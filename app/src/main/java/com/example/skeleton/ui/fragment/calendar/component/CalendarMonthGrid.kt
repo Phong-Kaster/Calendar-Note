@@ -15,6 +15,7 @@ import java.time.LocalDate
  *
  * @param days one entry per grid cell; null entries are leading/trailing padding.
  * @param today real-world today, used to highlight the matching cell.
+ * @param datesWithNotes every date that should render the "has notes" marker.
  * @param onDayClick called with the tapped date; threaded through to every [CalendarDayCell]
  * so a later task can react to day taps without changing this grid.
  * @author Phong-Kaster
@@ -23,6 +24,7 @@ import java.time.LocalDate
 fun CalendarMonthGrid(
     days: List<LocalDate?>,
     today: LocalDate,
+    datesWithNotes: Set<LocalDate> = emptySet(),
     onDayClick: (LocalDate) -> Unit = {},
 ) {
     LazyVerticalGrid(
@@ -33,7 +35,7 @@ fun CalendarMonthGrid(
             CalendarDayCell(
                 date = date,
                 isToday = date == today,
-                hasNotes = false,
+                hasNotes = date != null && date in datesWithNotes,
                 onClick = onDayClick,
             )
         }

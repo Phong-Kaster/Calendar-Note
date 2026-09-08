@@ -48,7 +48,7 @@ Verification per Phase: build, test, lint on the combined tree (§ENGINE 6.7), t
 | Phase | Tasks | Shared files the Iteration wires itself |
 |---|---|---|
 | 1 | T-001, T-002, T-005 | `AppDatabase.kt` (register `TaskEntity`/`TaskDao`, version → 3), `Migration.kt` (`MIGRATION_2_3`), `injection/DatabaseModule.kt`, `injection/RepositoryModule.kt`, `injection/ViewModelModule.kt`, `app/src/main/res/navigation/navigation_graph.xml` (todo + calendar destinations), `ui/component/CoreBottomBar.kt` + `domain/enums/BottomBarDestination.kt` (entry points), `res/values/strings.xml` |
-| 2 | T-003, T-006 | `AppDatabase.kt` (register `NoteEntity`/`NoteDao`, version → 4), `Migration.kt` (`MIGRATION_3_4`), `injection/DatabaseModule.kt`, `injection/RepositoryModule.kt`, `injection/ViewModelModule.kt` (CalendarViewModel gains `noteRepository`), `res/values/strings.xml` |
+| 2 | T-003, T-006 | `AppDatabase.kt` (register `NoteEntity`/`NoteDao`, version → 4), `Migration.kt` (`MIGRATION_3_4`), `injection/DatabaseModule.kt`, `injection/RepositoryModule.kt`, `injection/ViewModelModule.kt` (CalendarViewModel gains `noteRepository`), `res/values/strings.xml`, `ui/fragment/todo/TodoFragment.kt` (wire `TodoTaskItem`'s new `onToggle`/`onDelete` callbacks — discovered necessary during execution, see `AMENDMENTS.md` Iteration 2), `ui/fragment/calendar/component/CalendarMonthGrid.kt` (thread `datesWithNotes` through to `CalendarDayCell`'s `hasNotes` param — same reason) |
 | 3 | T-004, T-007 | `res/values/strings.xml` (edit-dialog strings) |
 
 Every task in a Phase has a Declared File Scope pairwise-disjoint from its Phase-mates (verified again in

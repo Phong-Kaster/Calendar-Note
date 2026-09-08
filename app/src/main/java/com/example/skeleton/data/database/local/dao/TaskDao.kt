@@ -20,4 +20,10 @@ interface TaskDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: TaskEntity)
+
+    @Query("UPDATE tasks SET isDone = :done WHERE id = :id")
+    suspend fun setDone(id: Long, done: Boolean)
+
+    @Query("DELETE FROM tasks WHERE id = :id")
+    suspend fun deleteTask(id: Long)
 }

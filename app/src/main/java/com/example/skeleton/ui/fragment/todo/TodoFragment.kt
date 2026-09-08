@@ -40,6 +40,8 @@ class TodoFragment : CoreFragment() {
         TodoLayout(
             uiState = uiState,
             onAddTask = { title -> viewModel.addTask(title) },
+            onToggleTask = { id, done -> viewModel.setDone(id, done) },
+            onDeleteTask = { id -> viewModel.deleteTask(id) },
         )
     }
 }
@@ -51,6 +53,8 @@ class TodoFragment : CoreFragment() {
 private fun TodoLayout(
     uiState: TodoUiState,
     onAddTask: (String) -> Unit = {},
+    onToggleTask: (Long, Boolean) -> Unit = { _, _ -> },
+    onDeleteTask: (Long) -> Unit = {},
 ) {
     CoreLayout(
         topBar = { CoreTopBar(title = stringResource(R.string.todo)) },
@@ -71,7 +75,11 @@ private fun TodoLayout(
                         items = uiState.tasks,
                         key = { task -> task.id },
                     ) { task ->
-                        TodoTaskItem(task = task)
+                        TodoTaskItem(
+                            task = task,
+                            onToggle = onToggleTask,
+                            onDelete = onDeleteTask,
+                        )
                     }
                 }
             }

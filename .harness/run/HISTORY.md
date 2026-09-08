@@ -6,6 +6,29 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 2 - 2026-09-08
+
+- **Phase:** 2 (T-003, T-006).
+- Dispatched T-003 (To-do toggle/delete) at Fast tier and T-006 (Calendar note CRUD + dates-with-notes
+  marker) at Capable tier, in parallel. Verified pairwise-disjoint Declared File Scopes against
+  `git status` — no violations; both succeeded on attempt 1.
+- Wired shared files myself, amending Phase 2's shared-file list in `PLAN.md` to add two files neither
+  Worker was allowed to touch: `TodoFragment.kt` (wiring `TodoTaskItem`'s new toggle/delete callbacks) and
+  `CalendarMonthGrid.kt` (threading `datesWithNotes` through to `CalendarDayCell`'s marker) — plus the
+  originally-planned `AppDatabase.kt`/`Migration.kt` (version → 4, `MIGRATION_3_4`), all three Koin
+  modules, and `strings.xml`/`values-de/strings.xml`. Full detail in `AMENDMENTS.md`.
+- Fixed two build/test failures directly (not counted against either task's attempts): a Kotlin
+  empty-lambda-default compile error appearing identically in a Worker file and my own wiring file, and a
+  wrong assertion in `TaskToggleAndDeleteTest` (test-only typo, not an implementation defect). Also
+  restored KDoc on `CalendarFragment.kt` that the Worker's edit had dropped. Rationale for fixing directly
+  rather than re-dispatching in `AMENDMENTS.md`.
+- Ran `gradlew.bat assembleDebug` (pass), `gradlew.bat test` (pass, 14/14: 10 new this Phase + 4 from
+  Phase 1), `gradlew.bat lintDebug` (4 pre-existing `MissingTranslation` errors, confirmed unrelated; the
+  2 new string keys this Phase add no new errors).
+- Fresh-Context Review (clean context, Capable tier) found no critical/blocking issues. Full findings and
+  disposition in `AMENDMENTS.md`.
+- D-002 remains queued (unanswered, blocks no task — only final DoD sign-off on criterion 30).
+
 ### Iteration 1 - 2026-09-08
 
 - **Phase:** 1 (T-001, T-002, T-005).

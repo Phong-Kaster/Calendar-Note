@@ -7,7 +7,7 @@
 
 - **Stage:** in-progress
 - **Loop Branch:** loop/todo-calendar-screens
-- **Next Phase:** Phase 2 (T-003, T-006)
+- **Next Phase:** Phase 3 (T-004, T-007)
 - **DONE-candidate:** no
 
 ## Progress
@@ -16,24 +16,32 @@
 |---|---|---|---|
 | T-001 | complete | `ui/theme/Color.kt`, `ui/theme/Theme.kt` | build+test pass; see T-001.md Evidence |
 | T-002 | complete | `domain/model/Task.kt` + Task CRUD data/ui files (see PLAN.md) | build+test pass; see T-002.md Evidence |
-| T-003 | pending (depends on T-002, now met) | Task toggle/delete extension (see PLAN.md) | - |
-| T-004 | pending (depends on T-003) | Task edit-title extension (see PLAN.md) | - |
+| T-003 | complete | Task toggle/delete extension (see PLAN.md) | build+test pass; see T-003.md Evidence |
+| T-004 | pending (depends on T-003, now met) | Task edit-title extension (see PLAN.md) | - |
 | T-005 | complete | `domain/model/CalendarMonth.kt` + Calendar shell (see PLAN.md) | build+test pass; see T-005.md Evidence |
-| T-006 | pending (depends on T-005, now met) | Note CRUD (create/read/mark) + calendar wiring (see PLAN.md) | - |
-| T-007 | pending (depends on T-006) | Note edit/delete (see PLAN.md) | - |
+| T-006 | complete | Note CRUD (create/read/mark) + calendar wiring (see PLAN.md) | build+test pass; see T-006.md Evidence |
+| T-007 | pending (depends on T-006, now met) | Note edit/delete (see PLAN.md) | - |
 
-Phase 1 (T-001, T-002, T-005) completed this iteration: three Workers dispatched at Capable tier,
+Phase 1 (T-001, T-002, T-005) completed Iteration 1: three Workers dispatched at Capable tier,
 pairwise-disjoint Declared File Scopes verified against `git status` before trusting output, shared files
 (`AppDatabase.kt`, `Migration.kt`, `injection/*`, `navigation_graph.xml`, `CoreBottomBar.kt` +
 `BottomBarDestination.kt`, `strings.xml`/`values-de/strings.xml`, two new bottom-bar drawables) wired by
-the Iteration itself. `gradlew.bat assembleDebug` and `gradlew.bat test` both pass (6/6 new tests + 1
-pre-existing). `gradlew.bat lint` fails with 4 pre-existing `MissingTranslation` errors unrelated to this
-Phase (confirmed by line number — none touched this run); this Phase's own 2 new string keys have German
-translations and add no new lint errors. Fresh-Context Review ran and found 6 issues (1 critical, 3
-major, 2 minor); 5 were fixed before checkpoint (see each task's Evidence section and `AMENDMENTS.md`
-Iteration 1). The 1 critical finding (hardcoded colors on new screens vs. DoD 30, traced to `CoreLayout`'s
-pre-existing hardcoded black background) is queued as D-002 in `ESCALATION.md` — a Tier-2,
+the Iteration itself. Fresh-Context Review found 6 issues (1 critical, 3 major, 2 minor); 5 were fixed
+before checkpoint. The 1 critical finding (hardcoded colors on new screens vs. DoD 30, traced to
+`CoreLayout`'s pre-existing hardcoded black background) is queued as D-002 in `ESCALATION.md` — a Tier-2,
 architecture-touching question that blocks no task but must be resolved before final DONE verification.
+
+Phase 2 (T-003, T-006) completed Iteration 2: two Workers dispatched in parallel (T-003 at Fast tier,
+T-006 at Capable tier), both succeeded on attempt 1. Shared files wired by the Iteration: `AppDatabase.kt`/
+`Migration.kt` (`NoteEntity`/`NoteDao`, version → 4, `MIGRATION_3_4`), all three Koin modules,
+`strings.xml`/`values-de/strings.xml` (`note_title`, `delete_task`), plus two files added to Phase 2's
+shared-file list mid-iteration (`AMENDMENTS.md`): `TodoFragment.kt` (toggle/delete callback wiring) and
+`CalendarMonthGrid.kt` (`datesWithNotes` threading to the day-cell marker). Two build/test failures fixed
+directly rather than re-dispatched (a Kotlin empty-lambda-default compile error, a wrong test assertion) —
+see `AMENDMENTS.md` Iteration 2 for why neither counted against either task's attempts. `gradlew.bat
+assembleDebug` and `gradlew.bat test` both pass (14/14). `gradlew.bat lint` still shows only the same 4
+pre-existing `MissingTranslation` errors; this Phase's 2 new string keys have German translations and add
+no new errors. Fresh-Context Review found no critical/blocking issues.
 
 ## Assumptions
 

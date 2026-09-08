@@ -42,4 +42,18 @@ class TodoViewModel(
             taskRepository.addTask(title)
         }
     }
+
+    /** Marks a task as done or not done. */
+    fun setDone(id: Long, done: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            taskRepository.setDone(id, done)
+        }
+    }
+
+    /** Removes a task by its id. */
+    fun deleteTask(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            taskRepository.deleteTask(id)
+        }
+    }
 }

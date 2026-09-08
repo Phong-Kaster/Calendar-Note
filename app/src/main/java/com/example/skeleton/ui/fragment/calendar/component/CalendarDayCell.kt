@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.skeleton.ui.theme.customizedTextStyle
 import java.time.LocalDate
 
@@ -24,7 +27,7 @@ import java.time.LocalDate
  *
  * @param date the day this cell represents; null renders an empty padding cell.
  * @param isToday true when [date] equals the real-world today.
- * @param hasNotes reserved for a later task (shows a note indicator dot); unused visually yet.
+ * @param hasNotes shows a small dot below the day number when true.
  * @param onClick called with [date] when the cell is tapped; never called for a null [date].
  * @author Phong-Kaster
  */
@@ -61,14 +64,23 @@ fun CalendarDayCell(
             modifier = Modifier.fillMaxWidth().aspectRatio(1f).then(backgroundModifier),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = date.dayOfMonth.toString(),
-                style = customizedTextStyle(
-                    fontSize = 14,
-                    fontWeight = if (isToday) 700 else 400,
-                    color = Color.White,
-                ),
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    style = customizedTextStyle(
+                        fontSize = 14,
+                        fontWeight = if (isToday) 700 else 400,
+                        color = Color.White,
+                    ),
+                )
+                if (hasNotes) {
+                    Box(
+                        modifier = Modifier
+                            .size(4.dp)
+                            .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
+                    )
+                }
+            }
         }
     }
 }
@@ -83,4 +95,10 @@ private fun CalendarDayCellPreview() {
 @Composable
 private fun CalendarDayCellTodayPreview() {
     CalendarDayCell(date = LocalDate.of(2026, 9, 8), isToday = true)
+}
+
+@Preview(name = "Has notes")
+@Composable
+private fun CalendarDayCellHasNotesPreview() {
+    CalendarDayCell(date = LocalDate.of(2026, 9, 8), isToday = false, hasNotes = true)
 }

@@ -32,4 +32,12 @@ class TaskRepositoryImpl(
         )
         dao.upsert(task.toEntity())
     }
+
+    override suspend fun setDone(id: Long, done: Boolean) {
+        dao.setDone(id, done)
+    }
+
+    override suspend fun deleteTask(id: Long) {
+        dao.deleteTask(id)
+    }
 }

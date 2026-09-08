@@ -6,11 +6,11 @@
 >
 > Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-08 - branch `loop/todo-calendar-screens` - iteration 1_
+_Last updated: 2026-09-08 - branch `loop/todo-calendar-screens` - iteration 2_
 
 ## Abandoned tasks
 
-None — every task attempted so far (T-001, T-002, T-005) succeeded on its first attempt.
+None — every task attempted so far (T-001, T-002, T-003, T-005, T-006) succeeded on its first attempt.
 
 ## Unreachable tasks
 

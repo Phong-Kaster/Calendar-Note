@@ -40,4 +40,6 @@
     <string name="add">Hinzufügen</string>
     <string name="previous_month">Vorheriger Monat</string>
     <string name="next_month">Nächster Monat</string>
+    <string name="note_title">Notiztitel</string>
+    <string name="delete_task">Aufgabe löschen</string>
 </resources>

@@ -56,3 +56,46 @@
 - Re-ran `gradlew.bat assembleDebug`, `test`, and `lint` after the review fixes: build and all 7 tests
   (6 new + 1 pre-existing) still pass; lint still shows exactly the same 4 pre-existing errors, confirming
   the fixes introduced no regression.
+
+### Iteration 2 - 2026-09-08
+
+- Dispatched Phase 2 (T-003 at Fast/haiku tier, T-006 at Capable tier) in parallel. Verified pairwise-
+  disjoint Declared File Scopes against `git status` — no violations.
+- Added `ui/fragment/todo/TodoFragment.kt` and `ui/fragment/calendar/component/CalendarMonthGrid.kt` to
+  Phase 2's shared-files list in `PLAN.md` (not anticipated at planning time): T-003's Worker correctly
+  left `TodoTaskItem`'s new `onToggle`/`onDelete` callbacks unwired at their `TodoFragment.kt` call site
+  (out of its Declared File Scope), and T-006's Worker correctly reported that `CalendarMonthGrid.kt`
+  hardcoded `hasNotes = false` with no parameter to carry `datesWithNotes` through (also out of its scope).
+  Both are plain integration wiring with no design judgment involved — done by the Iteration itself, same
+  as the standing DI/Room wiring.
+- Wired shared files per the (now-amended) Phase 2 row: `AppDatabase.kt`/`Migration.kt` (`NoteEntity`/
+  `NoteDao` registered, version → 4, `MIGRATION_3_4`), all three Koin modules, `TodoFragment.kt`
+  (toggle/delete callback wiring), `CalendarMonthGrid.kt` + `CalendarFragment.kt` (`datesWithNotes`
+  threading), `strings.xml`/`values-de/strings.xml` (`note_title`, `delete_task` — replacing
+  `CalendarAddNoteRow`'s hardcoded-English placeholders the Worker flagged as out of its scope).
+- Two build/test failures were fixed directly by the Iteration rather than re-dispatching a Worker, since
+  both were mechanical, single-line, non-design defects rather than evidence of task misclassification or
+  a misunderstood requirement — re-dispatching would have discarded substantial correct work to fix a
+  keystroke:
+  1. `compileDebugKotlin` failed: `onToggle: (Long, Boolean) -> Unit = {}` does not compile in Kotlin (an
+     empty-bodied lambda default infers as a zero-arg function type, not the declared two-arg one) — a
+     language-level footgun, not a logic error. It appeared identically in `TodoTaskItem.kt` (T-003's own
+     file) and in `TodoFragment.kt` (the Iteration's own wiring file) for the same mechanical reason.
+     Fixed both to `= { _, _ -> }`.
+  2. `testDebugUnitTest` failed: `TaskToggleAndDeleteTest`'s "deleting a task removes it from the list"
+     test asserted the wrong remaining task's title (`"Task 1"` instead of `"Task 2"`), given
+     `FakeTaskRepository`'s insert-at-front order — a test-assertion typo, not an implementation defect
+     (the other two tests in the same file, exercising the same `deleteTask` code path, passed both before
+     and after the fix). Corrected the assertion.
+  3. `CalendarFragment.kt`'s class-level and `CalendarLayout`-level KDoc (present since T-005/Phase 1) were
+     found dropped by T-006's Worker edit, with no replacement. Restored and updated both to describe the
+     new note-related behavior, per `android-skeleton-project.md`'s documentation requirement.
+- Re-ran `gradlew.bat assembleDebug`/`test`/`lintDebug` after all fixes: build passes, all 14 tests pass
+  (10 new this Phase + 4 from Phase 1), lint shows exactly the same 4 pre-existing errors (the 2 new
+  string keys this Phase both have German translations and add no new errors).
+- Fresh-Context Review (clean context, Capable tier) found no critical or blocking issues. One "major"
+  finding (no note edit/delete exists yet) is exactly T-007's scope, correctly deferred to Phase 3, not a
+  defect in this Phase. Two minor findings, neither actioned: `CalendarViewModel`'s unused `TAG` field
+  matches the codebase's standing (also-unused) `TAG`-per-ViewModel convention, not a regression; and
+  `CalendarNoteList` uses a plain `Column`/`forEach` rather than `LazyColumn`, acceptable given a single
+  day's note count is expected small (avoiding premature optimization per `CLAUDE.md`).

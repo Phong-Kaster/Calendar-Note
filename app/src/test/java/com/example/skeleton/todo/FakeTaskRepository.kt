@@ -30,4 +30,14 @@ class FakeTaskRepository : TaskRepository {
         )
         backing.value = listOf(task) + backing.value
     }
+
+    override suspend fun setDone(id: Long, done: Boolean) {
+        backing.value = backing.value.map { task ->
+            if (task.id == id) task.copy(isDone = done) else task
+        }
+    }
+
+    override suspend fun deleteTask(id: Long) {
+        backing.value = backing.value.filter { it.id != id }
+    }
 }

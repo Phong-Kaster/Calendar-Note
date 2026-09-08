@@ -15,14 +15,18 @@ import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
+import com.example.skeleton.ui.fragment.calendar.component.CalendarAddNoteRow
 import com.example.skeleton.ui.fragment.calendar.component.CalendarMonthGrid
 import com.example.skeleton.ui.fragment.calendar.component.CalendarMonthHeader
+import com.example.skeleton.ui.fragment.calendar.component.CalendarNoteList
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Calendar screen: shows the current month and lets the user step to the previous/next month.
+ * Calendar screen: shows the current month, lets the user step to the previous/next month,
+ * select a date, and add/view notes on that date.
  *
  * @author Phong-Kaster
  */
@@ -39,18 +43,23 @@ class CalendarFragment : CoreFragment() {
             uiState = uiState,
             onPrevious = { viewModel.previousMonth() },
             onNext = { viewModel.nextMonth() },
+            onDayClick = { date -> viewModel.selectDate(date) },
+            onAddNote = { title -> viewModel.addNote(title) },
         )
     }
 }
 
 /**
- * Calendar screen: month header with prev/next navigation above a 7-column day grid.
+ * Calendar screen UI: month header with prev/next navigation, a 7-column day grid, the
+ * selected date's notes, and a row to add a new note to that date.
  */
 @Composable
 private fun CalendarLayout(
     uiState: CalendarUiState,
     onPrevious: () -> Unit = {},
     onNext: () -> Unit = {},
+    onDayClick: (LocalDate) -> Unit = {},
+    onAddNote: (String) -> Unit = {},
 ) {
     val monthLabel = uiState.currentMonth.yearMonth.format(
         DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
@@ -74,6 +83,13 @@ private fun CalendarLayout(
                 CalendarMonthGrid(
                     days = uiState.currentMonth.buildGrid(),
                     today = uiState.today,
+                    datesWithNotes = uiState.datesWithNotes,
+                    onDayClick = onDayClick,
+                )
+                CalendarNoteList(notes = uiState.notesOfSelectedDate)
+                CalendarAddNoteRow(
+                    enabled = uiState.selectedDate != null,
+                    onAddNote = onAddNote,
                 )
             }
         }

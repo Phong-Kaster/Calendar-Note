@@ -21,5 +21,5 @@ val viewModelModule = module {
     viewModel { TodoViewModel(taskRepository = get()) }
 
     // Calendar View Model
-    viewModel { CalendarViewModel() }
+    viewModel { CalendarViewModel(noteRepository = get()) }
 }

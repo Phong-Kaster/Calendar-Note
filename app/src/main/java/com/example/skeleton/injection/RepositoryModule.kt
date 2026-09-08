@@ -1,9 +1,11 @@
 package com.example.skeleton.injection
 
+import com.example.skeleton.data.repository.impl.NoteRepositoryImpl
 import com.example.skeleton.data.repository.impl.PostRepositoryImpl
 import com.example.skeleton.data.repository.impl.SettingRepositoryImpl
 import com.example.skeleton.data.repository.impl.TaskRepositoryImpl
 import com.example.skeleton.data.repository.impl.UserActionRepositoryImpl
+import com.example.skeleton.domain.repository.NoteRepository
 import com.example.skeleton.domain.repository.PostRepository
 import com.example.skeleton.domain.repository.SettingRepository
 import com.example.skeleton.domain.repository.TaskRepository
@@ -19,4 +21,6 @@ val repositoryModule = module {
     single<PostRepository> { PostRepositoryImpl(api = get(), dao = get()) }
 
     single<TaskRepository> { TaskRepositoryImpl(dao = get()) }
+
+    single<NoteRepository> { NoteRepositoryImpl(dao = get()) }
 }
