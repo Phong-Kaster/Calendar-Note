@@ -5,10 +5,12 @@
 
 ## Current
 
-- **Stage:** in-progress
+- **Stage:** blocked-on-decision
 - **Loop Branch:** loop/todo-calendar-screens
-- **Next Phase:** Phase 3 (T-004, T-007)
-- **DONE-candidate:** no
+- **Next Phase:** none — all seven tasks complete, no Phase 4 in `PLAN.md`. Blocked on D-002 before
+  Verification (§ENGINE 11) can run.
+- **DONE-candidate:** no (a queued decision, D-002, is unresolved — §ENGINE 6.11 requires ESCALATE, not a
+  DONE-candidate, whenever no executable task remains and a decision is queued)
 
 ## Progress
 
@@ -17,10 +19,10 @@
 | T-001 | complete | `ui/theme/Color.kt`, `ui/theme/Theme.kt` | build+test pass; see T-001.md Evidence |
 | T-002 | complete | `domain/model/Task.kt` + Task CRUD data/ui files (see PLAN.md) | build+test pass; see T-002.md Evidence |
 | T-003 | complete | Task toggle/delete extension (see PLAN.md) | build+test pass; see T-003.md Evidence |
-| T-004 | pending (depends on T-003, now met) | Task edit-title extension (see PLAN.md) | - |
+| T-004 | complete | Task edit-title extension (see PLAN.md) | build+test pass; see T-004.md Evidence |
 | T-005 | complete | `domain/model/CalendarMonth.kt` + Calendar shell (see PLAN.md) | build+test pass; see T-005.md Evidence |
 | T-006 | complete | Note CRUD (create/read/mark) + calendar wiring (see PLAN.md) | build+test pass; see T-006.md Evidence |
-| T-007 | pending (depends on T-006, now met) | Note edit/delete (see PLAN.md) | - |
+| T-007 | complete | Note edit/delete (see PLAN.md) | build+test pass; see T-007.md Evidence |
 
 Phase 1 (T-001, T-002, T-005) completed Iteration 1: three Workers dispatched at Capable tier,
 pairwise-disjoint Declared File Scopes verified against `git status` before trusting output, shared files
@@ -30,6 +32,21 @@ the Iteration itself. Fresh-Context Review found 6 issues (1 critical, 3 major, 
 before checkpoint. The 1 critical finding (hardcoded colors on new screens vs. DoD 30, traced to
 `CoreLayout`'s pre-existing hardcoded black background) is queued as D-002 in `ESCALATION.md` — a Tier-2,
 architecture-touching question that blocks no task but must be resolved before final DONE verification.
+
+Phase 3 (T-004, T-007) completed Iteration 3: two Workers dispatched in parallel, both Capable tier, both
+succeeded on attempt 1. Adding `TaskRepository.updateTitle`/`NoteRepository.update`+`delete` broke two
+files outside either task's scope (`FakeTaskRepository.kt`, `FakeNoteRepository.kt`, interface
+implementers used only by tests) and the new edit entry points needed wiring into `TodoTaskItem.kt`/
+`TodoFragment.kt`/`CalendarFragment.kt` — all five wired by the Iteration itself, same pattern as Phase 2's
+`TodoFragment.kt`/`CalendarMonthGrid.kt` discovery. No Room migration needed (no schema change). Fresh-
+Context Review found two major issues (both worker-authored, both fixed): `TodoEditTaskDialog.kt` missing
+`KeyboardActions(onDone)` present in its sibling `CalendarEditNoteDialog.kt`; and an inconsistent
+state-clear timing between `TodoViewModel.updateTaskTitle` (synchronous) and `CalendarViewModel
+.updateNoteTitle` (after-write) for the same interaction — aligned Todo's to match Calendar's. Two minor
+issues fixed too (`NoteDao.kt` missing KDoc, an import-order slip). `gradlew.bat assembleDebug`/`test` both
+pass (20/20) before and after the fixes; `gradlew.bat lintDebug` shows the same 4 pre-existing baseline
+errors. All seven tasks are now complete with no Phase 4 remaining — the run is blocked only on D-002
+before Verification.
 
 Phase 2 (T-003, T-006) completed Iteration 2: two Workers dispatched in parallel (T-003 at Fast tier,
 T-006 at Capable tier), both succeeded on attempt 1. Shared files wired by the Iteration: `AppDatabase.kt`/

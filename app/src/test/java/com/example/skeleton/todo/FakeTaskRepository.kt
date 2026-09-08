@@ -37,6 +37,15 @@ class FakeTaskRepository : TaskRepository {
         }
     }
 
+    override suspend fun updateTitle(id: Long, title: String) {
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isBlank()) return
+
+        backing.value = backing.value.map { task ->
+            if (task.id == id) task.copy(title = trimmedTitle) else task
+        }
+    }
+
     override suspend fun deleteTask(id: Long) {
         backing.value = backing.value.filter { it.id != id }
     }

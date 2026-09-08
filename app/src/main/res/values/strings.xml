@@ -45,4 +45,9 @@
     <string name="next_month">Next month</string>
     <string name="note_title">Note title</string>
     <string name="delete_task">Delete task</string>
+    <string name="edit_task">Edit task</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit_note">Edit note</string>
+    <string name="delete_note">Delete note</string>
 </resources>

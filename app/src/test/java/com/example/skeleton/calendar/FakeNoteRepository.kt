@@ -43,4 +43,17 @@ class FakeNoteRepository : NoteRepository {
         )
         backing.value = backing.value + note
     }
+
+    override suspend fun update(id: Long, title: String) {
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isBlank()) return
+
+        backing.value = backing.value.map { note ->
+            if (note.id == id) note.copy(title = trimmedTitle) else note
+        }
+    }
+
+    override suspend fun delete(id: Long) {
+        backing.value = backing.value.filter { it.id != id }
+    }
 }

@@ -7,6 +7,11 @@ import androidx.room.Query
 import com.example.skeleton.data.database.local.entity.NoteEntity
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Room access for the `notes` table.
+ *
+ * @author Phong-Kaster
+ */
 @Dao
 interface NoteDao {
 
@@ -18,4 +23,10 @@ interface NoteDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: NoteEntity)
+
+    @Query("UPDATE notes SET title = :title WHERE id = :id")
+    suspend fun update(id: Long, title: String)
+
+    @Query("DELETE FROM notes WHERE id = :id")
+    suspend fun delete(id: Long)
 }

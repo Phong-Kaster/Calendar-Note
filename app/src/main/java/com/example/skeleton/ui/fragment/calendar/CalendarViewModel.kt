@@ -2,6 +2,7 @@ package com.example.skeleton.ui.fragment.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skeleton.domain.model.Note
 import com.example.skeleton.domain.repository.NoteRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +55,35 @@ class CalendarViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val date = _uiState.value.selectedDate ?: return@launch
             noteRepository.addNote(date, title)
+        }
+    }
+
+    /** Opens the edit dialog for [note]. */
+    fun startEditingNote(note: Note) {
+        _uiState.value = _uiState.value.copy(editingNote = note)
+    }
+
+    /** Closes the edit dialog without saving. */
+    fun cancelEditingNote() {
+        _uiState.value = _uiState.value.copy(editingNote = null)
+    }
+
+    /**
+     * Saves [title] as the new title of [CalendarUiState.editingNote], then closes the edit
+     * dialog; no-op when nothing is being edited.
+     */
+    fun updateNoteTitle(title: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val note = _uiState.value.editingNote ?: return@launch
+            noteRepository.update(note.id, title)
+            _uiState.value = _uiState.value.copy(editingNote = null)
+        }
+    }
+
+    /** Deletes the note identified by [id]. */
+    fun deleteNote(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            noteRepository.delete(id)
         }
     }
 

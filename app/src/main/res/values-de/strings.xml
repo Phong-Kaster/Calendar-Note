@@ -42,4 +42,9 @@
     <string name="next_month">Nächster Monat</string>
     <string name="note_title">Notiztitel</string>
     <string name="delete_task">Aufgabe löschen</string>
+    <string name="edit_task">Aufgabe bearbeiten</string>
+    <string name="save">Speichern</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="edit_note">Notiz bearbeiten</string>
+    <string name="delete_note">Notiz löschen</string>
 </resources>

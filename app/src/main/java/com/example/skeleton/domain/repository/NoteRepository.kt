@@ -38,4 +38,24 @@ interface NoteRepository {
      * @param title What the user wrote.
      */
     suspend fun addNote(date: LocalDate, title: String)
+
+    /**
+     * Renames the note identified by [id] to [title].
+     *
+     * A blank or whitespace-only title is silently ignored, same rule as [addNote]. An [id]
+     * that doesn't match any note is a no-op — nothing to update, nothing to report.
+     *
+     * @param id The note to rename.
+     * @param title The new title.
+     */
+    suspend fun update(id: Long, title: String)
+
+    /**
+     * Removes the note identified by [id].
+     *
+     * An [id] that doesn't match any note is a no-op.
+     *
+     * @param id The note to remove.
+     */
+    suspend fun delete(id: Long)
 }

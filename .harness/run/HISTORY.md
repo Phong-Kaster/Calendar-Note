@@ -6,6 +6,29 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 3 - 2026-09-08
+
+- **Phase:** 3 (T-004, T-007) — the last Phase in `PLAN.md`.
+- Dispatched T-004 (To-do edit-title) and T-007 (Calendar note edit/delete), both Capable tier, in
+  parallel. Verified pairwise-disjoint Declared File Scopes against `git status` — no violations; both
+  succeeded on attempt 1.
+- Discovered before dispatch (from reading the existing interface implementers) that five files needed
+  Iteration-level wiring beyond the planned `strings.xml`: `FakeTaskRepository.kt`, `FakeNoteRepository.kt`
+  (would otherwise fail to compile once the domain interfaces gained new methods), `TodoTaskItem.kt`,
+  `TodoFragment.kt`, `CalendarFragment.kt` (edit entry points needed wiring outside either task's scope).
+  Amended Phase 3's shared-file list in `PLAN.md`; full detail in `AMENDMENTS.md`.
+- Wired all shared files myself; no Room migration needed (no schema change this Phase).
+- Ran `gradlew.bat assembleDebug` (pass), `gradlew.bat test` (pass, 20/20: 6 new this Phase + 14 prior),
+  `gradlew.bat lintDebug` (same 4 pre-existing errors, no new ones).
+- Fresh-Context Review found two major, two minor issues; all four fixed before checkpoint (missing
+  `KeyboardActions` in `TodoEditTaskDialog.kt`, an inconsistent state-clear timing between
+  `TodoViewModel`/`CalendarViewModel`, a missing DAO KDoc, a cosmetic import-order slip). Re-ran build+test
+  after fixes: still pass, 20/20. Full detail in `AMENDMENTS.md`.
+- All seven tasks now complete; no Phase 4 exists. D-002 remains queued (blocks no task, blocks only final
+  DoD sign-off on criterion 30). Since no executable task remains and a decision is queued, this Iteration
+  reports `ESCALATE`, not a DONE-candidate — per `ENGINE.md` §6.11 a queued decision takes precedence over
+  declaring the run ready for Verification even when every task is complete.
+
 ### Iteration 2 - 2026-09-08
 
 - **Phase:** 2 (T-003, T-006).

@@ -13,9 +13,11 @@ import androidx.compose.ui.unit.dp
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
+import com.example.skeleton.domain.model.Note
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.fragment.calendar.component.CalendarAddNoteRow
+import com.example.skeleton.ui.fragment.calendar.component.CalendarEditNoteDialog
 import com.example.skeleton.ui.fragment.calendar.component.CalendarMonthGrid
 import com.example.skeleton.ui.fragment.calendar.component.CalendarMonthHeader
 import com.example.skeleton.ui.fragment.calendar.component.CalendarNoteList
@@ -45,6 +47,14 @@ class CalendarFragment : CoreFragment() {
             onNext = { viewModel.nextMonth() },
             onDayClick = { date -> viewModel.selectDate(date) },
             onAddNote = { title -> viewModel.addNote(title) },
+            onEditNote = { note -> viewModel.startEditingNote(note) },
+            onDeleteNote = { id -> viewModel.deleteNote(id) },
+        )
+
+        CalendarEditNoteDialog(
+            note = uiState.editingNote,
+            onConfirm = { title -> viewModel.updateNoteTitle(title) },
+            onDismiss = { viewModel.cancelEditingNote() },
         )
     }
 }
@@ -60,6 +70,8 @@ private fun CalendarLayout(
     onNext: () -> Unit = {},
     onDayClick: (LocalDate) -> Unit = {},
     onAddNote: (String) -> Unit = {},
+    onEditNote: (Note) -> Unit = {},
+    onDeleteNote: (Long) -> Unit = {},
 ) {
     val monthLabel = uiState.currentMonth.yearMonth.format(
         DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
@@ -86,7 +98,11 @@ private fun CalendarLayout(
                     datesWithNotes = uiState.datesWithNotes,
                     onDayClick = onDayClick,
                 )
-                CalendarNoteList(notes = uiState.notesOfSelectedDate)
+                CalendarNoteList(
+                    notes = uiState.notesOfSelectedDate,
+                    onEdit = onEditNote,
+                    onDelete = onDeleteNote,
+                )
                 CalendarAddNoteRow(
                     enabled = uiState.selectedDate != null,
                     onAddNote = onAddNote,

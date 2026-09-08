@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +28,7 @@ import com.example.skeleton.ui.theme.customizedTextStyle
  *
  * @param task The task to display.
  * @param onToggle Called when the checkbox is toggled; receives task id and new done state.
+ * @param onEdit Called with the tapped task when its edit button is pressed.
  * @param onDelete Called when the delete button is pressed; receives task id.
  * @author Phong-Kaster
  */
@@ -34,6 +36,7 @@ import com.example.skeleton.ui.theme.customizedTextStyle
 fun TodoTaskItem(
     task: Task,
     onToggle: (Long, Boolean) -> Unit = { _, _ -> },
+    onEdit: (Task) -> Unit = {},
     onDelete: (Long) -> Unit = {},
 ) {
     val textColor = if (task.isDone) Color.White.copy(alpha = 0.5f) else Color.White
@@ -65,6 +68,18 @@ fun TodoTaskItem(
                 .weight(1f)
                 .padding(horizontal = 8.dp),
         )
+
+        IconButton(
+            onClick = {
+                onEdit(task)
+            },
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = stringResource(R.string.edit_task),
+                tint = Color.White,
+            )
+        }
 
         IconButton(
             onClick = {

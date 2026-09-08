@@ -99,3 +99,50 @@
   matches the codebase's standing (also-unused) `TAG`-per-ViewModel convention, not a regression; and
   `CalendarNoteList` uses a plain `Column`/`forEach` rather than `LazyColumn`, acceptable given a single
   day's note count is expected small (avoiding premature optimization per `CLAUDE.md`).
+
+### Iteration 3 - 2026-09-08
+
+- Dispatched Phase 3 (T-004, T-007), both at Capable tier per their planned Model Tier, in parallel — the
+  last Phase in `PLAN.md`. Verified pairwise-disjoint Declared File Scopes against `git status` — no
+  violations; both succeeded on attempt 1.
+- Added five files to Phase 3's shared-files list in `PLAN.md` (not anticipated at planning time), all
+  discovered before dispatch by reading the existing code the new interface methods would touch: adding
+  `TaskRepository.updateTitle`/`NoteRepository.update`+`delete` to the domain interfaces would break
+  `FakeTaskRepository.kt`/`FakeNoteRepository.kt` (interface implementers used only by tests, outside
+  either task's Declared File Scope) unless those fakes gained matching overrides; and the new edit
+  entry points needed wiring into `TodoTaskItem.kt`/`TodoFragment.kt` and `CalendarFragment.kt`
+  respectively, none of which were in-scope for a Worker to touch. Same category of gap as Iteration 2's
+  `TodoFragment.kt`/`CalendarMonthGrid.kt` addition — plain integration wiring, no design judgment, done by
+  the Iteration itself.
+- Wired shared files per the (now-amended) Phase 3 row: `FakeTaskRepository.kt` (`updateTitle`,
+  trim-and-blank-guard mirroring `TaskRepositoryImpl`), `FakeNoteRepository.kt` (`update`/`delete`,
+  mirroring `NoteRepositoryImpl`), `TodoTaskItem.kt` (added an `onEdit` pencil `IconButton` beside the
+  existing delete button), `TodoFragment.kt` (wired `onEditTask` + rendered `TodoEditTaskDialog` as a
+  `ComposeView()` sibling overlay, per `figma-design-system.md` §12), `CalendarFragment.kt` (wired
+  `onEditNote`/`onDeleteNote` to `CalendarNoteList` + rendered `CalendarEditNoteDialog` the same way),
+  `strings.xml`/`values-de/strings.xml` (`edit_task`, `save`, `cancel`, `edit_note`, `delete_note` — the
+  last four replacing `CalendarEditNoteDialog.kt`'s/`CalendarNoteList.kt`'s hardcoded-English placeholders
+  the T-007 Worker flagged as out of its scope).
+- No Room migration needed this Phase — both tasks only add `UPDATE`/`DELETE` queries against existing
+  columns/tables, no schema change, `AppDatabase` stays at version 4.
+- Ran `gradlew.bat assembleDebug`/`test`/`lintDebug`: build passes; all 20 tests pass (6 new this Phase: 3
+  in `TaskEditTitleTest`, 3 in `NoteEditAndDeleteTest`); lint shows exactly the same 4 pre-existing errors
+  (this Phase's 5 new string keys all have German translations, zero new errors).
+- Fresh-Context Review (clean context, Capable tier) found two major and two minor issues, all fixed
+  before checkpoint: (1) `TodoEditTaskDialog.kt`'s `OutlinedTextField` set `imeAction = Done` but never
+  wired `KeyboardActions(onDone = ...)`, unlike every other single-line title field in this run including
+  the sibling `CalendarEditNoteDialog.kt` added in this same Phase — added the missing `KeyboardActions`;
+  (2) `TodoViewModel.updateTaskTitle` cleared `editingTask` synchronously outside the write coroutine while
+  `CalendarViewModel.updateNoteTitle` cleared `editingNote` only after the write completed inside its
+  coroutine — same interaction, two different behaviors from two independent workers; changed
+  `updateTaskTitle` to match `updateNoteTitle`'s after-write pattern; (3) `NoteDao.kt` was missing the
+  class-level KDoc every sibling DAO (`TaskDao.kt`) has — added; (4) a cosmetic import-ordering slip in
+  `TodoEditTaskDialog.kt` — fixed alongside the `KeyboardActions` import. Both new dialogs were confirmed
+  to correctly use `MaterialTheme.colorScheme` defaults rather than copying the pre-existing hardcoded-white
+  pattern (the dialogs' own `Surface` isn't affected by `CoreLayout`'s black background, so no D-002-style
+  tension exists for them).
+- Re-ran `gradlew.bat assembleDebug`/`test` after the review fixes: both still pass, 20/20 tests.
+- All seven tasks (`T-001`..`T-007`) are now complete. No Phase 4 exists in `PLAN.md`. D-002 remains
+  queued and unanswered — it blocks no task (none exist to select), but blocks final DoD sign-off on
+  criterion 30 at Verification (§ENGINE 11). Since no executable task remains and a decision is queued,
+  this Iteration reports `ESCALATE` per §ENGINE 6.11, not a DONE-candidate.

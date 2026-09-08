@@ -40,4 +40,11 @@ class TaskRepositoryImpl(
     override suspend fun deleteTask(id: Long) {
         dao.deleteTask(id)
     }
+
+    override suspend fun updateTitle(id: Long, title: String) {
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isBlank()) return
+
+        dao.updateTitle(id, trimmedTitle)
+    }
 }

@@ -37,4 +37,15 @@ interface TaskRepository {
      * @param id The task's unique identifier.
      */
     suspend fun deleteTask(id: Long)
+
+    /**
+     * Renames a task's title.
+     *
+     * A blank or whitespace-only [title] is silently ignored (no exception, no error state) —
+     * same rule as [addTask]. If the task does not exist, this is a no-op.
+     *
+     * @param id The task's unique identifier.
+     * @param title The new title.
+     */
+    suspend fun updateTitle(id: Long, title: String)
 }

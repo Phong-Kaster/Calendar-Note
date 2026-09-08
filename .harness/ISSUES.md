@@ -6,11 +6,11 @@
 >
 > Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-08 - branch `loop/todo-calendar-screens` - iteration 2_
+_Last updated: 2026-09-08 - branch `loop/todo-calendar-screens` - iteration 3_
 
 ## Abandoned tasks
 
-None — every task attempted so far (T-001, T-002, T-003, T-005, T-006) succeeded on its first attempt.
+None — every task (T-001..T-007, all seven, run complete) succeeded on its first attempt.
 
 ## Unreachable tasks
 
@@ -23,12 +23,15 @@ None — no abandonment has occurred.
 
 | # | Question | Blocks |
 |---|---|---|
-| D-002 | Todo/Calendar screens hardcode `Color.White` for text/icons instead of sourcing from `MaterialTheme.colorScheme`, literally violating DoD criterion 30. A literal fix would require changing `CoreLayout.kt`'s hardcoded black background too, which risks making Home/Setting's own hardcoded-white text invisible in light mode unless those pre-existing files are also touched (out of every task's Declared File Scope). See full analysis and options in `.harness/run/ESCALATION.md`. | No task (blocks only final DoD sign-off on criterion 30 at Verification) |
+| D-002 | Todo/Calendar screens hardcode `Color.White` for text/icons instead of sourcing from `MaterialTheme.colorScheme`, literally violating DoD criterion 30. A literal fix would require changing `CoreLayout.kt`'s hardcoded black background too, which risks making Home/Setting's own hardcoded-white text invisible in light mode unless those pre-existing files are also touched (out of every task's Declared File Scope). See full analysis and options in `.harness/run/ESCALATION.md`. | No task remains to select — all seven tasks are complete. Blocks only final DoD sign-off on criterion 30 at Verification (§ENGINE 11); the run cannot proceed past `ESCALATE` to Verification until this is answered. |
 
 ## Review findings not fixed
 
-- (D-002, above) Hardcoded `Color.White` in `TodoTaskItem.kt`, `CalendarMonthHeader.kt`,
-  `CalendarDayCell.kt` — deliberately not fixed inline; see D-002.
+- (D-002, above) Hardcoded `Color.White` in `TodoTaskItem.kt` (including its new edit-pencil icon added in
+  Phase 3), `CalendarMonthHeader.kt`, `CalendarDayCell.kt` — deliberately not fixed inline; see D-002. Note:
+  the two new dialogs added in Phase 3 (`TodoEditTaskDialog.kt`, `CalendarEditNoteDialog.kt`) and
+  `CalendarNoteList.kt`'s text/icons correctly source colors from `MaterialTheme.colorScheme` instead —
+  they are not part of this finding.
 
 ## Assumptions recorded
 

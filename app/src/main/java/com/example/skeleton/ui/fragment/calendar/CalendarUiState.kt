@@ -13,6 +13,8 @@ import java.time.LocalDate
  * @param notesOfSelectedDate Notes for [selectedDate], oldest first; empty when nothing selected.
  * @param datesWithNotes Every date in [currentMonth] (and its padding cells) that has at least
  * one note, used to render the "has notes" marker on each day cell.
+ * @param editingNote The note currently being edited in [com.example.skeleton.ui.fragment.calendar.component.CalendarEditNoteDialog];
+ * null when no edit dialog should be shown.
  * @author Phong-Kaster
  */
 data class CalendarUiState(
@@ -21,4 +23,5 @@ data class CalendarUiState(
     val selectedDate: LocalDate? = null,
     val notesOfSelectedDate: List<Note> = emptyList(),
     val datesWithNotes: Set<LocalDate> = emptySet(),
+    val editingNote: Note? = null,
 )

@@ -20,6 +20,7 @@ import com.example.skeleton.domain.model.Task
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.fragment.todo.component.TodoAddTaskRow
+import com.example.skeleton.ui.fragment.todo.component.TodoEditTaskDialog
 import com.example.skeleton.ui.fragment.todo.component.TodoTaskItem
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -41,7 +42,14 @@ class TodoFragment : CoreFragment() {
             uiState = uiState,
             onAddTask = { title -> viewModel.addTask(title) },
             onToggleTask = { id, done -> viewModel.setDone(id, done) },
+            onEditTask = { task -> viewModel.startEditingTask(task) },
             onDeleteTask = { id -> viewModel.deleteTask(id) },
+        )
+
+        TodoEditTaskDialog(
+            task = uiState.editingTask,
+            onConfirm = { title -> viewModel.updateTaskTitle(title) },
+            onDismiss = { viewModel.cancelEditingTask() },
         )
     }
 }
@@ -54,6 +62,7 @@ private fun TodoLayout(
     uiState: TodoUiState,
     onAddTask: (String) -> Unit = {},
     onToggleTask: (Long, Boolean) -> Unit = { _, _ -> },
+    onEditTask: (Task) -> Unit = {},
     onDeleteTask: (Long) -> Unit = {},
 ) {
     CoreLayout(
@@ -78,6 +87,7 @@ private fun TodoLayout(
                         TodoTaskItem(
                             task = task,
                             onToggle = onToggleTask,
+                            onEdit = onEditTask,
                             onDelete = onDeleteTask,
                         )
                     }

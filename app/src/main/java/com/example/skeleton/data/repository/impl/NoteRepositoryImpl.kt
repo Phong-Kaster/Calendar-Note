@@ -38,4 +38,15 @@ class NoteRepositoryImpl(
         )
         dao.insert(note.toEntity())
     }
+
+    override suspend fun update(id: Long, title: String) {
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isBlank()) return
+
+        dao.update(id, trimmedTitle)
+    }
+
+    override suspend fun delete(id: Long) {
+        dao.delete(id)
+    }
 }

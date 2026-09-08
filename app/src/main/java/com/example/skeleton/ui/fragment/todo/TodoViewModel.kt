@@ -2,6 +2,7 @@ package com.example.skeleton.ui.fragment.todo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skeleton.domain.model.Task
 import com.example.skeleton.domain.repository.TaskRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +55,25 @@ class TodoViewModel(
     fun deleteTask(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             taskRepository.deleteTask(id)
+        }
+    }
+
+    /** Opens the edit dialog for [task]. */
+    fun startEditingTask(task: Task) {
+        _uiState.value = _uiState.value.copy(editingTask = task)
+    }
+
+    /** Closes the edit dialog without saving. */
+    fun cancelEditingTask() {
+        _uiState.value = _uiState.value.copy(editingTask = null)
+    }
+
+    /** Saves [title] as the new title of the task currently being edited, then closes the dialog. */
+    fun updateTaskTitle(title: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val editingTask = _uiState.value.editingTask ?: return@launch
+            taskRepository.updateTitle(editingTask.id, title)
+            _uiState.value = _uiState.value.copy(editingTask = null)
         }
     }
 }
