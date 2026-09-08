@@ -6,6 +6,22 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 4 - 2026-09-08
+
+- **Phase:** none — all seven tasks were already complete; this Iteration consumed a queued decision,
+  it did not select or dispatch a Phase.
+- Consumed D-002 (answered by the supervising session): amended `DoD.md` criterion 30's wording to
+  match the human's decided text, added a Status-section note and updated the Verification Evidence
+  Required row 30 to name which files use `MaterialTheme.colorScheme` and which follow the pre-existing
+  hardcoded pattern. No implementation code touched. Full request + decision archived below under
+  "Archived Decisions".
+- D-002 named no blocked tasks (none remained to select) — nothing to unblock beyond final DoD sign-off.
+- Since no queued decisions remain, no task is abandoned or deferred, and all seven tasks report
+  complete, `STATE.md` now records a DONE-candidate. This Iteration wrote no implementation, but per
+  `ENGINE.md` §6.11 an Iteration that has just resolved the blocking question on its own DoD criterion
+  still reports `CONTINUE`, not `DONE` — the next, fresh invocation runs Verification (§ENGINE 11)
+  against the amended criterion with no bias from having just decided it.
+
 ### Iteration 3 - 2026-09-08
 
 - **Phase:** 3 (T-004, T-007) — the last Phase in `PLAN.md`.
@@ -129,3 +145,65 @@ the "add one line" intent — a capability-model limitation, not a reason to ref
 
 **Consumed:** Iteration 1 unblocked all seven tasks with respect to this decision (see `AMENDMENTS.md`
 Iteration 1 entry) and selected Phase 1 (T-001, T-002, T-005).
+
+### D-002 - CoreLayout's hardcoded black background makes DoD criterion 30 architecturally unsatisfiable without touching Home/Setting (consumed Iteration 4)
+
+**Question:** DoD criterion 30 required new screens to read colors from `MaterialTheme.colorScheme`,
+never hardcoded. Phase 1's Fresh-Context Review found `TodoTaskItem.kt`, `CalendarMonthHeader.kt`, and
+`CalendarDayCell.kt` use hardcoded `Color.White` for all text/icons, literally violating this criterion.
+
+**Context:** `core/CoreLayout.kt` unconditionally paints the screen background `Color.Black` regardless
+of `darkTheme`; T-001 only overrode `primary`/`secondary`/`tertiary`, so `onBackground`/`onSurface` still
+resolve to Material3's baseline **dark** defaults in the light color scheme. Swapping the flagged
+`Color.White` literals for `MaterialTheme.colorScheme.onBackground` would render near-invisible
+dark-on-black text whenever the system is in light mode — trading a checklist violation for a real,
+worse, visible bug. The only letter-and-spirit-correct fix is `CoreLayout`'s background itself sourcing
+`MaterialTheme.colorScheme.background`, but `CoreLayout.kt` is a skeleton-provided core file outside
+every task's Declared File Scope, and every existing screen (`HomeFragment`, `SettingFragment`,
+`SettingItem`, `LanguageItem`) already shares the identical hardcoded-white-on-black pattern — changing
+`CoreLayout` alone would make Home/Setting's own hardcoded-white text invisible in light mode, a real
+regression that DoD criterion 31 (build + reachability only) would not catch.
+
+**Options considered:**
+
+1. Leave Todo/Calendar's hardcoded `Color.White` as-is, consistent with the app's existing pattern;
+   treat full theme-awareness as a separate follow-up PRD. DoD 30 remains formally unmet unless amended
+   (Tier 3, human-only).
+2. Approve a new cross-cutting task changing `CoreLayout.kt`'s background to
+   `MaterialTheme.colorScheme.background` AND fixing every existing hardcoded-white call site app-wide
+   (`HomeFragment`, `SettingFragment`, `SettingItem`, `LanguageItem`, plus this run's own files).
+   Materially larger than the original plan, touches files no task ever declared, carries whole-app
+   visual-regression risk this run's single-Phase-diff Fresh-Context Review was never scoped to catch.
+3. Amend DoD criterion 30's wording (Tier 3) to describe the existing, working, consistent pattern
+   instead of demanding `MaterialTheme.colorScheme` unconditionally.
+
+**Engine recommendation:** Option 1 for this run, Option 2 proposed as a separate follow-up PRD/goal.
+
+**Decision — Option 1 AND Option 3 together, 2026-09-08 19:55**, by the supervising session on the
+human's standing instruction to answer escalations autonomously and log every decision (Option 3 is
+Tier 3, flagged as a delegated intent decision):
+
+- Option 1 alone was rejected as incoherent: leaving criterion 30 formally unmet means the Verifier can
+  never sign off, so the run could never reach `DONE`. The amendment (Option 3) is what makes Option 1
+  actionable.
+- Option 2 was rejected: disproportionate blast radius, touches files no task declared, and the
+  resulting cross-app regression risk would not be caught by this run's own acceptance bar — approving
+  it would mean approving an unverifiable change.
+- **Criterion 30 amended** to: "Dark mode works for the new screens: they render through the existing
+  `CoreFragment` → `MyApplicationTheme(isSystemInDarkTheme())` mechanism with no new theme wrapper. New
+  composables source colours from `MaterialTheme.colorScheme` wherever doing so does not conflict with
+  `CoreLayout`'s app-wide hardcoded background; where it does conflict they follow the app's existing
+  hardcoded-white-on-black pattern, for consistency with Home and Setting. Making the app theme-aware
+  end-to-end (`CoreLayout` plus every pre-existing screen) is explicitly out of scope for this run."
+  Applied verbatim to `DoD.md` by Iteration 4.
+- **Follow-up recorded, not dropped:** full app-wide theme awareness (`CoreLayout` background from
+  `colorScheme.background`, plus `HomeFragment`, `SettingFragment`, `SettingItem`, `LanguageItem`, plus
+  this run's `TodoTaskItem`, `CalendarMonthHeader`, `CalendarDayCell`) needs its own PRD with visual
+  acceptance criteria — out of scope here.
+- **Note for the human:** the pre-existing hardcoded-white-on-black pattern means the app is effectively
+  dark-only today; light mode does not really exist. Pre-existing, not introduced by this run, but worth
+  knowing before treating "dark mode" as fully delivered.
+
+**Consumed:** Iteration 4 applied the amended wording to `DoD.md` (Status note + criterion 30 text +
+Verification Evidence Required row 30). No task was blocked by this decision, so nothing to unblock;
+it clears the way for Verification (§ENGINE 11) to check DoD sign-off against the amended criterion.

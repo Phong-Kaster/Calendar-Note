@@ -6,7 +6,7 @@
 >
 > Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-08 - branch `loop/todo-calendar-screens` - iteration 3_
+_Last updated: 2026-09-08 - branch `loop/todo-calendar-screens` - iteration 4_
 
 ## Abandoned tasks
 
@@ -21,17 +21,15 @@ None — no abandonment has occurred.
 
 ## Decisions awaiting an answer
 
-| # | Question | Blocks |
-|---|---|---|
-| D-002 | Todo/Calendar screens hardcode `Color.White` for text/icons instead of sourcing from `MaterialTheme.colorScheme`, literally violating DoD criterion 30. A literal fix would require changing `CoreLayout.kt`'s hardcoded black background too, which risks making Home/Setting's own hardcoded-white text invisible in light mode unless those pre-existing files are also touched (out of every task's Declared File Scope). See full analysis and options in `.harness/run/ESCALATION.md`. | No task remains to select — all seven tasks are complete. Blocks only final DoD sign-off on criterion 30 at Verification (§ENGINE 11); the run cannot proceed past `ESCALATE` to Verification until this is answered. |
+None. D-002 (Todo/Calendar screens' hardcoded colors vs. DoD criterion 30) was answered by the
+supervising session and consumed in Iteration 4 — DoD criterion 30 was reworded to match; full
+request/decision archived in `.harness/run/HISTORY.md` under "Archived Decisions".
 
 ## Review findings not fixed
 
-- (D-002, above) Hardcoded `Color.White` in `TodoTaskItem.kt` (including its new edit-pencil icon added in
-  Phase 3), `CalendarMonthHeader.kt`, `CalendarDayCell.kt` — deliberately not fixed inline; see D-002. Note:
-  the two new dialogs added in Phase 3 (`TodoEditTaskDialog.kt`, `CalendarEditNoteDialog.kt`) and
-  `CalendarNoteList.kt`'s text/icons correctly source colors from `MaterialTheme.colorScheme` instead —
-  they are not part of this finding.
+None outstanding. The one prior open finding (hardcoded `Color.White` in `TodoTaskItem.kt`,
+`CalendarMonthHeader.kt`, `CalendarDayCell.kt`) is resolved as intended-and-documented behavior via
+D-002's amendment to DoD criterion 30, not a defect — see `.harness/run/HISTORY.md`.
 
 ## Assumptions recorded
 
@@ -47,6 +45,11 @@ None — no abandonment has occurred.
   button).
 - Room migration correctness (DoD 16, 24) is proven structurally (entity + DAO + registration + migration
   present, `assembleDebug` succeeds) rather than via an instrumented/Robolectric migration test.
+- The app is effectively dark-only today: `CoreLayout`'s background is hardcoded black regardless of
+  system theme, and no screen (old or new) sources text/icon colors from `MaterialTheme.colorScheme`
+  where doing so would conflict with that background. Pre-existing, not introduced by this run. DoD
+  criterion 30 was reworded (D-002) to describe this reality rather than an unmet ideal; full app-wide
+  theme-awareness is recorded as a separate follow-up goal, not silently dropped.
 
 See `.harness/run/STATE.md` for the full rationale behind each, and `.harness/run/HISTORY.md` /
-`.harness/run/AMENDMENTS.md` for what Iteration 1 built, wired, and fixed.
+`.harness/run/AMENDMENTS.md` for what each Iteration built, wired, and fixed.

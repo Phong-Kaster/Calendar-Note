@@ -5,12 +5,20 @@
 
 ## Current
 
-- **Stage:** blocked-on-decision
+- **Stage:** ready-for-verification
 - **Loop Branch:** loop/todo-calendar-screens
-- **Next Phase:** none — all seven tasks complete, no Phase 4 in `PLAN.md`. Blocked on D-002 before
-  Verification (§ENGINE 11) can run.
-- **DONE-candidate:** no (a queued decision, D-002, is unresolved — §ENGINE 6.11 requires ESCALATE, not a
-  DONE-candidate, whenever no executable task remains and a decision is queued)
+- **Next Phase:** none — all seven tasks complete, no Phase 4 in `PLAN.md`. D-002 is consumed (Iteration
+  4); nothing remains to unblock. The next invocation should proceed straight to Verification (§ENGINE 11).
+- **DONE-candidate:** yes (no queued decisions remain, nothing abandoned or deferred, all seven tasks
+  report complete and DoD criterion 30 now has amended, verifiable wording — see D-002 in `HISTORY.md`).
+  This flag was set by Iteration 4, which wrote no implementation; per §ENGINE 11 the next invocation
+  must still re-verify everything itself from fresh evidence before reporting `DONE`.
+
+Iteration 4 consumed D-002 (no Phase, no Worker dispatch): applied the human-decided amended wording for
+DoD criterion 30 to `DoD.md`, replaced the `ESCALATION.md` entry with a "consumed" pointer, and archived
+the full question/decision into `HISTORY.md`. No implementation file was touched. With the only queued
+decision now resolved and no task abandoned or deferred, this Iteration sets the DONE-candidate flag for
+the next, fresh invocation to verify per §ENGINE 11.
 
 ## Progress
 

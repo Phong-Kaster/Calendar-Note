@@ -6,6 +6,8 @@
 ## Status
 
 - [x] APPROVED — approved via D-001, 2026-09-08 19:02, as authored (no edits).
+- [x] AMENDED (Tier 3, human-owned) — criterion 30 reworded via D-002, 2026-09-08 19:55. Full request,
+  options, and decision rationale archived in `HISTORY.md` under "Archived Decisions".
 
 ## Acceptance Criteria
 
@@ -49,7 +51,7 @@
 27. Each new Fragment extends `CoreFragment` and lives under `ui/fragment/<feature>/`, matching the Home/Setting layout.
 28. Repository / mapper / DI conventions in `.claude/repository-layer.md` are followed (interface in `domain/repository/`, impl in `data/repository/impl/`, DI binding).
 29. New UI uses Material 3 with a blue colour scheme (`dynamicColor` forced off so the custom scheme actually takes effect on API 31+).
-30. Dark mode works for the new screens (inherited via the existing `CoreFragment` → `MyApplicationTheme(isSystemInDarkTheme())` mechanism; new screens read colors from `MaterialTheme.colorScheme`, never hardcoded).
+30. Dark mode works for the new screens: they render through the existing `CoreFragment` → `MyApplicationTheme(isSystemInDarkTheme())` mechanism with no new theme wrapper. New composables source colours from `MaterialTheme.colorScheme` wherever doing so does not conflict with `CoreLayout`'s app-wide hardcoded background; where it does conflict they follow the app's existing hardcoded-white-on-black pattern, for consistency with Home and Setting. Making the app theme-aware end-to-end (`CoreLayout` plus every pre-existing screen) is explicitly out of scope for this run. (Amended via D-002, 2026-09-08; original wording required `MaterialTheme.colorScheme` unconditionally — see `HISTORY.md`.)
 31. Home and Setting still build and remain reachable from the app (existing nav destinations/actions intact).
 
 ## Constraints
@@ -90,5 +92,5 @@
 | 27 | New fragments declare `: CoreFragment()`, live at `ui/fragment/todo/` and `ui/fragment/calendar/` |
 | 28 | `domain/repository/TaskRepository.kt` / `NoteRepository.kt`, `data/repository/impl/*Impl.kt`, bindings in `RepositoryModule.kt` / `ViewModelModule.kt` |
 | 29 | `ui/theme/Theme.kt` sets `dynamicColor = false`; `ui/theme/Color.kt` blue values used by both light/dark schemes |
-| 30 | New fragments render through `CoreFragment`; no new theme wrapper; colors sourced from `MaterialTheme.colorScheme` |
+| 30 | New fragments render through `CoreFragment`, no new theme wrapper; `TodoEditTaskDialog.kt`/`CalendarEditNoteDialog.kt`/`CalendarNoteList.kt` source colors from `MaterialTheme.colorScheme`; `TodoTaskItem.kt`/`CalendarMonthHeader.kt`/`CalendarDayCell.kt` use the pre-existing hardcoded-white-on-black pattern shared with Home/Setting, per amended wording (D-002) |
 | 31 | `homeFragment`, `settingFragment`, `settingLanguageFragment` and their actions still present in `navigation_graph.xml`; `gradlew.bat assembleDebug` passes |

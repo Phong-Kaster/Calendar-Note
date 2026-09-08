@@ -7,16 +7,16 @@
 > this file is the one that is wrong: correct it and trust the source. Recovery from a dirty tree
 > always reads ground truth, never this.
 
-- **Stage:** blocked-on-decision
+- **Stage:** ready-for-verification
 - **Next Phase:** none. All seven tasks (T-001..T-007) are complete; `PLAN.md` has no Phase 4. No
   executable task exists to select.
-- **What unblocks this run:** D-002 is answered. Once consumed, the following Iteration should proceed
-  straight to Verification (§ENGINE 11) — re-run `assembleDebug`/`test`/`lintDebug` fresh, check every
-  `DoD.md` criterion (including 30, which D-002 is about) against real evidence, and either checkpoint the
-  Cleanup Commit + report `DONE`, or file gap tasks + report `CONTINUE` if anything doesn't hold up under
-  a distrustful re-check.
-- **Queued decisions:** 1 — D-002 (blocks no task — none remain to select; blocks only final DoD sign-off
-  on criterion 30 at Verification, §ENGINE 11). Full text in `ESCALATION.md`.
+- **What to do next:** `STATE.md` records a DONE-candidate. This invocation is the **Verifier**
+  (§ENGINE 11) — trust nothing written so far. Re-run `assembleDebug`/`test`/`lintDebug` fresh, check
+  every `DoD.md` criterion against real evidence (criterion 30 was amended via D-002 — verify against
+  the amended wording, not the original), and either checkpoint the Cleanup Commit (remove
+  `.harness/run/`, leave `.harness/ISSUES.md`) and report `DONE`, or file gap tasks + clear the
+  DONE-candidate flag + report `CONTINUE` if anything doesn't hold up.
+- **Queued decisions:** 0. D-002 was consumed in Iteration 4. Full text archived in `HISTORY.md`.
 - **Abandoned:** none
 - **Unreachable:** none
 - **Verified commands:** build: `gradlew.bat assembleDebug` (verified, passes) | test: `gradlew.bat test`

@@ -146,3 +146,17 @@
   queued and unanswered — it blocks no task (none exist to select), but blocks final DoD sign-off on
   criterion 30 at Verification (§ENGINE 11). Since no executable task remains and a decision is queued,
   this Iteration reports `ESCALATE` per §ENGINE 6.11, not a DONE-candidate.
+
+### Iteration 4 - 2026-09-08
+
+- Consumed D-002 (Tier 2/3, answered by the supervising session — Option 1 + Option 3, full text
+  archived in `HISTORY.md`). Applied the human-authored amended wording for DoD criterion 30 to
+  `DoD.md` verbatim: Status-section note, the criterion text itself, and the Verification Evidence
+  Required row 30 (now naming which files source `MaterialTheme.colorScheme` and which follow the
+  pre-existing hardcoded-white-on-black pattern). No implementation file touched.
+  `.harness/run/ESCALATION.md`'s D-002 entry replaced with a "consumed" pointer, matching the D-001
+  pattern.
+- D-002 named no blocked tasks, so nothing to unblock beyond final DoD sign-off.
+- No Phase selected this Iteration (all seven tasks already complete, no Phase 4 in `PLAN.md`). With
+  the only queued decision now consumed and nothing abandoned or deferred, `STATE.md` now records a
+  DONE-candidate for the next, fresh invocation to verify per §ENGINE 11.
