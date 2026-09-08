@@ -33,4 +33,11 @@
     <string name="the_server_is_busy">Der Server ist derzeit ausgelastet. Bitte versuche es später erneut</string>
     <string name="we_are_sorry">Es tut uns leid, etwas ist schiefgelaufen. Bitte versuche es erneut.</string>
     <string name="request_timed_out">Zeitüberschreitung der Anfrage</string>
+
+    <!-- To-do / Calendar -->
+    <string name="todo">Aufgaben</string>
+    <string name="calendar">Kalender</string>
+    <string name="add">Hinzufügen</string>
+    <string name="previous_month">Vorheriger Monat</string>
+    <string name="next_month">Nächster Monat</string>
 </resources>

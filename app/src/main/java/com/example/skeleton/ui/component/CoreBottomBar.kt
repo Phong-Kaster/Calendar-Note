@@ -61,7 +61,7 @@ fun CoreBottomBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        listOf(BottomBarDestination.Home).forEach { item ->
+        listOf(BottomBarDestination.Home, BottomBarDestination.Todo).forEach { item ->
             BottomBarElement(
                 enable = currentDestination?.hierarchy?.any { it.id == item.destinationId } == true,
                 drawableId = item.drawableId,
@@ -94,7 +94,7 @@ fun CoreBottomBar() {
             )
         }
 
-        listOf(BottomBarDestination.Setting).forEach { item ->
+        listOf(BottomBarDestination.Calendar, BottomBarDestination.Setting).forEach { item ->
             BottomBarElement(
                 enable = currentDestination?.hierarchy?.any { it.id == item.destinationId } == true,
                 drawableId = item.drawableId,

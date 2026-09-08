@@ -5,26 +5,35 @@
 
 ## Current
 
-- **Stage:** escalated
+- **Stage:** in-progress
 - **Loop Branch:** loop/todo-calendar-screens
-- **Next Phase:** none selectable — all tasks blocked by D-001
+- **Next Phase:** Phase 2 (T-003, T-006)
 - **DONE-candidate:** no
 
 ## Progress
 
 | Task | Status | Declared File Scope | Evidence |
 |---|---|---|---|
-| T-001 | blocked | `ui/theme/Color.kt`, `ui/theme/Theme.kt` | - |
-| T-002 | blocked | `domain/model/Task.kt` + Task CRUD data/ui files (see PLAN.md) | - |
-| T-003 | blocked | Task toggle/delete extension (see PLAN.md) | - |
-| T-004 | blocked | Task edit-title extension (see PLAN.md) | - |
-| T-005 | blocked | `domain/model/CalendarMonth.kt` + Calendar shell (see PLAN.md) | - |
-| T-006 | blocked | Note CRUD (create/read/mark) + calendar wiring (see PLAN.md) | - |
-| T-007 | blocked | Note edit/delete (see PLAN.md) | - |
+| T-001 | complete | `ui/theme/Color.kt`, `ui/theme/Theme.kt` | build+test pass; see T-001.md Evidence |
+| T-002 | complete | `domain/model/Task.kt` + Task CRUD data/ui files (see PLAN.md) | build+test pass; see T-002.md Evidence |
+| T-003 | pending (depends on T-002, now met) | Task toggle/delete extension (see PLAN.md) | - |
+| T-004 | pending (depends on T-003) | Task edit-title extension (see PLAN.md) | - |
+| T-005 | complete | `domain/model/CalendarMonth.kt` + Calendar shell (see PLAN.md) | build+test pass; see T-005.md Evidence |
+| T-006 | pending (depends on T-005, now met) | Note CRUD (create/read/mark) + calendar wiring (see PLAN.md) | - |
+| T-007 | pending (depends on T-006) | Note edit/delete (see PLAN.md) | - |
 
-All seven tasks are blocked by D-001 (DoD approval + standing capability grant) — this is the bootstrap's
-single mandatory gate (ENGINE.md §5). No task can be selected into a Phase until it is answered, since none
-can be verified via §ENGINE 6.7 without the build/test capability it grants.
+Phase 1 (T-001, T-002, T-005) completed this iteration: three Workers dispatched at Capable tier,
+pairwise-disjoint Declared File Scopes verified against `git status` before trusting output, shared files
+(`AppDatabase.kt`, `Migration.kt`, `injection/*`, `navigation_graph.xml`, `CoreBottomBar.kt` +
+`BottomBarDestination.kt`, `strings.xml`/`values-de/strings.xml`, two new bottom-bar drawables) wired by
+the Iteration itself. `gradlew.bat assembleDebug` and `gradlew.bat test` both pass (6/6 new tests + 1
+pre-existing). `gradlew.bat lint` fails with 4 pre-existing `MissingTranslation` errors unrelated to this
+Phase (confirmed by line number — none touched this run); this Phase's own 2 new string keys have German
+translations and add no new lint errors. Fresh-Context Review ran and found 6 issues (1 critical, 3
+major, 2 minor); 5 were fixed before checkpoint (see each task's Evidence section and `AMENDMENTS.md`
+Iteration 1). The 1 critical finding (hardcoded colors on new screens vs. DoD 30, traced to `CoreLayout`'s
+pre-existing hardcoded black background) is queued as D-002 in `ESCALATION.md` — a Tier-2,
+architecture-touching question that blocks no task but must be resolved before final DONE verification.
 
 ## Assumptions
 

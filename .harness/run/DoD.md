@@ -5,7 +5,7 @@
 
 ## Status
 
-- [ ] APPROVED — approve via the pending `.harness/run/ESCALATION.md`; edit criteria freely before approving.
+- [x] APPROVED — approved via D-001, 2026-09-08 19:02, as authored (no edits).
 
 ## Acceptance Criteria
 

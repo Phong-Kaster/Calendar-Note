@@ -20,6 +20,16 @@
         android:name="com.example.skeleton.ui.fragment.setting.language.SettingLanguageFragment"
         android:label="Setting Language Fragment" />
 
+    <fragment
+        android:id="@+id/todoFragment"
+        android:name="com.example.skeleton.ui.fragment.todo.TodoFragment"
+        android:label="Todo Fragment" />
+
+    <fragment
+        android:id="@+id/calendarFragment"
+        android:name="com.example.skeleton.ui.fragment.calendar.CalendarFragment"
+        android:label="Calendar Fragment" />
+
     <!-- FOUR MAIN SCREEN-->
     <action
         android:id="@+id/toHome"
@@ -32,6 +42,22 @@
     <action
         android:id="@+id/toSetting"
         app:destination="@id/settingFragment"
+        app:enterAnim="@anim/enter_fade_in"
+        app:exitAnim="@anim/exit_fade_out"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/homeFragment" />
+
+    <action
+        android:id="@+id/toTodo"
+        app:destination="@id/todoFragment"
+        app:enterAnim="@anim/enter_fade_in"
+        app:exitAnim="@anim/exit_fade_out"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/homeFragment" />
+
+    <action
+        android:id="@+id/toCalendar"
+        app:destination="@id/calendarFragment"
         app:enterAnim="@anim/enter_fade_in"
         app:exitAnim="@anim/exit_fade_out"
         app:launchSingleTop="true"

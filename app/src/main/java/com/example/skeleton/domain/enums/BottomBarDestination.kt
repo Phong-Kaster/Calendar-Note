@@ -26,4 +26,18 @@ enum class BottomBarDestination (
         directions = R.id.toSetting,
         homeDestinationId = R.id.settingFragment,
     ),
+    Todo(
+        nameId = R.string.todo,
+        drawableId = R.drawable.ic_bottom_todo,
+        destinationId = R.id.todoFragment,
+        directions = R.id.toTodo,
+        homeDestinationId = R.id.todoFragment,
+    ),
+    Calendar(
+        nameId = R.string.calendar,
+        drawableId = R.drawable.ic_bottom_calendar,
+        destinationId = R.id.calendarFragment,
+        directions = R.id.toCalendar,
+        homeDestinationId = R.id.calendarFragment,
+    ),
 }

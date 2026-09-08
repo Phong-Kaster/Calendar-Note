@@ -6,6 +6,33 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 1 - 2026-09-08
+
+- **Phase:** 1 (T-001, T-002, T-005).
+- Consumed D-001 (approved) — see `AMENDMENTS.md` and Archived Decisions below.
+- Dispatched three Workers at Capable tier for T-001 (blue theme, `dynamicColor = false`), T-002 (To-do
+  add/list vertical slice: `Task`/`TaskEntity`/`TaskDao`/`TaskMapper`/`TaskRepository`/
+  `TaskRepositoryImpl`/`TodoFragment`+`TodoViewModel`+`TodoUiState`+components + tests), and T-005
+  (Calendar month shell: `CalendarMonth` domain model + `CalendarFragment`+`CalendarViewModel`+
+  `CalendarUiState` + components + test). Verified Declared File Scopes were pairwise-disjoint and matched
+  `git status` exactly before trusting any Worker output.
+- Wired shared files myself: `AppDatabase.kt`/`Migration.kt` (version → 3, `MIGRATION_2_3`), all three
+  Koin modules, `navigation_graph.xml`, `BottomBarDestination.kt`+`CoreBottomBar.kt`, two new drawables,
+  `strings.xml`/`values-de/strings.xml`. Details in `AMENDMENTS.md`.
+- Ran `gradlew.bat assembleDebug` (pass), `gradlew.bat test` (pass, 6/6 new tests + 1 pre-existing),
+  `gradlew.bat lint` (fails — 4 pre-existing `MissingTranslation` errors, confirmed unrelated to this
+  Phase by exact line number; not a DoD criterion).
+- Fresh-Context Review (clean context, Capable tier) found 6 issues; fixed 5 before checkpoint (see
+  `AMENDMENTS.md`); queued the 6th as D-002 (Tier 2 — hardcoded colors on new screens vs. DoD 30, traced
+  to `CoreLayout`'s pre-existing hardcoded background, real contrast-regression risk if "fixed" literally
+  without also touching Home/Setting, which are out of this run's scope).
+- Learned (recorded in `PROJECT.md`): `runBlocking`/`Flow.first()` resolve on the JVM test classpath with
+  zero new test dependencies — the conditional coroutines capability in `.harness/run/capabilities.json`
+  was not needed. `gradlew.bat lint` is not currently a green gate on this repo baseline (4 pre-existing
+  errors, unrelated to any task). `CoreLayout.kt`'s background is hardcoded black regardless of
+  `darkTheme`, and no screen (old or new) sources its own text/icon colors from `MaterialTheme.colorScheme`
+  — a pre-existing, app-wide pattern, not a regression introduced by this run.
+
 ### Iteration 0 (Bootstrap) - 2026-09-08
 
 - **Phase:** none - bootstrap does not select or dispatch Workers.
@@ -30,3 +57,29 @@
 ## Archived Decisions
 
 <!-- Full request + decision + rationale of every consumed Decision Queue entry. -->
+
+### D-001 - Approve the Definition of Done and standing capabilities (consumed Iteration 1)
+
+**Question:** Approve `DoD.md` (editable before approving) and two proposed capability grants: (1) a
+standing repo build/test/lint capability, (2) a goal-scoped, conditional `kotlinx-coroutines-core`
+test-dependency addition, to be used only if `gradlew.bat test` shows it does not already resolve
+transitively.
+
+**Decision — APPROVED, 2026-09-08 19:02**, by the supervising session on the human's standing instruction
+to answer escalations autonomously and log every decision:
+
+1. DoD approved as authored, no edits — all 30 criteria are evidence-verifiable; the critique role
+   hardened three PRD gaps before any code existed (forcing `dynamicColor = false`, requiring a real
+   `Migration.kt` entry for both new tables, giving `CoreFragment.kt` an explicit owner).
+2. Build/test/lint capability approved, lifetime corrected from the proposal's `"goal"` to `"permanent"`
+   and placed in `.harness/knowledge/capabilities.json` (the standing ledger) — this repository's
+   toolchain should survive future runs. Non-`.bat` command spellings added alongside the `.bat` ones.
+3. Coroutines test-dependency capability approved, narrowed to goal-scoped, placed in
+   `.harness/run/capabilities.json` — expires automatically with `.harness/run/`. Exclusion list kept
+   verbatim (no `kotlinx-coroutines-test`, Robolectric, Turbine, MockK, androidTest).
+
+Noted, not blocking: `Edit(app/build.gradle.kts)` necessarily grants edit of the whole file, broader than
+the "add one line" intent — a capability-model limitation, not a reason to refuse.
+
+**Consumed:** Iteration 1 unblocked all seven tasks with respect to this decision (see `AMENDMENTS.md`
+Iteration 1 entry) and selected Phase 1 (T-001, T-002, T-005).

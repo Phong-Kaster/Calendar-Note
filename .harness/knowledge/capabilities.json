@@ -1,0 +1,20 @@
+{
+  "description": "Standing Capability Ledger for this repository. Written by the human on approving a queued decision. Standing = per-repository toolchain that should survive future runs.",
+  "entries": [
+    {
+      "intent": "Run this repository's verified build, unit-test and lint commands so each Phase's build/test/lint step (ENGINE.md 6.7) and final DoD verification (11) can execute and be checkpointed",
+      "command": "gradlew.bat assembleDebug | test | lint",
+      "scope": "this repository only; no other process; no network beyond Gradle's own dependency resolution",
+      "lifetime": "permanent",
+      "allow": [
+        "Bash(./gradlew.bat assembleDebug*)",
+        "Bash(./gradlew.bat test*)",
+        "Bash(./gradlew.bat lint*)",
+        "Bash(./gradlew.bat testDebugUnitTest*)",
+        "Bash(./gradlew.bat lintDebug*)",
+        "Bash(./gradlew assembleDebug*)",
+        "Bash(./gradlew test*)"
+      ]
+    }
+  ]
+}

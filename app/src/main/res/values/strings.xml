@@ -36,4 +36,11 @@
     <string name="the_server_is_busy">The server is currently busy. Please try again later</string>
     <string name="we_are_sorry">We’re sorry, something went wrong. Please try again.</string>
     <string name="request_timed_out">Request timed out</string>
+
+    <!-- To-do / Calendar -->
+    <string name="todo">To-do</string>
+    <string name="calendar">Calendar</string>
+    <string name="add">Add</string>
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
 </resources>

@@ -7,9 +7,9 @@
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build | `gradlew.bat assembleDebug` | no — proposed in D-001, not yet run (no standing capability granted yet) |
-| Unit tests | `gradlew.bat test` (or `gradlew.bat testDebugUnitTest`) | no — same as above |
-| Lint | `gradlew.bat lint` (or `gradlew.bat lintDebug`) | no — same as above |
+| Build | `gradlew.bat assembleDebug` | yes — Iteration 1, BUILD SUCCESSFUL |
+| Unit tests | `gradlew.bat test` (or `gradlew.bat testDebugUnitTest`) | yes — Iteration 1, BUILD SUCCESSFUL |
+| Lint | `gradlew.bat lint` (or `gradlew.bat lintDebug`) | yes, but **not currently green**: fails with 4 pre-existing `MissingTranslation` errors in `values/strings.xml` (`home_refresh`, `home_no_posts`, `exact_alarm`, `allow_exact_alarm_for_prayer_time` missing from `values-de/strings.xml`), present before this run and unrelated to any task. Not a DoD criterion. Treat `lintDebug` failure as expected baseline noise unless the *error count increases* or a *new* string/file is implicated. |
 
 ## Architecture Conventions
 
@@ -47,10 +47,21 @@
 - Test source set (`app/build.gradle.kts`) declares only `testImplementation(libs.junit)` (JUnit 4.13.2).
   No `kotlinx-coroutines-test`, Room-testing artifact, Turbine, MockK, or Robolectric. `koin-test` is
   cataloged in `gradle/libs.versions.toml` but unused.
-- `kotlinx-coroutines-core` (providing `runBlocking`) is expected to already be reachable on the JVM test
-  classpath transitively via `room-ktx`/`lifecycle-runtime-ktx`, since AGP puts a module's `implementation`
-  dependencies on its unit-test compile classpath — but this has not yet been empirically verified by an
-  actual `gradlew.bat test` run (no standing build/test capability granted yet). See `ESCALATION.md` D-001.
+- **Verified (Iteration 1):** `kotlinx-coroutines-core` (`runBlocking`, `Flow.first()`) resolves on the
+  JVM test classpath with zero explicit `testImplementation` entry, transitively via `room-ktx`. The
+  conditional capability in `.harness/run/capabilities.json` (add an explicit dependency) was not needed
+  and was not used.
+- `MaterialTheme.colorScheme.onBackground`/`.onSurface` are **not** overridden anywhere in `Theme.kt` —
+  they fall back to Material3 baseline defaults, which are dark in the light scheme. Combined with
+  `core/CoreLayout.kt:38` unconditionally painting the screen background `Color.Black` regardless of
+  `darkTheme`, no screen can safely source body text/icon color from `MaterialTheme.colorScheme.onBackground`
+  today — it would be near-invisible in light mode. Every existing screen (Home, Setting) and the new
+  Todo/Calendar screens instead hardcode `Color.White`, which is why DoD-style "never hardcode colors"
+  requirements are only partially satisfiable without a `CoreLayout` background change — see D-002 in
+  `.harness/run/ESCALATION.md` for the live instance of this tension.
+- No dedicated bottom-bar icon existed for Todo/Calendar; `ic_bottom_todo.xml`/`ic_bottom_calendar.xml`
+  were added under `res/drawable/` matching `ic_bottom_home.xml`'s stroke-vector style (25dp viewport,
+  `strokeColor="#8C8C8C"`, actual render color comes from the `Icon(tint = ...)` call site, not the file).
 - No root `README.md` exists yet, though `.claude/android-skeleton-project.md` requires one with a package
   tree, to be added/updated whenever top-level packages change.
 - `CLAUDE.md`'s `@`-imports reference `.claude/view-model-layer.md`, `.claude/jetpack-compose-ui-layer.md`,
