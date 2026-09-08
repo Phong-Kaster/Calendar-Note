@@ -1,0 +1,25 @@
+---
+description: Kotlin, Compose, and API patterns when editing .kt files
+globs: "**/*.kt"
+alwaysApply: false
+---
+
+# Kotlin & Android Patterns
+
+## Compose & UI
+- Fragments extend **CoreFragment** and implement **ComposeView()**; use **CoreLayout** for topBar/bottomBar/content.
+- Use **collectAsState()** for ViewModel state in Composables. Keep UI state in **XxxUiState** data classes.
+- Use **stringResource(R.string.xxx)** for user-facing text.
+- UI only receives data as Room Database, Datastore,... from ViewModel which inject suitable repositories.
+
+## ViewModels & Data
+- ViewModels get repositories via Koin **by viewModel()**; repositories use **Flow** and **Resource** for async data.
+- Do not pass **Context** into domain or data layer. Use it only in UI or **ui/util** (e.g. UiErrorMapper, LocaleManager).
+- Never allow use directly classes from data layer ( for example: settingDatastore ) in ViewModel. In this case, prefer creating a Interface Repository.  Repository interfaces: `XxxRepository`. Implementations: `XxxRepositoryImpl` in `data/repository/impl/`
+
+## API & Errors
+- Repositories that call network use **safeApiCallFlow { api.xxx() }** and map DTOs to domain in the block.
+- In UI/ViewModel, handle **Resource.Error** and show message via **throwable?.toUiMessage(context)** when Context is available.
+
+## Dependency Injection
+- Register new APIs in **NetworkModule**, repositories in **RepositoryModule**, ViewModels in **ViewModelModule**. **AppModule** includes all submodules.

@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name" translatable="false">Android Compose Skeleton</string>
+    <string name="english">English</string>
+    <string name="vietnamese">Vietnamese</string>
+    <string name="german">German</string>
+    <string name="french">French</string>
+    <string name="hindi">Hindi</string>
+    <string name="japanese">Japanese</string>
+    <string name="korean">Korean</string>
+    <string name="home">Home</string>
+    <string name="home_refresh">Refresh</string>
+    <string name="home_no_posts">No posts yet. Pull to refresh or tap Refresh.</string>
+    <string name="setting">Setting</string>
+
+    <!-- Settings -->
+    <string name="languages">Languages</string>
+    <string name="rate_app">Rate app</string>
+    <string name="share_app">Share app</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service">Terms of Service</string>
+
+    <string name="do_you_like_the_app">Do you like the app?</string>
+    <string name="we_are_thrilled_to_hear_that_you_love_our_app">We are thrilled to hear that you love our app</string>
+    <string name="describe_your_feedback">Enter your feedback…</string>
+    <string name="submit">Submit</string>
+    <string name="thanks_for_your_feedback">Thanks for your feedback !</string>
+
+    <string name="notification">Notification</string>
+    <string name="location">Location</string>
+    <string name="allow_notification_to_send_you">Allow notification to send you important updates and alerts</string>
+    <string name="allow_location_to_help_you">Allow location access to provide you with relevant features and better experience</string>
+    <string name="exact_alarm">Alarms &amp; reminders</string>
+    <string name="allow_exact_alarm_for_prayer_time">Allow exact alarms so notifications can trigger on time</string>
+
+    <string name="please_check_your_internet_connection">Please check your internet connection</string>
+    <string name="the_server_is_busy">The server is currently busy. Please try again later</string>
+    <string name="we_are_sorry">We’re sorry, something went wrong. Please try again.</string>
+    <string name="request_timed_out">Request timed out</string>
+</resources>

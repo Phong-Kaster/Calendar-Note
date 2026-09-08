@@ -1,0 +1,42 @@
+# Gradle
+.gradle/
+build/
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Android build outputs
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# Logs
+*.log
+
+# Keystore files
+*.jks
+*.keystore
+
+# Firebase / Google services (if any)
+google-services.json
+
+# Kotlin / Java
+*.class
+
+# Temporary files
+*.swp
+*.tmp
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# gradle
+.gradle/

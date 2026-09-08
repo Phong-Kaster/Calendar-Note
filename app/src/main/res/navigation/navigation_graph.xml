@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/navigation_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.skeleton.ui.fragment.home.HomeFragment"
+        android:label="Home Fragment" />
+
+    <fragment
+        android:id="@+id/settingFragment"
+        android:name="com.example.skeleton.ui.fragment.setting.SettingFragment"
+        android:label="Setting Fragment" />
+
+    <fragment
+        android:id="@+id/settingLanguageFragment"
+        android:name="com.example.skeleton.ui.fragment.setting.language.SettingLanguageFragment"
+        android:label="Setting Language Fragment" />
+
+    <!-- FOUR MAIN SCREEN-->
+    <action
+        android:id="@+id/toHome"
+        app:destination="@id/homeFragment"
+        app:enterAnim="@anim/enter_fade_in"
+        app:exitAnim="@anim/exit_fade_out"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/navigation_graph" />
+
+    <action
+        android:id="@+id/toSetting"
+        app:destination="@id/settingFragment"
+        app:enterAnim="@anim/enter_fade_in"
+        app:exitAnim="@anim/exit_fade_out"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/homeFragment" />
+
+    <!--CONTENT FRAGMENTS-->
+    <action
+        android:id="@+id/toSettingLanguage"
+        app:destination="@id/settingLanguageFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right"
+        app:popUpToInclusive="true"/>
+
+</navigation>

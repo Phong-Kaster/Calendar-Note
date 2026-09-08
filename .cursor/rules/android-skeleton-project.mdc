@@ -1,0 +1,111 @@
+---
+description: Android skeleton project — tech stack, Clean Architecture, and conventions by Phong-Kaster
+alwaysApply: true
+---
+
+# Android Compose Skeleton — Project Rules
+
+## Purpose
+This is a **reusable skeleton app**. Code and structure should stay easy to copy into new projects. Prefer clear layers and config over one-off hacks.
+
+## Core rules / Spirit of Cursor
+- Always write code that can be easier expandable, respect Android official document recommendation
+- Always write code that can be easier recycled from a project to other projects
+- Prefer write code that easier to understand for human than write code that has high performance
+
+## Document
+- Always add document and write example for each class or functions even if it's just writing a short paragraph. Higher priority to complex functions and related logic
+- Always add @author Phong-Kaster at the end of document. For example
+/**
+* The purpose of this class is ....
+* @param A do something
+* @param B do something
+* @author Phong-Kaster
+*/
+- Write document or inline document like you are explaining for a kid like "I am just a kid & i need to understand your code"
+- Always add README.md to explain overall the purpose of the app & what features the app does
+- Always add a project package tree in README.md (see **README & package tree** below)
+
+## Naming & Style
+- Repository interfaces: `XxxRepository`. Implementations: `XxxRepositoryImpl` in `data/repository/impl/`.
+For example: if you need repository interface `SettingRepository` in `domain/repository` then implementation is `SettingRepositoryImpl` in `data/repository/impl`
+
+- API services: `XxxApi` in `data/remote/api/`. DTOs: `XxxDto` in `data/remote/dto/`.
+For example: if you need Post API then create PostApi in `remote/api/PostApi` and create related DTO classes in `data/remote/dto/post/….`
+
+- Keep new shared utilities/extensions in **common** (e.g. `common.extensions`); keep UI-only helpers in **ui/util**.
+For example: if need date and time extensions then create DateAndTimeExtension in `common/extensions`
+For example: if date and time needs complicated functions then create package as `common/extension/date_and_time` and separate 2 files include BasicDateAndTimeExtension and AdvancedDataAndTimeExtension
+
+- Do not hide lamda function. Always write full lamda functions. For example:
+val prevDone = prayerTimeStates.getOrElse(index = index - 1, defaultValue = { PrayerItemState.Rest }) == PrayerItemState.Done
+val thisDone = prayerTimeStates.getOrElse(index = index, defaultValue = { PrayerItemState.Rest }) == PrayerItemState.Done
+
+- When update uiState, do not use syntax updatePlayer { copy(currentIndex = playlistIndex, playingVerseKey = key) }
+- Do not use `MutableStateFlow.update { … }` or `_uiState.update { it.copy(…) }` for screen UI state in this project.
+- Always use syntax: `_uiState.value = _uiState.value.copy(...)`
+
+- When a project defines multiple rules, treat this "android-skeleton-project" rules as the highest priority and always enforce them.
+- If another rule conflicts with this file, follow **this** file and mention the conflict in your summary or PR description.
+
+- If the codebase does not use Activity or Fragment, allow skipping any rules related to Activity or Fragment.
+
+## Tech Stack
+- **Language:** Kotlin
+- **UI:** Jetpack Compose + Material3
+- **DI:** Koin or Hilt
+- **Navigation:** Navigation Component (Fragment-based, Compose inside fragments)
+- **Network:** Ktor client or Retrofit
+- **Local:** Room, DataStore
+- **Config:** `core.config.AppConfig` (API base URL, timeouts); `common.Constant` (app URLs, datastore name)
+- Leverage utilize use-case to carry out a complex action that needs time to compute then base on the result to decide. Naming use-case must represent purpose, for example: CreateOngoingUseCase, CreateDailyNotificationUseCase
+
+## Clean Architecture — Package Layout
+- **domain/** — `model/`, `repository/` (interfaces only). No Android or data dependencies.
+- **data/** — `remote/api/` (ApiPath, *Api classes), `remote/dto/`, `remote/util/` (e.g. safeApiCallFlow), `mapper/`, `repository/impl/`.
+- **core/** — `config/` (AppConfig), base classes (CoreActivity, CoreFragment, CoreLayout).
+- **common/** — Shared types and constants: Resource, Constant, Language, extensions (e.g. validation).
+- **ui/** — Fragments, ViewModels, components, theme, util (e.g. UiErrorMapper).
+- **injection/** — Koin modules (appModule includes database, datastore, repository, viewModel, network, locale).
+
+## API & Data Conventions
+- Put endpoint paths in **data/remote/api/ApiPath.kt** (use `AppConfig` for base URLs).
+- New API: add *Api in `data/remote/api/`, DTO in `data/remote/dto/`, mapper in `data/mapper/`, repository interface in `domain/repository/`, impl in `data/repository/impl/`, bind in NetworkModule + RepositoryModule.
+- Wrap API calls in **safeApiCallFlow**; expose **Resource&lt;T&gt;** (Loading/Success/Error). Map errors in UI with **Throwable.toUiMessage(context)** (UiErrorMapper).
+
+## README & package tree
+- **README.md** must describe app purpose, features, tech stack, and include a **package tree** for `app/src/main/java/com/example/skeleton/` (or the current app package).
+- **When to update README** in the same change (do not defer):
+  - You add, remove, or rename a **top-level package** or **meaningful subpackage** under the app source root.
+  - You change **architecture** or **layer responsibilities** described in README.
+  - You edit **this rule file** (`android-skeleton-project.mdc`) in a way that changes what README is supposed to contain—**sync README** in that same task.
+- For each major folder in the tree, add a **short note** (purpose of that package), not only file names.
+
+### Tree drawing order (important)
+- Under any folder, list **subfolders first** (deepest paths expanded), **then** `.kt` (or sibling files) at that folder level.
+- So for `ui/fragment/home/`, show `component/` (and its files) **before** `HomeFragment.kt`, `HomeUiState.kt`, `HomeViewModel.kt` at the `home/` level.
+
+**Correct pattern (conceptual):**
+```
+ui/fragment/home/
+├── component/
+│   ├── HomePermissionBottomSheet.kt
+│   └── HomeRequestPermission.kt
+├── HomeFragment.kt
+├── HomeUiState.kt
+└── HomeViewModel.kt
+```
+
+**Avoid:** listing `HomeFragment.kt` before `component/` when `component/` is a child of `home/`.
+
+## TLS / networking (when users report certificate errors)
+- This app may use **BuildConfig**-based **debug vs release** base URLs and **network_security_config.xml** (e.g. cleartext limited to specific hosts in debug). Do not suggest disabling TLS verification globally for production.
+- For `CertPathValidatorException`, consider build type, `network_security_config`, and environment (proxy, VPN, corporate inspection) before changing code.
+
+## Agent checklist (before finishing a structural task)
+- [ ] If packages or layers changed: **README package tree** and package-purpose notes are updated.
+- [ ] If this `.mdc` file changed: **README** still matches new documentation rules.
+- [ ] New remote feature: **ApiPath**, DTO, mapper, repository + **NetworkModule** / **RepositoryModule** (and **ViewModelModule** if needed).
+- [ ] ViewModels: screen state uses `_uiState.value = _uiState.value.copy(...)` only.
+
+## @author Phong-Kaster

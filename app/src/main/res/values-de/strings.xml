@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Android Compose Skeleton</string>
+    <string name="english">Englisch</string>
+    <string name="vietnamese">Vietnamesisch</string>
+    <string name="german">Deutsch</string>
+    <string name="french">Französisch</string>
+    <string name="hindi">Hindi</string>
+    <string name="japanese">Japanisch</string>
+    <string name="korean">Koreanisch</string>
+    <string name="home">Startseite</string>
+    <string name="setting">Einstellungen</string>
+
+    <!-- Settings -->
+    <string name="languages">Sprachen</string>
+    <string name="rate_app">App bewerten</string>
+    <string name="share_app">App teilen</string>
+    <string name="privacy_policy">Datenschutzerklärung</string>
+    <string name="terms_of_service">Nutzungsbedingungen</string>
+
+    <string name="do_you_like_the_app">Gefällt dir die App?</string>
+    <string name="we_are_thrilled_to_hear_that_you_love_our_app">Wir freuen uns sehr zu hören, dass dir unsere App gefällt</string>
+    <string name="describe_your_feedback">Gib dein Feedback ein…</string>
+    <string name="submit">Senden</string>
+    <string name="thanks_for_your_feedback">Vielen Dank für dein Feedback!</string>
+
+    <string name="notification">Benachrichtigung</string>
+    <string name="location">Standort</string>
+    <string name="allow_notification_to_send_you">Erlaube Benachrichtigungen, um dir wichtige Updates und Hinweise zu senden</string>
+    <string name="allow_location_to_help_you">Erlaube den Standortzugriff, um dir relevante Funktionen und eine bessere Erfahrung zu bieten</string>
+
+    <string name="please_check_your_internet_connection">Bitte überprüfe deine Internetverbindung</string>
+    <string name="the_server_is_busy">Der Server ist derzeit ausgelastet. Bitte versuche es später erneut</string>
+    <string name="we_are_sorry">Es tut uns leid, etwas ist schiefgelaufen. Bitte versuche es erneut.</string>
+    <string name="request_timed_out">Zeitüberschreitung der Anfrage</string>
+</resources>
