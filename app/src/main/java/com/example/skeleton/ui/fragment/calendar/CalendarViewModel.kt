@@ -27,7 +27,11 @@ class CalendarViewModel(
 
     private val TAG = "CalendarViewModel"
 
-    private val _uiState = MutableStateFlow(CalendarUiState())
+    // Today starts selected, so the screen opens on a usable state instead of one where the
+    // add-note row is disabled with nothing on screen saying why.
+    private val _uiState = MutableStateFlow(
+        CalendarUiState().let { initial -> initial.copy(selectedDate = initial.today) }
+    )
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -80,8 +84,24 @@ class CalendarViewModel(
         }
     }
 
-    /** Deletes the note identified by [id]. */
-    fun deleteNote(id: Long) {
+    /** Asks for confirmation before deleting the note identified by [id]. */
+    fun requestDeleteNote(id: Long) {
+        _uiState.value = _uiState.value.copy(pendingDeleteNoteId = id)
+    }
+
+    /** Dismisses the delete confirmation without deleting anything. */
+    fun cancelDeleteNote() {
+        _uiState.value = _uiState.value.copy(pendingDeleteNoteId = null)
+    }
+
+    /**
+     * Deletes the note awaiting confirmation and closes the dialog; no-op when nothing is
+     * pending. The pending id is cleared first so a second confirm tap cannot re-issue the
+     * delete against an id that is already gone.
+     */
+    fun confirmDeleteNote() {
+        val id = _uiState.value.pendingDeleteNoteId ?: return
+        _uiState.value = _uiState.value.copy(pendingDeleteNoteId = null)
         viewModelScope.launch(Dispatchers.IO) {
             noteRepository.delete(id)
         }
