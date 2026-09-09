@@ -1,57 +1,57 @@
 package com.example.skeleton.ui.theme
 
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
+/**
+ * The one colour scheme this app has.
+ *
+ * Every role is filled in, not just primary/secondary/tertiary. Leaving the rest at Material's
+ * baseline is what previously made surfaces read as faintly purple in a blue-branded app, and it
+ * meant any component reaching for `surfaceVariant` or `onSurfaceVariant` got a colour nobody
+ * had chosen.
+ */
 private val DarkColorScheme = darkColorScheme(
     primary = BlueDarkPrimary,
+    onPrimary = BlueDarkOnPrimary,
+    primaryContainer = BlueDarkPrimaryContainer,
+    onPrimaryContainer = BlueDarkOnPrimaryContainer,
     secondary = BlueDarkSecondary,
-    tertiary = BlueDarkTertiary
+    onSecondary = BlueDarkOnSecondary,
+    tertiary = BlueDarkTertiary,
+    onTertiary = BlueDarkOnTertiary,
+    background = BlueDarkBackground,
+    onBackground = BlueDarkOnBackground,
+    surface = BlueDarkSurface,
+    onSurface = BlueDarkOnSurface,
+    surfaceVariant = BlueDarkSurfaceVariant,
+    onSurfaceVariant = BlueDarkOnSurfaceVariant,
+    outline = BlueDarkOutline,
+    error = BlueDarkError,
+    onError = BlueDarkOnError,
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = BlueLightPrimary,
-    secondary = BlueLightSecondary,
-    tertiary = BlueLightTertiary
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
-
+/**
+ * Applies the app's colour scheme and typography.
+ *
+ * **This app is dark-only, deliberately.** `CoreLayout` paints a black ground under every screen,
+ * so a light scheme could never actually take effect — it only produced screens where some text
+ * used `onSurface` (near-black, invisible on black) while other text hardcoded white. Rather than
+ * leave a light scheme that renders unusable, there is one scheme and every colour is chosen
+ * against black.
+ *
+ * Dynamic colour is intentionally absent too: the blue is brand, not wallpaper.
+ *
+ * If light mode is ever wanted, the change is not in this file alone — `CoreLayout`'s hardcoded
+ * black ground and `customizedTextStyle`'s white default both have to become theme-driven first.
+ */
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+, but this app uses a fixed blue brand
-    // scheme by default so the theme doesn't get overridden by device wallpaper colors.
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = DarkColorScheme,
         typography = Typography,
         content = content
     )
