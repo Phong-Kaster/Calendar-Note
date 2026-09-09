@@ -51,8 +51,24 @@ class TodoViewModel(
         }
     }
 
-    /** Removes a task by its id. */
-    fun deleteTask(id: Long) {
+    /** Asks for confirmation before removing the task identified by [id]. */
+    fun requestDeleteTask(id: Long) {
+        _uiState.value = _uiState.value.copy(pendingDeleteTaskId = id)
+    }
+
+    /** Dismisses the delete confirmation without removing anything. */
+    fun cancelDeleteTask() {
+        _uiState.value = _uiState.value.copy(pendingDeleteTaskId = null)
+    }
+
+    /**
+     * Removes the task awaiting confirmation and closes the dialog; no-op when nothing is
+     * pending. The pending id is cleared first so a second confirm tap cannot re-issue the
+     * delete against an id that is already gone.
+     */
+    fun confirmDeleteTask() {
+        val id = _uiState.value.pendingDeleteTaskId ?: return
+        _uiState.value = _uiState.value.copy(pendingDeleteTaskId = null)
         viewModelScope.launch(Dispatchers.IO) {
             taskRepository.deleteTask(id)
         }

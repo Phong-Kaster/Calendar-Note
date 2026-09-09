@@ -53,6 +53,7 @@ fun TodoAddTaskRow(
         OutlinedTextField(
             value = text,
             onValueChange = { newValue -> text = newValue },
+            label = { Text(text = stringResource(R.string.task_title)) },
             modifier = Modifier.weight(1f),
             singleLine = true,
             keyboardOptions = KeyboardOptions(

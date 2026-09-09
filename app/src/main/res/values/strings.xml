@@ -50,4 +50,26 @@
     <string name="cancel">Cancel</string>
     <string name="edit_note">Edit note</string>
     <string name="delete_note">Delete note</string>
+    <string name="task_title">Task title</string>
+
+    <!-- Empty states -->
+    <string name="todo_empty_title">Nothing to do yet</string>
+    <string name="todo_empty_body">Add your first task using the field above.</string>
+    <string name="calendar_no_notes_for_date">No notes on this day yet.</string>
+
+    <!-- Delete confirmation -->
+    <string name="delete">Delete</string>
+    <string name="delete_task_confirm_title">Delete this task?</string>
+    <string name="delete_note_confirm_title">Delete this note?</string>
+    <string name="delete_confirm_body">This can\'t be undone.</string>
+
+    <!-- Weekday labels for the calendar grid header. The grid is Sunday-first
+         (CalendarMonth.buildGrid), so the header renders Sun..Sat in that order. -->
+    <string name="weekday_short_mon">Mon</string>
+    <string name="weekday_short_tue">Tue</string>
+    <string name="weekday_short_wed">Wed</string>
+    <string name="weekday_short_thu">Thu</string>
+    <string name="weekday_short_fri">Fri</string>
+    <string name="weekday_short_sat">Sat</string>
+    <string name="weekday_short_sun">Sun</string>
 </resources>
