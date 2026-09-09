@@ -38,5 +38,10 @@ google-services.json
 # Claude Code local settings
 .claude/settings.local.json
 
+# Installed skills are tracked under .agents/skills/ (the real files). The installer also drops
+# .claude/skills/<name> as a symlink to them, and that symlink stores an absolute machine-local
+# path — committing it would break the repo on every other machine.
+.claude/skills/
+
 # gradle
 .gradle/
