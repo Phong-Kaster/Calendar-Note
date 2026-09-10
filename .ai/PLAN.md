@@ -67,6 +67,12 @@ The layers, in increasing cost:
 `updateDebugScreenshotTest` overwrites references. It is never the fix for a failing validation —
 that silently re-baselines the regression the test existed to catch.
 
+**Adding a string is a two-file operation (amendment A-003).** Lint here treats
+`MissingTranslation` as an *error*, and this repository ships a `values-de/` locale — so a string
+appended to `res/values/strings.xml` alone turns criterion 13 red. Every task that adds user-visible
+copy appends the German equivalent to `res/values-de/strings.xml` in the same checkpoint. This was
+found by lint failing on the untouched baseline, not inferred.
+
 **Pure logic goes somewhere testable.** The date-state mapping and the ordering rule are put in
 plain Kotlin (domain model + repository), never inside a `@Composable`. A rule inside a composable
 can only be checked by rendering it, which is precisely the capability this repository does not have.
@@ -86,12 +92,12 @@ can only be checked by rendering it, which is precisely the capability this repo
 
 ## Known Risks
 
-- **No toolchain has ever run here.** Every command in `knowledge/PROJECT.md` is unverified —
-  `./gradlew --version` was refused at bootstrap, and the capability was granted only *after* this
-  iteration's permissions were compiled. The first iteration that can actually run Gradle must treat
-  "does this project build at all?" as its first finding, before treating any code as correct. If it
-  does not build out of the box, that is a discovery to reconcile, not a defect introduced by this
-  run.
+- ~~**No toolchain has ever run here.**~~ **Resolved in iteration 2.** The skeleton builds, its unit
+  test stub passes, and lint runs — see `knowledge/PROJECT.md` § Toolchain, now `Verified: yes`.
+  The risk paid off exactly as written: running the baseline *before* editing anything is what
+  revealed that **lint was already failing on the untouched tree** (four `MissingTranslation`
+  errors). Had T-001's changes gone in first, a pre-existing red would have looked like this run's
+  regression. Keep doing that: measure before you touch.
 - **Look in the repository's own history before concluding it cannot do something.** This risk is
   written from a mistake already made: the bootstrap iteration declared the perceptual criteria
   unprovable while a verified screenshot harness sat on a sibling `loop/*` branch, reachable with

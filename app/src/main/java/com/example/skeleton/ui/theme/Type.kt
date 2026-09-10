@@ -49,11 +49,21 @@ val InterFontFamily = FontFamily(
     Font(R.font.inter_thin, FontWeight.Thin),
 )
 
+/**
+ * The house text style. Use it for every `Text`; never `MaterialTheme.typography`.
+ *
+ * @param fontSize in sp. @param fontWeight 400 body, 500 emphasis, 600 titles, 700 section heads.
+ * @param lineHeight in sp; defaults to 1.5x the font size.
+ * @param color defaults to [ColorTextPrimaryDark] — the same token the theme uses for
+ *   `onBackground`/`onSurface`, so an uncoloured `Text` is painted from the palette rather than
+ *   from a `Color.White` literal. Same signature, same rendered value as before.
+ * @author Phong-Kaster
+ */
 fun customizedTextStyle(
     fontSize: Int = 14,
     fontWeight: Int = 400,
     lineHeight: Int = (fontSize * 1.5f).toInt(),
-    color: Color = Color.White,
+    color: Color = ColorTextPrimaryDark,
     textDecoration: TextDecoration? = null,
     fontFamily: FontFamily = InterFontFamily,
 ): TextStyle = TextStyle(

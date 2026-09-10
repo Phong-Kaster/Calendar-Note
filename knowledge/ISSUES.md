@@ -35,21 +35,89 @@
   bootstrap and their conventions are summarised in `knowledge/PROJECT.md`. Also do not "fix" this by
   creating the missing files — that invents human intent.
 
-### No toolchain command has ever been executed in this repository
+### `.claude/figma-design-system.md` tells you to hardcode colours, and names four tokens that do not exist
 
-- **What is wrong:** every build/test/lint command in `knowledge/PROJECT.md` is marked
-  `Verified: no`. At bootstrap `./gradlew --version` was refused by the permission layer, so the
-  project has never been proven to compile under this engine, and the recorded task names are
-  inferred from the AGP defaults rather than observed.
-- **Where:** `knowledge/PROJECT.md` § Toolchain
-- **Why it is still open:** the capability is now **granted** (escalation D-001 →
-  `knowledge/capabilities.json`), but it was granted after iteration 1's permissions had already been
-  compiled, so nothing has run yet. The Runtime recompiles permissions each iteration, so the next
-  invocation is the first that can.
-- **What would resolve it:** the next iteration runs the build and replaces the `no` entries in
-  `knowledge/PROJECT.md` with real observed output, then deletes this entry. **Treat "does this
-  project build at all?" as that iteration's first finding** — a skeleton that has never been
-  compiled by anyone in this run is an assumption, not a fact.
-- **Full record:** `git show 9b25307:.ai/ESCALATION.md` — the capability proposals (C1, C2, C3).
-- **Do not:** mark any task complete on the strength of "the code looks right". ENGINE.md §10
-  requires build/test/lint evidence, and until this entry is gone there is none.
+- **What is wrong:** two separate defects in one human-owned rule file.
+  1. **It contradicts the DoD.** § 4(b) *"Inline `Color(0xFF...)` for one-off literals"* and the DO
+     bullet *"Inline `Color(0xFF...)` … when they're literals from a node"* directly oppose DoD
+     criterion 2 and `POLICIES.md` § User-Interface Defects, which forbid hardcoded colour.
+  2. **Its token table references symbols that are not in the codebase.** § 4(a) documents
+     `ColorTextPrimary`, `ColorTextSecond`, `ColorBorderSubtle` and `ColorIconMuted`.
+     **None of the four is declared in `ui/theme/Color.kt`.** Code written to that table's letter
+     does not compile.
+- **Where:** `.claude/figma-design-system.md` § 4 "Colors: two systems, used on purpose", and its
+  Quick DO/DON'T list.
+- **Why it is still open:** `CLAUDE.md` and `.claude/*.md` are human-owned rule sources. ENGINE.md
+  §5 says they are inspected, never edited.
+- **How to behave until it is fixed:** follow the DoD, not the rule file — source-of-truth order
+  (ENGINE.md §3) puts `POLICIES.md` and the approved DoD above repository rule files. Read colours
+  from `MaterialTheme.colorScheme.*`; where a semantic name is genuinely wanted, add it to
+  `ui/theme/Color.kt` rather than assuming one of the four above exists.
+- **What would resolve it:** the human either relaxes DoD criterion 2 or edits the rule file — and
+  decides whether the four semantic names should be added to `Color.kt` or dropped from the table.
+- **Full record:** the fresh-context review of T-001; find the checkpoint with
+  `git log --oneline --all --grep='loop(T-001)'`.
+- **Do not:** create the four missing tokens to make the rule file true. That invents human intent,
+  and the skeleton's own `Color.kt` already covers these roles under different names.
+
+### Three pre-existing string keys are named for features rather than for their own words
+
+- **What is wrong:** `CLAUDE.md` § "String content" requires a string be named for the words it
+  contains, not prefixed with its feature. Three keys break it, and one is actively misleading:
+  - `home_refresh` ("Refresh") and `home_no_posts` — feature-prefixed.
+  - **`allow_exact_alarm_for_prayer_time`** — names a *prayer-time* feature. This app has no such
+    feature; the key is a leftover from whatever project the skeleton was cut from.
+- **Where:** `app/src/main/res/values/strings.xml` and the matching `values-de/strings.xml` entries.
+- **Why it is still open:** renaming a string key touches every Kotlin call site, which is unrelated
+  to any task in this run. T-001 had to *add* the German translations under the existing wrong keys
+  (a translation must match its key), so this run has made the names slightly more entrenched
+  without being able to fix them.
+- **What would resolve it:** rename to `refresh`, `no_posts` (if still needed) and
+  `allow_exact_alarm`, updating `values/`, `values-de/` and the call sites together.
+  **Two of the three may resolve themselves:** `home_refresh` and `home_no_posts` belong to the demo
+  `Post` feature that T-002 removes from Home. If T-002 deletes them, delete them here too and leave
+  only the prayer-time key.
+- **Full record:** the fresh-context review of T-001; find the checkpoint with
+  `git log --oneline --all --grep='loop(T-001)'`.
+- **Do not:** copy the `<feature>_<word>` shape when adding new strings in T-002 onward. New copy
+  follows the rule: `<string name="delete">`, not `<string name="note_delete">`.
+
+### 14 pre-existing UI files hardcode colour literals instead of reading the theme
+
+- **What is wrong:** 65 occurrences of `Color.Black`, `Color.White` or `Color(0xFF…)` across 14
+  files under `app/src/main/java/com/example/skeleton/`. `POLICIES.md` § User-Interface Defects
+  rates hardcoded colour a **Critical** defect: it is right only by coincidence with whatever
+  background happens to sit underneath, and it breaks silently — with the build still green — as
+  soon as that background changes.
+- **Where** (as of the T-001 checkpoint, which cleared five of these files):
+  `ui/component/ratebottomsheet/RateBottomSheet.kt` (14),
+  `ui/fragment/home/component/HomePermissionBottomSheet.kt` (9),
+  `ui/fragment/setting/language/component/LanguageItem.kt` (5), `ui/component/CoreTopBar4.kt` (5),
+  `ui/fragment/setting/component/SettingItem.kt` (4), `ui/component/CoreTopBar.kt` (3),
+  `ui/fragment/setting/language/SettingLanguageFragment.kt` (2),
+  `ui/fragment/setting/SettingFragment.kt` (1).
+  Re-derive the live list with:
+  `grep -rE 'Color\.Black|Color\.White|Color\(0x' app/src/main/java/com/example/skeleton`
+- **Already fixed, do not re-file:** `ui/theme/Theme.kt`, `ui/theme/Color.kt` (the declarations
+  themselves — that is the point of the file), `core/CoreLayout.kt`,
+  `ui/component/CoreBottomBar.kt`, `ui/component/CoreBottomSheet.kt` (its `containerColor` default
+  was `Color.White` in a dark-only app), and `ui/theme/Type.kt` (`customizedTextStyle`'s default is
+  now `ColorTextPrimaryDark`, so an uncoloured `Text` is painted from the palette). The surviving
+  `Color.Transparent` and `Color.Unspecified` uses are not colour choices and are fine.
+- **Why it is still open:** all of it predates this run. T-001's scope was the theme itself plus the
+  two components it explicitly named (`CoreLayout`, `CoreBottomBar`), and DoD criterion 2 binds only
+  code **this run introduces** — so rewriting eleven unrelated pre-existing screens would be
+  modifying unrelated files (ENGINE.md §14), not completing the task.
+- **What would resolve it:** repoint each literal at `MaterialTheme.colorScheme.*`, one file per
+  change, verifying appearance against a screenshot reference after T-010 lands the harness. Delete
+  this entry when the only survivors are the three deliberate ones noted above
+  (`Color.Transparent`, `Color.Unspecified`, and `customizedTextStyle`'s default).
+- **Full record:** the checkpoint that established the theme convention — find it with
+  `git log --oneline --all --grep='loop(T-001)'`, then read `.ai/TASKS/T-001.md` at that commit
+  (`MSYS_NO_PATHCONV=1 git show <sha>:.ai/TASKS/T-001.md`). Cited this way on purpose: the Cleanup
+  Commit deletes `.ai/`, so a bare path stops resolving at the branch tip.
+- **Do not:** copy the pattern into new files, and do not read
+  `.claude/figma-design-system.md` § "Colors: two systems, used on purpose" as permission to. That
+  rule file does allow inline literals, but DoD criterion 2 and `POLICIES.md` outrank it for code
+  this run writes. Nor should you bulk-rewrite these files opportunistically inside an unrelated
+  task — each one changes what a user sees and needs its own verification.

@@ -72,3 +72,39 @@
 - **Standing lesson, recorded in `knowledge/PROJECT.md`:** before deriving that this repository
   cannot do something, check the sibling `loop/*` branches. `git branch --list 'loop/*'` was
   available under baseline capabilities the whole time.
+
+---
+
+## A-003 — Every task that adds a user-visible string must also add its German translation
+
+- **Timestamp:** 2026-09-10 (iteration 2)
+- **Tier:** 1 — adds a prerequisite step to existing tasks. No change to the PRD, the DoD, the
+  architecture, or the task graph.
+- **Reason:** discovered by running lint for the first time. `./gradlew :app:lintDebug` **failed on
+  the untouched baseline** with four `MissingTranslation` errors — this repository ships a
+  `values-de/` locale and AGP lint treats a missing translation as an *error*, not a warning. The
+  bootstrap iteration could not have known: it was never able to run a single Gradle command.
+  The consequence is bigger than the four strings. **DoD criterion 13 (lint is green) and criterion
+  14 (new user-visible strings live in `res/values/strings.xml`) were on a collision course:** this
+  run adds roughly fifteen new strings across T-002 to T-009, and each one, added to `values/` alone,
+  produces a fresh lint error and turns criterion 13 red.
+- **Decision:** treat `res/values-de/strings.xml` as part of the definition of "added a string".
+  Every task that appends to `values/strings.xml` appends the German equivalent in the same
+  checkpoint. The four baseline gaps were filled in T-001 so the run starts from green.
+  Rejected alternatives, and why:
+  - *`lint { disable += "MissingTranslation" }` or `tools:ignore`* — switches off a check the
+    repository deliberately has at error severity, to make a self-inflicted problem disappear. It
+    would also silently green-light criterion 13 over a real defect, which is the exact failure mode
+    `POLICIES.md` § Evidence Requirements forbids.
+  - *Mark the new strings `translatable="false"`* — false: they are ordinary UI copy.
+  - *Delete `values-de/`* — plausibly what the human wants (see below), but deleting a shipped locale
+    is not the engine's call.
+- **Affected tasks:** T-002 through T-009 — every task whose acceptance includes a new string.
+  `.ai/PLAN.md` § Verification approach records the standing rule.
+- **Expected impact:** a few minutes per task, and criterion 13 stays satisfiable for the whole run.
+- **⚠️ Recorded as an assumption the human may overrule cheaply, in `STATE.md` § Assumptions.** The
+  engine is now authoring German product copy, which is content the human never asked for. The
+  honest alternative is "German is a stale demo locale — drop it", and that is a one-line answer
+  that deletes this amendment. It was **not** escalated because it blocks nothing: the conservative
+  route (keep an enabled check green) is available, reversible, and its worst failure is a clumsy
+  German phrase, not a wrong app.

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -38,6 +39,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.skeleton.core.LocalNavController
 import com.example.skeleton.domain.enums.BottomBarDestination
+import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.theme.customizedTextStyle
 import com.example.skeleton.ui.util.NavigationUtil
 
@@ -82,7 +84,7 @@ fun CoreBottomBar() {
                 .padding(horizontal = 12.dp)
                 .size(48.dp)
                 .clip(shape = CircleShape)
-                .background(color = Color(0xFF35A0F5))
+                .background(color = MaterialTheme.colorScheme.primary)
 
                 .clickable { showBottomSheet = !showBottomSheet },
         ) {
@@ -90,7 +92,7 @@ fun CoreBottomBar() {
                 imageVector = Icons.Rounded.Add,
                 contentDescription = null,
                 modifier = Modifier.size(30.dp),
-                tint = Color.White
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
 
@@ -134,7 +136,7 @@ private fun BottomBarElement(
             painter = painterResource(drawableId),
             contentDescription = stringResource(id = stringId),
             modifier = Modifier.size(24.dp),
-            tint = Color.White,
+            tint = MaterialTheme.colorScheme.onBackground,
         )
 
         if (enable) {
@@ -144,7 +146,7 @@ private fun BottomBarElement(
                     fontSize = 14,
                     fontWeight = 600,
                 ),
-                color =  Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -155,6 +157,15 @@ private fun BottomBarElement(
 
 @Preview
 @Composable
-fun PreviewBottomBar() {
-    CoreBottomBar()
+private fun PreviewBottomBar() {
+    // The bar is transparent and reads its colours from the theme, so it has to be previewed
+    // inside the real theme on the real ground colour. A preview on Studio's default white
+    // background proves nothing about what a user actually sees.
+    MyApplicationTheme(
+        content = {
+            Box(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
+                CoreBottomBar()
+            }
+        }
+    )
 }

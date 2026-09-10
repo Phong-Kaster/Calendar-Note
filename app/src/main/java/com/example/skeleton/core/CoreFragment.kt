@@ -55,9 +55,11 @@ open class CoreFragment : Fragment() {
 //                    LocalTheme provides if (enableDarkMode) DarkCustomizedTheme else LightCustomizedTheme,
                     *compositionLocalProvider().toTypedArray()
                 ) {
-                    MyApplicationTheme() {
-                        ComposeView()
-                    }
+                    MyApplicationTheme(
+                        content = {
+                            ComposeView()
+                        }
+                    )
                 }
             }
         }

@@ -9,22 +9,46 @@
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build (debug APK) | `./gradlew :app:assembleDebug` | **no** — granted, not yet run |
-| Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **no** — granted, not yet run |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **no** — granted, not yet run |
-| Lint | `./gradlew :app:lintDebug` | **no** — granted, not yet run |
-| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **no** — granted, not yet run *here* (verified on `loop/todo-calendar-screens`) |
-| Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **no** — granted, not yet run *here* (verified on `loop/todo-calendar-screens`) |
+| Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
+| Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL in 3s` (only the `ExampleUnitTest` stub exists) |
+| Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
+| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **no** — granted, harness not yet imported here (verified on `loop/todo-calendar-screens`) |
+| Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **no** — granted, harness not yet imported here (verified on `loop/todo-calendar-screens`) |
 
-**None of the above has been executed on this branch.** At bootstrap `./gradlew --version` was
-refused by the permission layer; the capability was then granted through escalation D-001
-(`knowledge/capabilities.json`) but only *after* that iteration's permissions had been compiled, so
-the first run is still pending. Until a build has actually run, treat every command in this table as
-inferred from `settings.gradle.kts` (single module `:app`) and the AGP task naming — except the two
-screenshot tasks, which a prior run did execute successfully on `loop/todo-calendar-screens`.
+Success looks like a literal `BUILD SUCCESSFUL` line. Lint additionally writes
+`app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt`,
+whose last line is the `N errors, M warnings` summary — read that rather than trusting the console
+tail.
 
 `updateDebugScreenshotTest` **overwrites** the committed reference images. It is never the fix for a
 failing `validateDebugScreenshotTest` — that re-baselines the regression the test existed to catch.
+
+### A piped Gradle command reports the *pipe's* exit code, not Gradle's
+
+`./gradlew … 2>&1 | tail -20` exits **0 even when the build failed**, because the exit status
+belongs to `tail`. This is not theoretical: it is how a `BUILD FAILED` in this repository was first
+mistaken for a pass. **Always read the `BUILD SUCCESSFUL` / `BUILD FAILED` line**, never the exit
+code, whenever the command is piped. (`PIPESTATUS` and `set -o pipefail` are both rejected by the
+permission layer here — the former as an expansion, the latter as a second operation.)
+
+### Do not run Gradle in the background while editing sources
+
+Gradle reads the working tree when it gets there, not when it was launched. A background
+`testDebugUnitTest` started before a batch of edits compiled the half-written tree and reported a
+`compileDebugKotlin` failure that had nothing to do with the baseline it was launched to measure.
+Either finish the edits first, or run the command in the foreground.
+
+### Lint fails the build on a missing German translation
+
+`values-de/` is a shipped locale and AGP lint rates `MissingTranslation` as an **error**, so lint —
+and therefore DoD criterion 13 — goes red the moment a string is added to `res/values/strings.xml`
+without a matching entry in `res/values-de/strings.xml`. The baseline tree was already failing this
+way on four strings before this run touched anything.
+
+The failure message names `values/strings.xml`, i.e. the file you *did* edit, and never mentions the
+German file you didn't — so it reads like the wrong problem. **Adding a user-visible string is a
+two-file operation here.**
 
 ## Architecture Conventions
 
@@ -40,12 +64,25 @@ confirmed against the code that exists.
   `private fun XxxLayout(uiState, on...: () -> Unit = {})` (pure UI, previewable, no navigation).
   Files live in `ui/fragment/<screen>/` with `XxxFragment.kt`, `XxxUiState.kt`, `XxxViewModel.kt`,
   and screen-local composables under `component/`.
-- **Scaffolding:** use `core/CoreLayout.kt` (not raw `Scaffold`). It already paints a
-  `Color.Black` background and takes `topBar` / `bottomBar` / `content`. `CoreTopBar` handles
-  status-bar padding itself.
+- **Scaffolding:** use `core/CoreLayout.kt` (not raw `Scaffold`). It takes `topBar` / `bottomBar` /
+  `content` and paints `MaterialTheme.colorScheme.background` as the ground (iteration 2 — it used
+  to hardcode `Color.Black`). `CoreTopBar` handles status-bar padding itself.
+- **Theme:** one fixed dark scheme in `ui/theme/Theme.kt`; `MyApplicationTheme(content)` takes no
+  `darkTheme` or `dynamicColor` parameter, and nothing reads the system light/dark setting. All 36
+  Material 3 roles are assigned explicitly. Colour tokens live in `ui/theme/Color.kt`;
+  `primary = ColorBlue2` = `#35A0F5`. **Read colours from `MaterialTheme.colorScheme.*`** —
+  `.claude/figma-design-system.md` permits inline `Color(0xFF…)` literals, but DoD criterion 2 and
+  `POLICIES.md` § User-Interface Defects override it for code this run writes.
+  When adding or changing a token, **compute the contrast ratio against the black ground rather
+  than judging the swatch** — this caught `outline` at 2.19:1 (under the 3:1 floor for a visible
+  boundary) in iteration 2. On pure black every mid-grey looks plausible in isolation, and the
+  failure shows up only as a border that silently is not there. `Color.kt` records the ratios in
+  its KDoc where they were load-bearing.
 - **Typography:** `ui/theme/Type.kt` exposes `customizedTextStyle(fontSize, fontWeight, lineHeight,
   color)` backed by `InterFontFamily` (fonts present in `res/font/`). Default text colour is
-  `Color.White`. House rule: use it for every `Text`, never `MaterialTheme.typography`.
+  `Color.White`. House rule: use it for every `Text`, never `MaterialTheme.typography`. The scheme's
+  `onBackground`/`onSurface` are deliberately **pure** white to match that default — two nearly
+  identical whites in one app is a defect nobody spots until they land side by side.
 - **Clean architecture layers:** `domain/model`, `domain/repository` (interfaces, Android-free),
   `data/database/local` (`AppDatabase`, `dao/`, `entity/`, `converter/`, `Migration.kt`),
   `data/repository/impl`, `data/mapper`, `data/remote`, `common/` (`Outcome<T>`, `Constant`),
@@ -80,10 +117,21 @@ confirmed against the code that exists.
 - `compileSdk 36`, `targetSdk 36`, `minSdk 24`, `jvmTarget 11`.
 - **No CI configuration exists** in this repository — there is no pipeline to inherit commands from.
 - **No lint baseline / no ktlint / no detekt** is configured. "Lint" means Android Gradle Plugin lint.
-- **Test surface is a stub only:** `app/src/test/.../ExampleUnitTest.kt` and
-  `app/src/androidTest/.../ExampleInstrumentedTest.kt`. There is no test that exercises app code, and
-  no host-side (Robolectric) test infrastructure. `androidTest` requires a device or emulator.
-- **No `README.md` exists** even though `CLAUDE.md` requires one with a package tree.
+- **Test surface:** `app/src/test/` holds the `ExampleUnitTest` stub plus
+  `ui/theme/DarkColorSchemeTest.kt` (iteration 2) — the first test that exercises real app code.
+  `app/src/androidTest/.../ExampleInstrumentedTest.kt` requires a device or emulator. There is no
+  Robolectric. **Plain JVM unit tests can touch Compose's non-`@Composable` API** — `darkColorScheme()`,
+  `Color`, and Java reflection over `ColorScheme` all work in `test/` with no Android context and no
+  extra dependency. Useful to know before assuming a Compose-related property needs an emulator.
+- **The HTTP client is Ktor, not Retrofit.** `injection/NetworkModule.kt` builds
+  `io.ktor.client.HttpClient(OkHttp)` with `HttpTimeout` + `ContentNegotiation`/kotlinx-serialization;
+  the catalogue declares `ktor-client-core`, `ktor-client-okhttp`, `ktor-serialization-kotlinx-json`
+  and **no Retrofit artifact**. `*Api` classes take an `HttpClient` constructor parameter. Worth
+  stating explicitly: Retrofit is the reflex guess for an Android repository of this shape, and a
+  README written on that reflex had to be corrected in iteration 2.
+- **`README.md` exists** at the repository root as of iteration 2, with the package tree
+  `CLAUDE.md` requires. It carries a feature table marking each feature built vs. planned — keep
+  that table honest in the same change that lands a feature.
 - The dependency catalogue is `gradle/libs.versions.toml`; all dependencies are declared through it.
   `kotlinx-coroutines-test` and Robolectric are **not** in it — any `suspend`/`Flow` unit test needs
   a dependency added first.

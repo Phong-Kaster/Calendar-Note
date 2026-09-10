@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -18,7 +19,20 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
 
-
+/**
+ * The shell every screen is built inside — a `Scaffold` that already knows this app's ground
+ * colour, its window insets, and how to dismiss the keyboard when you tap away from a text field.
+ *
+ * The background comes from `MaterialTheme.colorScheme.background`, **not** from a hardcoded
+ * `Color.Black`. That distinction is the whole point: this composable is what actually paints the
+ * screen, so a theme change that stops here changes nothing the user can see.
+ *
+ * @param showLoading when true the content is replaced by a centred spinner.
+ * @param topBar pinned above the content — use it for anything that must survive scrolling.
+ * @param bottomBar pinned below the content.
+ * @param content the scrollable body of the screen.
+ * @author Phong-Kaster
+ */
 @Composable
 fun CoreLayout(
     modifier: Modifier = Modifier,
@@ -35,7 +49,7 @@ fun CoreLayout(
     Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .background(color = Color.Black)
+            .background(color = MaterialTheme.colorScheme.background)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

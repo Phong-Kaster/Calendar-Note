@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Android Compose Skeleton</string>
+    <!--app_name is translatable="false" in values/strings.xml, so it is deliberately absent here.-->
     <string name="english">Englisch</string>
     <string name="vietnamese">Vietnamesisch</string>
     <string name="german">Deutsch</string>
@@ -9,6 +9,8 @@
     <string name="japanese">Japanisch</string>
     <string name="korean">Koreanisch</string>
     <string name="home">Startseite</string>
+    <string name="home_refresh">Aktualisieren</string>
+    <string name="home_no_posts">Noch keine Beiträge. Zum Aktualisieren ziehen oder auf „Aktualisieren“ tippen.</string>
     <string name="setting">Einstellungen</string>
 
     <!-- Settings -->
@@ -28,6 +30,8 @@
     <string name="location">Standort</string>
     <string name="allow_notification_to_send_you">Erlaube Benachrichtigungen, um dir wichtige Updates und Hinweise zu senden</string>
     <string name="allow_location_to_help_you">Erlaube den Standortzugriff, um dir relevante Funktionen und eine bessere Erfahrung zu bieten</string>
+    <string name="exact_alarm">Alarme &amp; Erinnerungen</string>
+    <string name="allow_exact_alarm_for_prayer_time">Erlaube exakte Alarme, damit Benachrichtigungen rechtzeitig ausgelöst werden</string>
 
     <string name="please_check_your_internet_connection">Bitte überprüfe deine Internetverbindung</string>
     <string name="the_server_is_busy">Der Server ist derzeit ausgelastet. Bitte versuche es später erneut</string>
