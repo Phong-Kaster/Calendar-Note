@@ -12,10 +12,11 @@
 
 - **Phase:** executing
 - **Loop Branch:** `loop/calendar-note-app`
-- **Next task:** **T-002** — Home shows persisted notes newest-first, with an empty state. Its
-  dependency (T-001) is complete. Nothing is pending. This is the first task that writes the Note
-  feature: entity + DAO + `AppDatabase` version 3 + `MIGRATION_2_3` + repository + `HomeViewModel`
-  repointed off the demo `Post` list.
+- **Next task:** **T-003** — the user can create a note for today from Home's centre action button.
+  Its dependency (T-002) is complete. Nothing is pending. It adds the first **write** path: a
+  `saveNote` on `NoteRepository`, a Note screen, and the nav-graph destination to reach it. Note
+  that the future-date rule stays scheduled for T-008 — but T-003 is the task that first makes a
+  violation *possible*, so read `knowledge/DOMAIN.md` rule 1 before writing the save.
 - **DONE-candidate:** no
 - **DoD:** ✅ approved 2026-09-10, A5 overruled to title + body. Immutable from here — propose
   changes (Tier 3), never apply them.
@@ -29,18 +30,22 @@
   not a bug to route around (ENGINE.md §13) but a constraint to plan for.
 - **`knowledge/DOMAIN.md` exists** (two rules: no future-dated notes; `updatedAt`-descending
   ordering). Read it at Orient every iteration. It outranks the codebase, and it is deny-listed —
-  a rule you disagree with is an escalation, never an edit. Neither rule is implemented yet; both
-  land in T-002/T-008.
+  a rule you disagree with is an escalation, never an edit. **Rule 2 (ordering) is implemented and
+  tested** as of iteration 4. Rule 1 (no future dates) is still unimplemented and lands in T-008 —
+  but T-003 introduces the first write path, which is where a violation first becomes possible.
 
 ### First thing the next iteration should do
 
-Read `knowledge/PROJECT.md` § Toolchain before running anything. It carries five traps, all earned
-by a real failure: a **piped Gradle command reports the pipe's exit code**, so a `BUILD FAILED`
-looks like a pass; **Gradle run in the background races your own edits**; **lint fails on a missing
-German translation**, which makes adding a string a two-file operation; **`updateDebugScreenshotTest`
-orphans reference images** rather than replacing them when a preview's size or name changes; and
-**a green `validateDebugScreenshotTest` is not evidence for DoD criterion 2** — a screenshot cannot
-tell a hardcoded literal from a theme lookup.
+Read `knowledge/PROJECT.md` § Toolchain before running anything. It carries seven traps, every one
+of them earned by a real failure or a denied command: a **piped Gradle command reports the pipe's
+exit code**, so a `BUILD FAILED` looks like a pass; **Gradle run in the background races your own
+edits**; **lint fails on a missing German translation**, which makes adding a string a two-file
+operation; **`updateDebugScreenshotTest` orphans reference images** rather than replacing them when
+a preview's size or name changes; **a green `validateDebugScreenshotTest` is not evidence for DoD
+criterion 2** — a screenshot cannot tell a hardcoded literal from a theme lookup; **a hand-written
+Room migration is unverifiable here**, so copy the statement out of Room's generated
+`AppDatabase_Impl` rather than composing one; and **`git reset`/`git restore` are denied** — the
+allowed way to unstage is `git rm --cached`, naming individual files rather than a folder.
 
 ## Progress
 
@@ -48,7 +53,7 @@ tell a hardcoded literal from a theme lookup.
 |---|---|---|
 | T-001 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 55 warnings`) + `testDebugUnitTest` (6 tests, 0 failures) all green; no `lightColorScheme`/`isSystemInDarkTheme`/dynamic-colour hits in `app/src/main`; 36/36 Material roles assigned **and now guarded by `DarkColorSchemeTest`**; README tree verified against all 82 source files. Fresh-context review: 16 findings, 1 Critical + 4 Major all fixed, 3 filed to `ISSUES.md`. Full record in `.ai/TASKS/T-001.md`. **3 perceptual items await human eyes** (see that file). |
 | T-010 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 59 warnings`) + `testDebugUnitTest --rerun-tasks` (6 tests, 0 failures) + `validateDebugScreenshotTest` (**6 cases, 0 failures**) all green. `ScreenshotScaffold.kt` diffed byte-identical against `loop/todo-calendar-screens`. Six reference PNGs committed. Fresh-context review: 16 findings, 0 Critical; 3 Major + 5 Minor fixed, the rest filed. Full record in `.ai/TASKS/T-010.md`. **Human approval of the six images is still open** — see that file. |
-| T-002 | pending | — |
+| T-002 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 59 warnings`) + `testDebugUnitTest --rerun-tasks` (**17 tests, 0 failures**) + `validateDebugScreenshotTest` (**7 cases, 0 failures**) all green, all re-run after the review fixes. `MIGRATION_2_3` is a verbatim copy of Room's generated `createAllTables` statement. Fresh-context review: 0 Critical, 2 Major (both knowledge reconciliation, both fixed), 7 Minor (6 fixed, 3 accepted with reasons). Full record in `.ai/TASKS/T-002.md`. **3 items await human eyes** — see that file. |
 | T-003 | pending | — |
 | T-004 | pending | — |
 | T-005 | pending | — |
@@ -66,11 +71,14 @@ title + body); the other eleven were accepted as written. They are not duplicate
 
 Execution assumptions made without asking, because they are minor and reversible:
 
-- **The demo `Post` / network stack stays.** `PostApi`, `PostRepository`, `PostDao`, `WeatherApi` and
-  `networkModule` remain wired in Koin but stop being used once Home is repointed at notes (T-002).
-  The PRD asks for no network feature but also does not ask for a deletion, and this repository is
-  explicitly a reusable skeleton whose network layer is part of its value. Reversible: deleting it
-  later is a small, isolated change. If it is still unused at completion it becomes a
+- **The demo `Post` / network stack stays — and since iteration 4 the demo `UserAction` stack does
+  too.** `PostApi`, `PostRepository`, `PostDao`, `WeatherApi` and `networkModule` are wired in Koin
+  and unused now that Home reads notes; `UserActionRepository` lost its only caller in the same
+  change, when `HomeViewModel.createUser()` went with the posts. The PRD asks for no network
+  feature but also does not ask for a deletion, and this repository is explicitly a reusable
+  skeleton whose network and Room verticals are part of its value. Reversible: deleting them later
+  is a small, isolated change. `injection/RepositoryModule.kt` now says out loud that both are
+  deliberate rather than forgotten. If they are still unused at completion they become a
   `knowledge/ISSUES.md` entry, not a silent leftover.
 - **`applicationId` and the `com.example.skeleton` package are not renamed.** Only the `app_name`
   display string changes (A12). Renaming the package touches every file and is not asked for.
@@ -114,11 +122,78 @@ rather than deleted because `rm` is denied to the engine. Listed in `knowledge/I
 human to remove. **Do not treat them as this run's debris and do not try to route around the deny
 rule to delete them.**
 
+Iteration 4 added **no** new orphans — one new reference image, one new case, and the six inherited
+PNGs verified byte-unchanged by `git status` after the `update` run. But it did find the trap next
+to them: **`git add -A app/src` stages the three strays**, and `git reset` / `git restore --staged`
+are both refused by the permission layer. The way back is `git rm --cached`, naming the three files
+individually — never `-r` on their folder, which holds the six committed references too. Recorded
+in `knowledge/PROJECT.md`.
+
 At Recover (ENGINE.md §6.1), a dirty tree means a previous invocation crashed mid-flight — but only
 if the dirt is *this run's*. Treat the paths above as clean; anything else untracked or modified is
 genuine debris to salvage or revert. Do not `git clean` them.
 
 ## Recent Iterations
+
+### Iteration 4 — 2026-09-10 — T-002, the app stops being a skeleton
+
+- **Attempted:** T-002 — the notes table, the store above it, and Home repointed off the demo post
+  list. Clean start: the working tree held only the paths listed above as expected, so Recover was
+  a no-op and Select took T-002 as the only unblocked task.
+- **Did:** `Note` + `NoteEntity` + `NoteDao` + `MIGRATION_2_3` + `NoteMapper` + `NoteRepository`
+  (interface and impl) + Koin wiring in three modules, then `HomeUiState`/`HomeViewModel`/
+  `HomeLayout` rewritten around notes, a new `HomeNoteList` component, two new unit-test classes,
+  one new screenshot case, and the README's feature table and package tree.
+- **Learned:**
+  - **A Room migration cannot be tested here, but it can be made right by construction.** No
+    Robolectric, no device, no unit test that executes SQLite — and
+    `fallbackToDestructiveMigration(false)` turns a wrong migration into a *launch crash*, not a
+    degraded read. The fix that worked: after any build, Room's own `CREATE TABLE` sits in
+    `app/build/generated/ksp/debug/kotlin/.../AppDatabase_Impl.kt` § `createAllTables`, with the
+    `TableInfo` it validates against directly below. Copy it verbatim. Writing it by eye first
+    produced a `DEFAULT ''` the entity does not declare — harmless as it happens, and a difference
+    nothing here could have caught. → `knowledge/PROJECT.md`, amendment **A-005**.
+  - **A fake DAO only proves something if the fake refuses to help.** The DAO orders in SQL, which
+    no available command can execute, so a fake that returned rows sorted would have made the
+    ordering test a tautology — the classic test-agrees-with-the-code failure. `FakeNoteDao`
+    returns its rows in construction order, deliberately jumbled, and the repository sorts them
+    itself. The redundancy with the SQL `ORDER BY` is the point: **the "newest first" promise now
+    belongs to the repository rather than to a query string a future edit can quietly change**, and
+    the suite fails against three separate breakages including `createdAt` ordering, which is the
+    exact trap `knowledge/DOMAIN.md` names.
+  - **`git reset` and `git restore` are denied; `git rm --cached` is the unstage.** Found by
+    `git add -A app/src` sweeping up the three orphan PNGs that must stay untracked. Not routed
+    around. → `knowledge/PROJECT.md`, with the warning not to use `-r` on the folder, which would
+    untrack the six committed references beside them.
+  - **The review's two Majors were both in `knowledge/`, not in the code.** `PROJECT.md` still said
+    `AppDatabase` is at `version = 2`; that file is read as *convention* at Orient, so the next task
+    would have read it as current and bumped to 3 a second time — a version/migration pair Room
+    rejects at launch. And `ISSUES.md` still asked for two string keys this task had just deleted.
+    Worth naming as a pattern: **the reconciliation step is not paperwork after the work, it is
+    part of the work**, and a stale line in a file read every iteration is a defect with a delay
+    fuse. Both fixed in this checkpoint, as `POLICIES.md` § Reconciliation Rules requires.
+  - **A locale-correct date is not `Locale.getDefault()`.** The row formats its date with
+    `LocalConfiguration.current.locales[0]`, because this app has its own language picker in
+    Settings — the device default answers a different question, and a user who switched the app to
+    German could have read an English date under German copy.
+  - **What a screenshot case is worth depends on what it renders.** The new empty-state reference
+    defends `HomeNoteList`, not `HomeLayout` — the layout is `private`, as the house rules require,
+    so the screenshot source set cannot reach it. Populated rows are pinned by nothing at all,
+    because a row prints a locale-dependent date and a reference image of that fails on a German
+    machine for reasons unrelated to the app. Both gaps are written into `HomeScreenshotTest.kt`
+    itself rather than left for someone to discover, and the untested "Untitled note" fallback is
+    carried into T-004.
+- **Reconciled:** `knowledge/PROJECT.md` — Room now at version 3 with the epoch-day note, the test
+  surface, the migration technique, and the `git rm --cached` rule; `knowledge/ISSUES.md` — the
+  string-key entry reduced to the one surviving prayer-time key (two resolved themselves here);
+  amendment **A-005**; `PLAN.md`'s Room-migration risk closed with what it actually cost; three
+  human-inspection items and the uncovered row fallback recorded in `.ai/TASKS/T-002.md`.
+- **Not done, on purpose:** rows are not clickable (T-004 opens a note), so **DoD criterion 12 is
+  half-satisfied** — bounded overflow exists, the route to the full text does not. No populated-row
+  screenshot, for the locale reason above. `saveNote` was not added to `NoteRepository` "while I was
+  there": a repository method with no caller is not a checkpoint of working behaviour
+  (`POLICIES.md` § Task Decomposition), and T-003 is where the write path becomes observable.
+- **Checkpoint:** see the `loop(T-002)` commit.
 
 ### Iteration 3 — 2026-09-10 — T-010, salvaged from a crashed invocation
 
@@ -240,65 +315,6 @@ genuine debris to salvage or revert. Do not `git clean` them.
   the standing assumption above.
 - **Checkpoint:** see the `loop(T-001)` commit.
 
-### Iteration 1 — 2026-09-10 — Bootstrap
-
-- **Attempted:** the Bootstrap Iteration (ENGINE.md §5). No implementation, by design.
-- **Did:** read `PRD.md`, `CLAUDE.md` and the five `.claude/*.md` rule files, the Gradle
-  configuration, the manifest, the nav graph, the themes, and the existing `core/`, `data/`,
-  `domain/`, `injection/`, `ui/` sources. Created `knowledge/PROJECT.md` and `knowledge/ISSUES.md`,
-  the Loop Branch `loop/calendar-note-app`, and `.ai/` (`DoD.md`, `PLAN.md`, nine `TASKS/`,
-  `STATE.md`, `AMENDMENTS.md`, `ESCALATION.md`).
-- **Learned:**
-  - `./gradlew --version` was **refused** by the permission layer. No toolchain command has ever run
-    here, so every command in `knowledge/PROJECT.md` is recorded `Verified: no`. Proposed as standing
-    capabilities in the escalation. → `knowledge/ISSUES.md`.
-  - `CLAUDE.md` `@`-imports three rule files that do not exist (`view-model-layer.md`,
-    `jetpack-compose-ui-layer.md`, `wiki-connection.md`); the real names are `viewmodel-layer.md` and
-    `jetpack-compose-ui.md`, and there is no wiki file. The rules were read directly from the real
-    files. `CLAUDE.md` is human-owned → `knowledge/ISSUES.md`, not an edit.
-  - PRD open question 1 (Compose-in-Fragment vs. `RecyclerView`) is already answered by the codebase:
-    `CoreFragment` exists solely to host a `ComposeView`, and `HomeFragment` already renders a
-    `LazyColumn`. Recorded as A1 rather than escalated as an open choice.
-  - `java.time` is safe on `minSdk 24` here because core-library desugaring is enabled — a build
-    configuration fact, not a language guarantee. → `knowledge/PROJECT.md`.
-  - There is no host-side test infrastructure and no CI. Anything provable only by rendering is
-    currently unprovable; the DoD names that gap explicitly rather than narrowing the criteria to
-    their machine-checkable half (`POLICIES.md` § Evidence Requirements).
-- **Reconciled:** two entries filed to `knowledge/ISSUES.md` (unverified toolchain; broken
-  `CLAUDE.md` imports); operational facts written to `knowledge/PROJECT.md`; one Escalation Request
-  written covering the DoD approval, the standing toolchain capability, and the host-side UI-test
-  proposal that would close part of the evidence gap. No plan amendments (the plan is new).
-- **Checkpoint:** `9b25307`, plus one follow-up commit backfilling that SHA into the two
-  `knowledge/ISSUES.md` entries. `POLICIES.md` requires every entry to cite the commit holding its
-  full record, and a commit cannot contain its own hash — amending would only have moved the
-  self-reference, so the backfill is a second commit rather than a history rewrite. Both entries now
-  resolve after the Cleanup Commit removes `.ai/`.
-- **Then, mid-iteration, the human answered D-001 in full** — first approving `.ai/DoD.md` (A5
-  overruled), then writing the complete decision, `knowledge/capabilities.json` and
-  `knowledge/DOMAIN.md`. Consumed and reconciled inside this same iteration:
-  - **A5 → title + body** propagated to T-002/T-003/T-004; amendment **A-001**.
-  - **Q4 corrected a wrong conclusion of mine.** I reported that this repository "has no host-side
-    test setup" and classified the perceptual clauses of criteria 1, 2, 7 and 9 as provable by no
-    command. A prior run on the unmerged branch `loop/todo-calendar-screens` had already built a
-    working screenshot harness on this exact toolchain. I branched from `main` and never checked
-    sibling `loop/*` branches — the refutation was reachable under baseline capabilities the whole
-    time. New task **T-010** imports it; amendment **A-002**; the standing lesson is in
-    `knowledge/PROJECT.md`.
-  - **Evidence classes re-scoped:** criteria 1, 2, 7, 9 are no longer "unprovable" but "human
-    approves the reference image once, machine defends it thereafter".
-  - **Criterion 13 gains `:app:validateDebugScreenshotTest`** per the decision. `.ai/DoD.md` was
-    **not** edited to say so — it is approved and immutable to the engine. Honoured from the task
-    files; the human can paste it into the DoD if they want the file to match.
-  - **`knowledge/DOMAIN.md` rule 1** applies to *every* write path, not just create — T-004 and
-    T-008 updated accordingly.
-  - The prior run's three recorded regressions (invisible has-notes dot on today's fill, selection
-    never reaching the grid, blank gap for an empty day — all green under its unit suite) written
-    into T-006 and T-007 as traps to avoid rather than rediscover.
-- **Reporting `CONTINUE`, not `ESCALATE`:** nothing is pending. Reporting `DONE` would be absurd and
-  `ESCALATE` would be false. No code was written because this was the Bootstrap Iteration and
-  ENGINE.md §5 forbids implementing in it — and because the granted `./gradlew` capability is not in
-  this process's compiled permissions, so T-001 could have been written but not evidenced.
-
 ## Iteration Index
 
 <!-- One line per iteration older than the three above. The SHA is the checkpoint commit whose
@@ -306,7 +322,7 @@ genuine debris to salvage or revert. Do not `git clean` them.
 
 | Iteration | Checkpoint | What happened |
 |---|---|---|
-| — | — | none yet |
+| 1 | `9b25307` (+ `6cfdd4e`) | Bootstrap. Read the PRD, the rule files and the whole codebase; created `knowledge/`, the Loop Branch and `.ai/` with nine tasks. No implementation, by design. `./gradlew --version` was refused, so every toolchain command was recorded unverified and proposed as a capability. Escalation D-001 was raised **and answered mid-iteration**: the DoD was approved with A5 overruled to title+body, the toolchain was granted, and Q4 refuted my conclusion that this repository had no host-side test setup — a working screenshot harness was sitting on the sibling branch `loop/todo-calendar-screens` the whole time, reachable under baseline capabilities. That produced T-010 and amendments A-001 and A-002. Reported `CONTINUE`. |
 
 ## Escalation Index
 

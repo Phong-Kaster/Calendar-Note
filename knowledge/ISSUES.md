@@ -96,27 +96,25 @@
 - **Do not:** create the four missing tokens to make the rule file true. That invents human intent,
   and the skeleton's own `Color.kt` already covers these roles under different names.
 
-### Three pre-existing string keys are named for features rather than for their own words
+### One pre-existing string key names a feature this app has never had
 
 - **What is wrong:** `CLAUDE.md` § "String content" requires a string be named for the words it
-  contains, not prefixed with its feature. Three keys break it, and one is actively misleading:
-  - `home_refresh` ("Refresh") and `home_no_posts` — feature-prefixed.
-  - **`allow_exact_alarm_for_prayer_time`** — names a *prayer-time* feature. This app has no such
-    feature; the key is a leftover from whatever project the skeleton was cut from.
-- **Where:** `app/src/main/res/values/strings.xml` and the matching `values-de/strings.xml` entries.
-- **Why it is still open:** renaming a string key touches every Kotlin call site, which is unrelated
-  to any task in this run. T-001 had to *add* the German translations under the existing wrong keys
-  (a translation must match its key), so this run has made the names slightly more entrenched
-  without being able to fix them.
-- **What would resolve it:** rename to `refresh`, `no_posts` (if still needed) and
-  `allow_exact_alarm`, updating `values/`, `values-de/` and the call sites together.
-  **Two of the three may resolve themselves:** `home_refresh` and `home_no_posts` belong to the demo
-  `Post` feature that T-002 removes from Home. If T-002 deletes them, delete them here too and leave
-  only the prayer-time key.
+  contains, not for the feature that shows it. **`allow_exact_alarm_for_prayer_time`** names a
+  *prayer-time* feature. This app has no such feature and never did; the key is a leftover from
+  whatever project the skeleton was cut from, and its own text ("Allow exact alarms so
+  notifications can trigger on time") says nothing about prayer.
+- **Where:** `app/src/main/res/values/strings.xml` and the matching `values-de/strings.xml` entry,
+  used by `ui/fragment/home/component/HomePermissionBottomSheet.kt`.
+- **Why it is still open:** renaming a string key means touching `values/`, `values-de/` and every
+  Kotlin call site together, which belongs to no task in this run.
+- **What would resolve it:** rename to `allow_exact_alarm` across those three places.
+- **Two sibling keys resolved themselves in iteration 4**, as this entry predicted: `home_refresh`
+  and `home_no_posts` belonged to the demo `Post` list, and T-002 deleted both locales' copies
+  along with the posts UI on Home. Nothing references either key any more.
 - **Full record:** the fresh-context review of T-001; find the checkpoint with
   `git log --oneline --all --grep='loop(T-001)'`.
-- **Do not:** copy the `<feature>_<word>` shape when adding new strings in T-002 onward. New copy
-  follows the rule: `<string name="delete">`, not `<string name="note_delete">`.
+- **Do not:** copy the `<feature>_<word>` shape when adding new strings. New copy follows the rule —
+  T-002 added `no_notes_yet` and `untitled_note`, not `home_no_notes`.
 
 ### 14 pre-existing UI files hardcode colour literals instead of reading the theme
 

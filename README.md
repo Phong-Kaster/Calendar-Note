@@ -25,7 +25,7 @@ Two things at once:
 | Dark-only theme with a blue accent, fixed regardless of the system light/dark setting | ✅ built |
 | Language picker in Settings — offers 7 languages, but only English and German have translations; the other 5 fall back to English | ⚠️ partial (inherited from the skeleton) |
 | Rate-app and permission-request bottom sheets | ✅ built (inherited from the skeleton) |
-| Home screen listing every note, most-recently-edited first | 🚧 planned |
+| Home screen listing every note, most-recently-edited first, with an empty state | ✅ built |
 | Create a note for today from the bottom bar's centre button | 🚧 planned |
 | Open, edit and delete a note (deletion behind a confirmation step) | 🚧 planned |
 | Month calendar with today marked and previous/next month navigation | 🚧 planned |
@@ -46,7 +46,9 @@ the Features table above is the source of truth for what is actually implemented
   enforced in the repository layer, below the UI, so that no caller can walk past it — a screen
   that merely hides the affordance does not satisfy it.
 - **Notes are ordered most-recently-touched first** — by `updatedAt` descending, where "touched"
-  means created *or* edited.
+  means created *or* edited. Enforced twice on purpose: `NoteDao` orders in SQL, and
+  `NoteRepositoryImpl` sorts the result again so the guarantee belongs to the store rather than to
+  a query string, and so a plain JVM test can hold it to that.
 
 ## Tech stack
 
@@ -151,9 +153,11 @@ com/example/skeleton/
 │   │       ├── converter/
 │   │       │   └── DateConverter.kt        #     Room TypeConverter: Date <-> Long
 │   │       ├── dao/
+│   │       │   ├── NoteDao.kt              #     The notes table: observe all, observe one day, upsert, delete
 │   │       │   ├── PostDao.kt
 │   │       │   └── UserActionDao.kt
 │   │       ├── entity/
+│   │       │   ├── NoteEntity.kt           #     A stored note; its day is an epoch-day Long, not a date type
 │   │       │   ├── PostEntity.kt
 │   │       │   └── UserActionEntity.kt
 │   │       ├── AppDatabase.kt              #     The Room database; every @Entity is registered here
@@ -161,6 +165,7 @@ com/example/skeleton/
 │   ├── datastore/
 │   │   └── SettingDatastore.kt             #   Typed Flows over Preferences DataStore
 │   ├── mapper/                             #   toDomain() / toEntity() extensions. Repositories never map inline.
+│   │   ├── NoteMapper.kt                   #     The only place an epoch day becomes a LocalDate
 │   │   ├── PostMapper.kt
 │   │   └── UserActionMapper.kt
 │   ├── remote/
@@ -174,6 +179,7 @@ com/example/skeleton/
 │   │       └── safeApiCallFlow.kt          #     Wraps a call as Flow<Outcome<T>>; repositories never throw
 │   └── repository/
 │       └── impl/                           #   The implementations behind the domain interfaces
+│           ├── NoteRepositoryImpl.kt       #     Room-only store; guarantees the newest-first order itself
 │           ├── PostRepositoryImpl.kt
 │           ├── SettingRepositoryImpl.kt
 │           └── UserActionRepositoryImpl.kt
@@ -181,9 +187,11 @@ com/example/skeleton/
 │   ├── enums/
 │   │   └── BottomBarDestination.kt
 │   ├── model/                              #   Models the UI and repositories agree on
+│   │   ├── Note.kt                         #     A note, plus the displayTitle fallback a row draws
 │   │   ├── Post.kt
 │   │   └── UserAction.kt
 │   └── repository/                         #   Interfaces only. Implementations live in data/.
+│       ├── NoteRepository.kt
 │       ├── PostRepository.kt
 │       ├── SettingRepository.kt
 │       └── UserActionRepository.kt
@@ -208,6 +216,7 @@ com/example/skeleton/
 │   ├── fragment/                           #   One folder per screen: Fragment + UiState + ViewModel + component/
 │   │   ├── home/
 │   │   │   ├── component/
+│   │   │   │   ├── HomeNoteList.kt         #       The scrolling note list, its rows, and its empty state
 │   │   │   │   ├── HomePermissionBottomSheet.kt
 │   │   │   │   └── HomeRequestPermission.kt
 │   │   │   ├── HomeFragment.kt

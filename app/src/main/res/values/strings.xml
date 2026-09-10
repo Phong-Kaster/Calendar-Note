@@ -8,8 +8,6 @@
     <string name="japanese">Japanese</string>
     <string name="korean">Korean</string>
     <string name="home">Home</string>
-    <string name="home_refresh">Refresh</string>
-    <string name="home_no_posts">No posts yet. Pull to refresh or tap Refresh.</string>
     <string name="setting">Setting</string>
 
     <!-- Settings -->
@@ -36,4 +34,8 @@
     <string name="the_server_is_busy">The server is currently busy. Please try again later</string>
     <string name="we_are_sorry">We’re sorry, something went wrong. Please try again.</string>
     <string name="request_timed_out">Request timed out</string>
+
+    <!-- Notes -->
+    <string name="no_notes_yet">No notes yet</string>
+    <string name="untitled_note">Untitled note</string>
 </resources>

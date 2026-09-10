@@ -11,7 +11,7 @@
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL in 3s` (only the `ExampleUnitTest` stub exists) |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 17 tests as of iteration 4. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
 | Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
@@ -43,6 +43,32 @@ which breaks unquoted shell paths.
 references and any other stray file must be removed by a human or left untracked. Plan for it:
 prefer not creating the stray in the first place — pick a preview's `name`/`widthDp`/`heightDp`
 before recording it, not after.
+
+### A hand-written Room migration has no test here — copy Room's own statement instead of writing one
+
+Nothing in this repository can execute SQLite: there is no Robolectric, `MigrationTestHelper` needs
+an instrumented device, and `fallbackToDestructiveMigration(false)` turns a migration that
+disagrees with the entity into a **launch crash** rather than a degraded read. So a migration is
+either right by construction or unverified.
+
+It can be right by construction. After any build, Room's generated implementation sits at
+`app/build/generated/ksp/debug/kotlin/com/example/skeleton/data/database/local/AppDatabase_Impl.kt`.
+Its `createAllTables` holds the exact `CREATE TABLE` Room will use on a fresh install, and the
+`_columnsXxx` map below it holds the `TableInfo` the first open is validated against. **Copy that
+statement into the migration verbatim, backticks and all**, then read the column map to confirm
+types, `NOT NULL` and primary key. Composing the SQL from the entity by eye is where the difference
+creeps in — iteration 4 wrote a `DEFAULT ''` the entity does not declare (see amendment A-005).
+
+### `git reset` and `git restore` are denied — `git rm --cached` is how you unstage
+
+`git add -A <dir>` stages everything under it, including the orphaned reference PNGs that
+`knowledge/ISSUES.md` says must stay untracked. Both obvious ways back are refused by the
+permission layer; `Bash(git rm --cached*)` is in the baseline ledger and does exactly the job —
+it drops a path from the index and leaves the file on disk.
+
+**Name the individual files, never the folder.** `git rm --cached -r <dir>` on
+`…/ThemeScreenshotTestKt/` would also untrack the six *committed* references living beside the
+strays, and the next commit would delete them from the branch.
 
 ### A piped Gradle command reports the *pipe's* exit code, not Gradle's
 
@@ -110,11 +136,14 @@ confirmed against the code that exists.
 - **DI is Koin**, wired in `injection/AppModule.kt` from `databaseModule`, `datastoreModule`,
   `repositoryModule`, `viewModelModule`, `networkModule`, `localeModule`. Repositories are bound by
   interface with named arguments; ViewModels use `viewModel { }`.
-- **Room:** `AppDatabase` is at `version = 2`, `exportSchema = false`, database file
-  `"app_database"`, `@TypeConverters(DateConverter::class)` (`Date` ↔ `Long`). Migrations are
-  explicit objects in `data/database/local/Migration.kt` and registered via `.addMigrations(...)` in
+- **Room:** `AppDatabase` is at **`version = 3`** (1 = user actions, 2 = the demo posts table,
+  3 = `notes`, added in iteration 4), `exportSchema = false`, database file `"app_database"`,
+  `@TypeConverters(DateConverter::class)` (`Date` ↔ `Long`). Migrations are explicit objects in
+  `data/database/local/Migration.kt` and registered via `.addMigrations(...)` in
   `injection/DatabaseModule.kt`. Adding an entity means: entity + DAO + register in `@Database` +
-  bump `version` + write the migration + expose the DAO in `databaseModule`.
+  bump `version` + write the migration + expose the DAO in `databaseModule`. `NoteEntity` stores a
+  calendar day as an **epoch-day `Long`**, not through a converter — `DateConverter` handles
+  `java.util.Date`, which is an instant rather than a day.
 - **ViewModel state:** one `data class XxxUiState` with defaults for every field; updates are always
   `_uiState.value = _uiState.value.copy(...)` (never `.update { }`); `TAG` is an instance
   `private val`, not a companion.
@@ -138,8 +167,10 @@ confirmed against the code that exists.
 - **No CI configuration exists** in this repository — there is no pipeline to inherit commands from.
 - **No lint baseline / no ktlint / no detekt** is configured. "Lint" means Android Gradle Plugin lint.
 - **Test surface — three source sets, two of which need no device:**
-  - `app/src/test/` — plain JVM unit tests: the `ExampleUnitTest` stub plus
-    `ui/theme/DarkColorSchemeTest.kt`. **These can touch Compose's non-`@Composable` API** —
+  - `app/src/test/` — plain JVM unit tests: the `ExampleUnitTest` stub,
+    `ui/theme/DarkColorSchemeTest.kt`, and (iteration 4) `domain/model/NoteTest.kt` plus
+    `data/repository/NoteRepositoryImplTest.kt`, which runs a `runTest` coroutine against a
+    hand-written fake DAO. **These can touch Compose's non-`@Composable` API** —
     `darkColorScheme()`, `Color` and Java reflection over `ColorScheme` all work with no Android
     context and no extra dependency. Worth knowing before assuming a Compose-related property needs
     an emulator. There is no Robolectric.

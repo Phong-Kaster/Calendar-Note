@@ -144,3 +144,34 @@
 - **Expected impact:** none on schedule. The effect is on honesty of reporting: at Final
   Verification, criterion 2 must be reported as reviewed-by-reading, and criteria 1, 7 and 9 as
   "approved once by a human, defended since by `validateDebugScreenshotTest`".
+
+---
+
+## A-005 — 2026-09-10 (iteration 4) — MIGRATION_2_3 copies Room's own CREATE TABLE instead of the SQL T-002 described
+
+- **Tier:** 1 — a correction to one task's implementation detail. No change to the PRD, the DoD, the
+  architecture or the task graph; `AppDatabase` still goes to `version = 3` with a hand-written
+  `MIGRATION_2_3` registered in `DatabaseModule`, exactly as approved.
+- **Reason:** `.ai/TASKS/T-002.md` specified the `title` column as `TEXT NOT NULL DEFAULT ''`. Room
+  generates the same table on a **fresh install** from `NoteEntity`, and that generated statement
+  has no `DEFAULT` — an entity without `@ColumnInfo(defaultValue = ...)` produces a plain
+  `TEXT NOT NULL`. Two tables that differ is precisely the situation Room's first-open validation
+  exists to reject, and `fallbackToDestructiveMigration(false)` turns a rejection into a **launch
+  crash** for every user upgrading from version 2. Nothing in this repository can catch that: there
+  is no Robolectric, `MigrationTestHelper` needs an instrumented device, and no unit test executes
+  SQLite. So the difference would have shipped unverified.
+  (Room's `TableInfo` comparison happens to tolerate a database-side default the entity does not
+  declare — the expected column carries `defaultValue = null` and the check is skipped. Tolerating
+  a difference is not the same as not having one, and relying on that detail buys nothing.)
+- **Decision:** the migration SQL is a **copy of the statement Room itself generates**, read from
+  `app/build/generated/ksp/debug/kotlin/.../AppDatabase_Impl.kt` § `createAllTables` after the
+  build. Byte-identical, backticks included. `title` therefore carries no SQL default; "a note may
+  have no heading" is expressed by the Kotlin type being an empty `String`, which is where it was
+  always enforced.
+- **Rejected:** adding `@ColumnInfo(defaultValue = "''")` to `NoteEntity` so both paths declare the
+  default. It works, and it makes the entity carry a SQL detail for the sole benefit of matching a
+  migration — the tail wagging the dog, and one more thing to get right for no behaviour gained.
+- **Affected tasks:** T-002 only. No task added, removed or reordered.
+- **Expected impact:** none on schedule. The standing consequence is a technique worth reusing, now
+  in `knowledge/PROJECT.md`: when hand-writing a Room migration here, copy Room's generated
+  statement rather than composing one from the entity by eye.

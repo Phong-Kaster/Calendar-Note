@@ -2,62 +2,44 @@ package com.example.skeleton.ui.fragment.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skeleton.common.Outcome
-import com.example.skeleton.domain.model.UserAction
-import com.example.skeleton.domain.repository.PostRepository
-import com.example.skeleton.domain.repository.UserActionRepository
-import kotlinx.coroutines.Dispatchers
+import com.example.skeleton.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Date
 
+/**
+ * Keeps the Home screen supplied with the list of notes.
+ *
+ * There is only one job here, and it is a subscription rather than a fetch: the store's flow stays
+ * open for the life of the screen and pushes a new list whenever the `notes` table changes, so
+ * writing a note anywhere in the app makes Home redraw itself with no refresh action and nothing
+ * to remember to call.
+ *
+ * @param noteRepository the notes store, injected by interface so a test can hand over a fake.
+ * @author Phong-Kaster
+ */
 class HomeViewModel(
-    private val userActionRepository: UserActionRepository,
-    private val postRepository: PostRepository,
+    private val noteRepository: NoteRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        observePosts()
-        refreshPosts()
+        collectNotes()
     }
 
-    /** Observes posts from local DB (offline-first). */
-    private fun observePosts() {
-        viewModelScope.launch(Dispatchers.IO) {
-            postRepository.observePosts().collect { posts ->
-                _uiState.value = _uiState.value.copy(posts = posts, refreshError = null)
+    /** Subscribes to the store and mirrors every list it sends into the UI state. */
+    private fun collectNotes() {
+        viewModelScope.launch {
+            noteRepository.notesFlow.collectLatest { notes ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    notes = notes,
+                )
             }
-        }
-    }
-
-    /** Fetches from API and saves to DB. Call on init or pull-to-refresh. */
-    fun refreshPosts() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = _uiState.value.copy(isRefreshing = true, refreshError = null)
-            when (val outcome = postRepository.refreshPosts()) {
-                is Outcome.Success -> {
-                    _uiState.value = _uiState.value.copy(isRefreshing = false, refreshError = null)
-                }
-                is Outcome.Error -> {
-                    _uiState.value = _uiState.value.copy(isRefreshing = false, refreshError = outcome.message)
-                }
-                is Outcome.Loading -> { /* kept in isRefreshing */ }
-            }
-        }
-    }
-
-    fun createUser() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val user = UserAction(
-                id = 0,
-                name = "John Doe",
-                createdAt = Date().time
-            )
-            userActionRepository.saveAction(user)
         }
     }
 }

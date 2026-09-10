@@ -88,7 +88,7 @@ can only be checked by rendering it, which is precisely the capability this repo
 
 - ✅ T-001 — Dark-only theme with blue primary, app named "Calendar Note", README seeded (depends on: —)
 - ✅ T-010 — Import the host-side screenshot harness from `loop/todo-calendar-screens` (depends on: T-001)
-- T-002 — Home shows persisted notes newest-first, with an empty state (depends on: T-001)
+- ✅ T-002 — Home shows persisted notes newest-first, with an empty state (depends on: T-001)
 - T-003 — User can create a note for today from Home (depends on: T-002)
 - T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003)
 - T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010)
@@ -112,9 +112,13 @@ can only be checked by rendering it, which is precisely the capability this repo
 - **Pushing logic out of composables is still right**, and is now belt *and* braces rather than the
   only mitigation. A rule in plain Kotlin is cheaper to test than a rule that must be rendered, even
   when rendering is available.
-- **Room migration.** `AppDatabase` is at `version = 2` with `fallbackToDestructiveMigration(false)`,
-  so a wrong or missing migration crashes the app at launch rather than degrading quietly. Adding
-  `NoteEntity` means version 3 **and** a hand-written `MIGRATION_2_3`.
+- ~~**Room migration.**~~ **Landed in iteration 4, and the risk was real.** `AppDatabase` is now at
+  `version = 3` with `MIGRATION_2_3`. `fallbackToDestructiveMigration(false)` means a migration
+  that disagrees with the entity is a **launch crash**, and nothing in this repository can catch
+  one: no Robolectric, no device, no unit test that executes SQLite. The mitigation that worked is
+  in `knowledge/PROJECT.md` — copy the `CREATE TABLE` out of Room's generated `AppDatabase_Impl`
+  instead of composing one by eye. Writing it by eye produced a `DEFAULT ''` the entity does not
+  declare (amendment A-005). **Any future migration takes the same route.**
 - **`CoreLayout` hardcodes `Color.Black`** as its background and `customizedTextStyle` defaults to
   white text. This happens to be correct for a dark-only app, but it means the theme's `background`
   role is not what actually paints the screen. Changing the theme alone will not change what the user
