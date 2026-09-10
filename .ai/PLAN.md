@@ -33,21 +33,39 @@ in the repository to copy the shape from.
 for by the PRD, and this repository is explicitly a reusable skeleton whose network layer is part of
 its value. `HomeViewModel` is repointed from posts to notes; the post plumbing is left intact.
 
-**Verification approach.** Three layers, in increasing cost:
+**Verification approach — revised by escalation D-001 (amendment A-002).** Four layers now, not
+three. The bootstrap iteration concluded this repository had no host-side test setup and that the
+perceptual halves of DoD criteria 1, 2, 7 and 9 were unprovable by any command. **That conclusion was
+wrong.** A prior run on the unmerged branch `loop/todo-calendar-screens` already built a working
+Compose Preview Screenshot Testing harness on this toolchain; the engine simply never looked at
+sibling `loop/*` branches. T-010 imports it.
+
+The consequence is not cosmetic: with a committed reference image, a perceptual property *does* have
+a standard a command can fail against. Those four criteria move from "human inspection forever" to
+**"the human approves the reference image once; `validateDebugScreenshotTest` defends it
+thereafter"**. Say exactly that at Final Verification — neither "proven" nor "unprovable".
+
+The layers, in increasing cost:
 
 - **Unit tests (JVM, no device)** carry everything that can be expressed without a screen: the
   future-date rule, `updatedAt` ordering, notes-for-a-date filtering, and the day-cell state
   mapping (past / today / future). These are written against a fake DAO so they need no Room and no
   Android context. This is where DoD criterion 10 lives, and it must never depend on a human looking
   at a screen.
-- **Build + lint** on every checkpoint.
-- **Human inspection** for the perceptual criteria the DoD names explicitly (1, 2, 7, 9). T-009
-  assembles these into one walkthrough checklist so the human runs the device once, at the end,
-  instead of once per iteration.
+- **Build + lint** on every checkpoint. Criterion 13's command set now also includes
+  `:app:validateDebugScreenshotTest` (D-001; `DoD.md` itself is immutable to the engine and was not
+  edited to say so — see A-002).
+- **Screenshot tests** (`app/src/screenshotTest/`, host-side layoutlib, no device) for everything
+  that is judged by looking: marker contrast in *combined* states, disabled-day styling, empty
+  states, the delete confirmation's two controls, the dark-and-blue theme itself. The prior run's
+  suite names the three regressions it caught, all of which passed a green unit suite — write the
+  equivalent cases rather than rediscovering them.
+- **Human inspection, once per image.** What remains for a person is approving each reference image
+  the first time it is generated. T-009 collects those approvals rather than a full manual
+  walkthrough.
 
-If the host-side UI-test capability proposed in the bootstrap escalation is granted, add a test task
-after T-005 and after T-008 (Tier-1 amendment) and move the (H) rows of the DoD evidence table out of
-the human checklist.
+`updateDebugScreenshotTest` overwrites references. It is never the fix for a failing validation —
+that silently re-baselines the regression the test existed to catch.
 
 **Pure logic goes somewhere testable.** The date-state mapping and the ordering rule are put in
 plain Kotlin (domain model + repository), never inside a `@Composable`. A rule inside a composable
@@ -56,26 +74,31 @@ can only be checked by rendering it, which is precisely the capability this repo
 ## Task Graph
 
 - T-001 — Dark-only theme with blue primary, app named "Calendar Note", README seeded (depends on: —)
+- T-010 — Import the host-side screenshot harness from `loop/todo-calendar-screens` (depends on: T-001)
 - T-002 — Home shows persisted notes newest-first, with an empty state (depends on: T-001)
 - T-003 — User can create a note for today from Home (depends on: T-002)
 - T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003)
-- T-005 — User can delete a note behind a confirmation step (depends on: T-004)
-- T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002)
+- T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010)
+- T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
 - T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
 - T-008 — Add a note to the selected day; the repository refuses future-dated notes (depends on: T-007, T-003)
 - T-009 — README, package tree, strings audit, and the human-inspection checklist (depends on: T-005, T-008)
 
 ## Known Risks
 
-- **No toolchain has ever run here.** Every command in `knowledge/PROJECT.md` is unverified and
-  `./gradlew --version` was refused at bootstrap. The first iteration after approval must treat
-  "does this project build at all?" as its first finding, before treating any code as correct.
-  If it does not build out of the box, that is a discovery to reconcile, not a defect introduced by
-  this run.
-- **No host-side test infrastructure.** `androidTest` needs a device this engine cannot drive, and
-  there is no Robolectric. Anything that can only be proven by rendering is currently unprovable —
-  see the DoD's stated evidence gap. The mitigation is to push logic out of composables, not to
-  pretend the gap is smaller than it is.
+- **No toolchain has ever run here.** Every command in `knowledge/PROJECT.md` is unverified —
+  `./gradlew --version` was refused at bootstrap, and the capability was granted only *after* this
+  iteration's permissions were compiled. The first iteration that can actually run Gradle must treat
+  "does this project build at all?" as its first finding, before treating any code as correct. If it
+  does not build out of the box, that is a discovery to reconcile, not a defect introduced by this
+  run.
+- **Look in the repository's own history before concluding it cannot do something.** This risk is
+  written from a mistake already made: the bootstrap iteration declared the perceptual criteria
+  unprovable while a verified screenshot harness sat on a sibling `loop/*` branch, reachable with
+  baseline capabilities the whole time. `git branch --list 'loop/*'` costs nothing.
+- **Pushing logic out of composables is still right**, and is now belt *and* braces rather than the
+  only mitigation. A rule in plain Kotlin is cheaper to test than a rule that must be rendered, even
+  when rendering is available.
 - **Room migration.** `AppDatabase` is at `version = 2` with `fallbackToDestructiveMigration(false)`,
   so a wrong or missing migration crashes the app at launch rather than degrading quietly. Adding
   `NoteEntity` means version 3 **and** a hand-written `MIGRATION_2_3`.

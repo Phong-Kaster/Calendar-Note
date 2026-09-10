@@ -42,11 +42,14 @@
   project has never been proven to compile under this engine, and the recorded task names are
   inferred from the AGP defaults rather than observed.
 - **Where:** `knowledge/PROJECT.md` § Toolchain
-- **Why it is still open:** the toolchain is a *standing* capability that is granted at the DoD gate
-  (`POLICIES.md` § Capability Risk Classes). It was proposed in the bootstrap Escalation Request and
-  is not yet approved.
-- **What would resolve it:** the human approves the `./gradlew` capability; the first iteration that
-  runs a build replaces the `no` entries with real observed output and deletes this entry.
+- **Why it is still open:** the capability is now **granted** (escalation D-001 →
+  `knowledge/capabilities.json`), but it was granted after iteration 1's permissions had already been
+  compiled, so nothing has run yet. The Runtime recompiles permissions each iteration, so the next
+  invocation is the first that can.
+- **What would resolve it:** the next iteration runs the build and replaces the `no` entries in
+  `knowledge/PROJECT.md` with real observed output, then deletes this entry. **Treat "does this
+  project build at all?" as that iteration's first finding** — a skeleton that has never been
+  compiled by anyone in this run is an assumption, not a fact.
 - **Full record:** `git show 9b25307:.ai/ESCALATION.md` — the capability proposals (C1, C2, C3).
 - **Do not:** mark any task complete on the strength of "the code looks right". ENGINE.md §10
   requires build/test/lint evidence, and until this entry is gone there is none.

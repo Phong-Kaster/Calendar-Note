@@ -5,7 +5,9 @@
 
 ## Status
 
-- [ ] APPROVED — approve via the pending `.ai/ESCALATION.md`; edit criteria freely before approving.
+- [x] **APPROVED** — 2026-09-10, by the human operator, through escalation D-001.
+      A5 overruled to **title + body**; A1–A4 and A6–A12 accepted as written.
+      Immutable to the engine from this point: propose changes (Tier 3), never apply them.
 
 ---
 
@@ -21,7 +23,7 @@ overrule.** Edit the criterion text directly; the engine will implement exactly 
 | A2 | Exact blue | **`#35A0F5`** as `primary` (already `ColorBlue2` in `ui/theme/Color.kt`), `#2F70BC` (`ColorBlue`) as the darker container/secondary role | Both blues already exist in the skeleton; `#35A0F5` is the one already painted on the bottom-bar action button, and it is the lighter of the two, so it survives a black background. |
 | A3 | Month vs. week calendar | **Month grid**, with previous/next month navigation | PRD §3.2 says "month view assumed". |
 | A4 | How a day's notes are shown after tapping | **Inline, on the Calendar screen, in a scrolling list under the grid** | Keeps the selected day and its notes visible together; avoids a sheet that hides the grid. A bottom sheet is the obvious alternative — say so and it changes. |
-| A5 | Note fields | **Body only** (`content: String`), no title | Matches the inferred data model in PRD §4, which lists `content` and marks a title as unconfirmed. The Home row shows the first line of the body. |
+| A5 | Note fields | **Title + body** (`title: String`, `content: String`). The title may be blank; a blank title falls back to the first line of the body for display. | **HUMAN OVERRULE, 2026-09-10.** The engine proposed body-only. A reverse-chronological list of every note in the app is the primary navigation surface here, and it is far harder to scan without titles. The engine is right that this is expensive to add later — entity, migration, both screens, tests — which is the reason to do it now rather than later. |
 | A6 | Sort key for "latest" | **`updatedAt` descending** | PRD §3.1 says "most recently created/edited note first" — "edited" only has meaning against `updatedAt`. `createdAt` is still stored. |
 | A7 | Edit / delete after creation | **Both allowed.** Edit is already implied by PRD §3.1 ("tapping a note opens the Note screen for editing"); delete is added, behind a confirmation step | A note app with no delete is a data trap. Delete is the one genuinely *added* scope here — remove criterion 7 if you don't want it. |
 | A8 | Persistence | **Room** | Already wired: `AppDatabase`, Koin `databaseModule`, an existing migration pattern to copy. |
@@ -43,17 +45,18 @@ overrule.** Edit the criterion text directly; the engine will implement exactly 
 2. **Blue primary.** `primary` is `#35A0F5`, declared once in `ui/theme/Color.kt` and consumed
    through the theme. No new composable introduced by this run hardcodes a colour literal; every
    colour a new screen paints comes from the theme or from `ui/theme/Color.kt`.
-3. **Notes persist.** A `NoteEntity` table exists, is registered in `AppDatabase` with the version
+3. **Notes persist.** A `NoteEntity` table exists carrying at minimum `id`, `title`, `content`, `date`, `createdAt` and `updatedAt`. It is registered in `AppDatabase` with the version
    bumped and a migration written in `data/database/local/Migration.kt`, and its DAO is exposed
    through `injection/DatabaseModule.kt`. A `NoteRepository` interface lives in `domain/repository/`
    with `NoteRepositoryImpl` in `data/repository/impl/`, bound by interface in
    `injection/RepositoryModule.kt`. Notes written on one app run are still present on the next.
 4. **Home lists every note, newest first.** The Home screen shows all notes across all days in a
-   `LazyColumn`, ordered by `updatedAt` descending. The list scrolls. When there are no notes, Home
+   `LazyColumn`, ordered by `updatedAt` descending. The list scrolls. Each row shows the note's
+   title, or — when the title is blank — the first line of its body. When there are no notes, Home
    shows an explicit empty-state message — never a blank region.
 5. **Create from Home.** The centre action button in `CoreBottomBar` opens the Note screen for a new
    note dated today. Saving it returns to Home, where the new note is the first row.
-6. **Open and edit.** Tapping a row on Home opens the Note screen showing that note's content.
+6. **Open and edit.** Tapping a row on Home opens the Note screen showing that note's title and content, both editable.
    Saving a change persists it, sets `updatedAt` to now, and Home reflects both the new text and the
    new position at the top of the list.
 7. **Delete with confirmation.** A note can be deleted from the Note screen. Deletion always passes

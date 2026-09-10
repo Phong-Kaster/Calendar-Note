@@ -9,16 +9,22 @@
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build (debug APK) | `./gradlew :app:assembleDebug` | **no** — denied at bootstrap, capability not granted |
-| Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **no** — denied at bootstrap, capability not granted |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **no** — denied at bootstrap, capability not granted |
-| Lint | `./gradlew :app:lintDebug` | **no** — denied at bootstrap, capability not granted |
+| Build (debug APK) | `./gradlew :app:assembleDebug` | **no** — granted, not yet run |
+| Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **no** — granted, not yet run |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **no** — granted, not yet run |
+| Lint | `./gradlew :app:lintDebug` | **no** — granted, not yet run |
+| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **no** — granted, not yet run *here* (verified on `loop/todo-calendar-screens`) |
+| Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **no** — granted, not yet run *here* (verified on `loop/todo-calendar-screens`) |
 
-**None of the above has been executed.** At bootstrap `./gradlew --version` was refused by the
-permission layer ("requires approval"), so no toolchain command is verified. They are proposed as
-standing capabilities in the bootstrap Escalation Request. Until a build has actually run, treat
-every command in this table as a guess derived from `settings.gradle.kts` (single module `:app`) and
-the Android Gradle Plugin's standard task names.
+**None of the above has been executed on this branch.** At bootstrap `./gradlew --version` was
+refused by the permission layer; the capability was then granted through escalation D-001
+(`knowledge/capabilities.json`) but only *after* that iteration's permissions had been compiled, so
+the first run is still pending. Until a build has actually run, treat every command in this table as
+inferred from `settings.gradle.kts` (single module `:app`) and the AGP task naming — except the two
+screenshot tasks, which a prior run did execute successfully on `loop/todo-calendar-screens`.
+
+`updateDebugScreenshotTest` **overwrites** the committed reference images. It is never the fix for a
+failing `validateDebugScreenshotTest` — that re-baselines the regression the test existed to catch.
 
 ## Architecture Conventions
 
@@ -83,6 +89,51 @@ confirmed against the code that exists.
   a dependency added first.
 - **`.loop/`, `.claude/skills/` and `.agents/skills/` are permanently untracked** human-installed
   tooling. They show up in every `git status` and are not the debris of a crashed run.
+
+### Reading files out of other commits and branches — Git Bash mangles the path
+
+`git show <ref>:<path>` works normally for `app/**` and `gradle/**`. For **`knowledge/**` and
+`.ai/**`** paths, MSYS rewrites `ref:path` into `ref;path` and the command fails with *"unknown
+revision or path not in the working tree"* — which reads exactly like the file is missing when it is
+not. Prefix those with the documented workaround, granted in `knowledge/capabilities.json`:
+
+```
+MSYS_NO_PATHCONV=1 git show <ref>:knowledge/PROJECT.md
+MSYS_NO_PATHCONV=1 git ls-tree -r --name-only <ref>
+```
+
+This matters more than it looks: every `knowledge/ISSUES.md` entry and every compacted `STATE.md`
+row cites a SHA meant to be read back this way. Use the prefixed form for those paths as a habit.
+
+Distinguish the two failures — *"path 'x' exists on disk, but not in '<ref>'"* is Git telling you the
+truth (the file genuinely is not on that branch), not the mangling.
+
+### A prior Foreman run's work lives on `loop/todo-calendar-screens`
+
+**Check sibling `loop/*` branches before concluding this repository cannot do something.** The
+bootstrap iteration of the current run declared the perceptual DoD criteria unprovable while a
+verified host-side screenshot harness sat on that branch, reachable with baseline capabilities the
+whole time. `git branch --list 'loop/*'` costs nothing.
+
+What is there (tip `969f278`), verified working on AGP 9.0.1 / Kotlin 2.2.10:
+
+- **Compose Preview Screenshot Testing**, host-side via layoutlib — no emulator, no device, no `adb`.
+  Four pieces, all required: the `com.android.compose.screenshot` plugin +
+  `screenshot-validation-api` (version `0.0.1-alpha15`) in `gradle/libs.versions.toml`;
+  `alias(libs.plugins.screenshot)` and
+  `experimentalProperties["android.experimental.enableScreenshotTest"] = true` and the two
+  `screenshotTestImplementation` lines in `app/build.gradle.kts`;
+  `android.experimental.enableScreenshotTest=true` in `gradle.properties`; and the test sources in
+  `app/src/screenshotTest/kotlin/...`, with references in `app/src/screenshotTestDebug/reference/`.
+- **`ScreenshotScaffold.kt`** — wraps content in `MyApplicationTheme` on `colorScheme.background`.
+  This is the part that took the work, and the reason it exists is recorded in its own KDoc: a bare
+  `@Preview` renders against Studio's white with Material's baseline colours, which is how a screen
+  full of hardcoded `Color.White` looked fine in the preview pane and was unreadable in the app.
+- **That run's calendar grid is Sunday-first**, and its screenshot suite pins the weekday header
+  against the grid for exactly that reason.
+- Its `Note` model differs from this run's (`epochDay`/`title`/`createdAt` there;
+  `date`/`title`/`content`/`createdAt`/`updatedAt` here), so its **reference PNGs are not reusable** —
+  regenerate rather than copy.
 
 ## Sources Consulted
 

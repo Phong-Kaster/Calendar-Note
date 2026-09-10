@@ -10,17 +10,34 @@
 
 ## Current
 
-- **Phase:** escalated
+- **Phase:** executing
 - **Loop Branch:** `loop/calendar-note-app`
-- **Next task:** T-001 — blocked until `.ai/DoD.md` is approved (ENGINE.md §5: the DoD gate is the
-  only mandatory human gate before autonomous execution)
+- **Next task:** **T-001** — dark-only theme with blue primary. Unblocked; nothing is pending.
 - **DONE-candidate:** no
+- **DoD:** ✅ approved 2026-09-10, A5 overruled to title + body. Immutable from here — propose
+  changes (Tier 3), never apply them.
+- **Escalation:** D-001 ✅ consumed. `.ai/ESCALATION.md` is marked CONSUMED and must not be
+  re-consumed.
+- **Capabilities:** `knowledge/capabilities.json` now grants `./gradlew`
+  assemble/compile/test/lint, `validate|updateDebugScreenshotTest`, and
+  `MSYS_NO_PATHCONV=1 git show|ls-tree`. **None has been executed yet** — iteration 1's permissions
+  were compiled before the ledger existed, which is why this iteration still ended without a build.
+- **`knowledge/DOMAIN.md` now exists** (two rules: no future-dated notes; `updatedAt`-descending
+  ordering). Read it at Orient every iteration. It outranks the codebase, and it is deny-listed —
+  a rule you disagree with is an escalation, never an edit.
+
+### First thing the next iteration should do
+
+Run `./gradlew :app:assembleDebug` **before** writing any code. Nothing in this repository has been
+compiled by this run, so "the skeleton builds" is an assumption. Finding out after T-001's changes
+are in the tree makes a pre-existing failure look like one this run caused.
 
 ## Progress
 
 | Task | Status | Evidence |
 |---|---|---|
 | T-001 | pending | — |
+| T-010 | pending | — (new — amendment A-002; runs between T-001 and T-002) |
 | T-002 | pending | — |
 | T-003 | pending | — |
 | T-004 | pending | — |
@@ -33,8 +50,9 @@
 ## Assumptions
 
 The twelve product assumptions (A1–A12) that turned `PRD.md`'s nine open questions into testable
-criteria are recorded in `.ai/DoD.md` § *Assumptions baked into these criteria*, where the human can
-edit them before approving. They are not duplicated here.
+criteria are recorded in `.ai/DoD.md` § *Assumptions baked into these criteria*. **They are no longer
+assumptions — the DoD is approved, so they are intent.** A5 was overruled by the human (body-only →
+title + body); the other eleven were accepted as written. They are not duplicated here.
 
 Execution assumptions made without asking, because they are minor and reversible:
 
@@ -98,6 +116,31 @@ genuine debris to salvage or revert. Do not `git clean` them.
   full record, and a commit cannot contain its own hash — amending would only have moved the
   self-reference, so the backfill is a second commit rather than a history rewrite. Both entries now
   resolve after the Cleanup Commit removes `.ai/`.
+- **Then, mid-iteration, the human answered D-001 in full** — first approving `.ai/DoD.md` (A5
+  overruled), then writing the complete decision, `knowledge/capabilities.json` and
+  `knowledge/DOMAIN.md`. Consumed and reconciled inside this same iteration:
+  - **A5 → title + body** propagated to T-002/T-003/T-004; amendment **A-001**.
+  - **Q4 corrected a wrong conclusion of mine.** I reported that this repository "has no host-side
+    test setup" and classified the perceptual clauses of criteria 1, 2, 7 and 9 as provable by no
+    command. A prior run on the unmerged branch `loop/todo-calendar-screens` had already built a
+    working screenshot harness on this exact toolchain. I branched from `main` and never checked
+    sibling `loop/*` branches — the refutation was reachable under baseline capabilities the whole
+    time. New task **T-010** imports it; amendment **A-002**; the standing lesson is in
+    `knowledge/PROJECT.md`.
+  - **Evidence classes re-scoped:** criteria 1, 2, 7, 9 are no longer "unprovable" but "human
+    approves the reference image once, machine defends it thereafter".
+  - **Criterion 13 gains `:app:validateDebugScreenshotTest`** per the decision. `.ai/DoD.md` was
+    **not** edited to say so — it is approved and immutable to the engine. Honoured from the task
+    files; the human can paste it into the DoD if they want the file to match.
+  - **`knowledge/DOMAIN.md` rule 1** applies to *every* write path, not just create — T-004 and
+    T-008 updated accordingly.
+  - The prior run's three recorded regressions (invisible has-notes dot on today's fill, selection
+    never reaching the grid, blank gap for an empty day — all green under its unit suite) written
+    into T-006 and T-007 as traps to avoid rather than rediscover.
+- **Reporting `CONTINUE`, not `ESCALATE`:** nothing is pending. Reporting `DONE` would be absurd and
+  `ESCALATE` would be false. No code was written because this was the Bootstrap Iteration and
+  ENGINE.md §5 forbids implementing in it — and because the granted `./gradlew` capability is not in
+  this process's compiled permissions, so T-001 could have been written but not evidenced.
 
 ## Iteration Index
 
@@ -115,4 +158,8 @@ genuine debris to salvage or revert. Do not `git clean` them.
 
 | ID | Checkpoint | Question → decision |
 |---|---|---|
-| — | — | none consumed yet (D-001 is pending) |
+| D-001 | `9b25307` | Approve DoD + grant toolchain + choose UI-evidence strategy → DoD approved with A5 overruled to title+body; C1 toolchain granted as proposed (narrow rules) plus screenshot and `MSYS_NO_PATHCONV` entries; test deps granted; Q4 Option B **plus** import the existing harness from `loop/todo-calendar-screens`; `DOMAIN.md` created with rules 1+2. |
+
+`9b25307` holds the request **as issued**. The decision text is in `.ai/ESCALATION.md` at iteration
+1's second checkpoint (marked CONSUMED) and reproduced in that commit's message — read it back with
+`MSYS_NO_PATHCONV=1 git show <sha>:.ai/ESCALATION.md`.
