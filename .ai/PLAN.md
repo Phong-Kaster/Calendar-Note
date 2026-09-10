@@ -67,6 +67,13 @@ The layers, in increasing cost:
   code is indistinguishable from a green suite against a tautology — and iteration 4 had already
   been bitten by a fake DAO that would have agreed with the code instead of checking it. Do this for
   any test that carries a DoD criterion on its own, criterion 10 above all.
+
+  **Iteration 6 sharpened it: one mutation per *test* is not enough — a test can fail for one
+  reason while another of its assertions is dead.** A new test there asserted that an edit does not
+  re-file a note onto another day, against a fixture already dated to the clock's today: the
+  assertion could not fail, and it survived three mutations before a *reader* found it. Mutate
+  toward each assertion the test claims to carry, and treat a fixture that already equals the
+  expected value as the smell it is.
 - **Build + lint** on every checkpoint. Criterion 13's command set now also includes
   `:app:validateDebugScreenshotTest` (D-001; `DoD.md` itself is immutable to the engine and was not
   edited to say so — see A-002).
@@ -106,9 +113,11 @@ can only be checked by rendering it, which is precisely the capability this repo
 - ✅ T-002 — Home shows persisted notes newest-first, with an empty state (depends on: T-001)
 - ✅ T-003 — User can create a note for today from Home (depends on: T-002) — **also carried the
   future-date rule (A-006) and the load-existing-note path (A-007), so DoD criterion 10 is done**
-- T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003) — **reduced by
-  A-007 to the Home-row route, the re-sort evidence and the blanked-title case**
-- T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010)
+- ✅ T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003) — **reduced
+  by A-007 to the Home-row route, the re-sort evidence and the blanked-title case**
+- T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010) — **also
+  resolves the failed-read defect T-004's review found (A-009): delete is what makes "the note you
+  opened is gone" ordinary rather than a disk fault**
 - T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
 - T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
 - T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006: the

@@ -44,4 +44,5 @@
     <string name="save">Speichern</string>
     <string name="title">Titel</string>
     <string name="write_your_note_here">Schreibe hier deine Notiz…</string>
+    <string name="open_note">Notiz öffnen</string>
 </resources>

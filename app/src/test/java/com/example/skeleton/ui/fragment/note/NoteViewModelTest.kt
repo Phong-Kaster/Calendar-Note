@@ -148,6 +148,34 @@ class NoteViewModelTest {
     }
 
     @Test
+    fun `clearing the title of a stored note hands the store a blank one`() = runTest {
+        // The editing session starts from the stored note and only overwrites the fields the user
+        // touched, which is what keeps the id and the creation time — and it is also where a
+        // cleared title could quietly come back to life. `openedNote` still holds "Groceries", so a
+        // save that fell back to it on a blank value would make the title field impossible to
+        // empty, with the old heading reappearing on Home as if the edit had never happened.
+        val stored = Note(
+            id = 7L,
+            date = A_DAY,
+            title = "Groceries",
+            content = "Coffee, oat milk",
+            createdAt = 1_000L,
+            updatedAt = 2_000L,
+        )
+        val repository = FakeNoteRepository(stored = stored)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+
+        viewModel.setTitle(value = "")
+        viewModel.save()
+
+        val saved = repository.savedNote!!
+        assertEquals("", saved.title)
+        assertEquals(7L, saved.id)
+        assertEquals("Coffee, oat milk", saved.content)
+    }
+
+    @Test
     fun `a successful save raises the trigger the screen leaves on`() = runTest {
         val viewModel = NoteViewModel(noteRepository = FakeNoteRepository())
         viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY)

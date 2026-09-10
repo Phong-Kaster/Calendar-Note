@@ -36,9 +36,16 @@ import com.example.skeleton.ui.fragment.home.component.HomeNoteList
  * ("14 Mar 2026" here, "14.03.2026" on a German machine). A reference image of that fails on a
  * colleague's laptop for a reason that has nothing to do with the app being wrong — and the only
  * way to make it pass again is `updateDebugScreenshotTest`, the one command nobody is allowed to
- * reach for. The references are already host-locked enough (`knowledge/ISSUES.md`). The
- * consequence: the row's own "Untitled note" fallback, for a note with neither a title nor a body,
- * is checked by nobody. It arrives with the rows, when they become clickable.
+ * reach for. The references are already host-locked enough (`knowledge/ISSUES.md`).
+ *
+ * The consequence, and it is still true now that the rows are clickable: **the row's own "Untitled
+ * note" fallback is checked by nobody**, and neither is the heading falling back to the first line
+ * of the body (DoD criterion 4) or the bounded overflow on a long note (criterion 12's row half).
+ * `@Preview(locale = "en")` would pin the language but not the format — `ofLocalizedDate` follows
+ * the JDK's CLDR data, which this project does not pin either — so recording a populated row today
+ * buys a case that fails on the next toolchain bump. It waits for the threshold or the toolchain
+ * pin that `knowledge/ISSUES.md` already asks for; it is a gap, not a decision that the criteria
+ * are covered.
  *
  * **This renders `HomeNoteList`, not `HomeLayout`.** So it defends the list's own empty state, not
  * Home's wiring to it: if `HomeLayout` stopped calling `HomeNoteList`, or held `showLoading` true
@@ -67,6 +74,7 @@ private fun NotesEmptyState() {
         content = {
             HomeNoteList(
                 notes = emptyList(),
+                onOpenNote = {},
                 modifier = Modifier.height(280.dp),
             )
         },

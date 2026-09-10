@@ -11,7 +11,7 @@
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 38 tests as of iteration 5. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 41 tests as of iteration 6. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
 | Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
@@ -210,6 +210,18 @@ confirmed against the code that exists.
   `<argument>` a `defaultValue` and pick sentinels that cannot be real values (`NoteFragment` uses
   `-1L` for "no note yet" and `Long.MIN_VALUE` for "no day given"; `-1` as an epoch day is a real
   date, 1969-12-31, so it is *not* usable as the day sentinel).
+- **`NavigationUtil.canNavigate()` is one clock for the whole app — do not use it to debounce a
+  list row.** It is a single process-wide `lastNavTime` guarding an 800 ms window, and
+  `CoreBottomBar.BottomBarElement` arms it *before* checking whether the tab tap navigates anywhere.
+  So a tap on the "Home" tab while already on Home consumes the window and any other navigating
+  control is dead for the next 800 ms, showing its ripple and doing nothing. Found in the T-004
+  review, on a Home note row. **For "this control must not navigate twice", ask the graph where you
+  are** — `findNavController().currentDestination?.id == R.id.<thisScreen>` — which has no dead
+  window at all: `navigate` moves `currentDestination` synchronously, so the second tap of a double
+  tap is already standing on the destination and is refused. `app:launchSingleTop` is *not* the
+  alternative on the `toNote` route: it reuses the existing Fragment, `onCreate` does not re-run,
+  and `NoteViewModel.openNote` short-circuits on its `opened` guard, so the second tap would leave
+  the previous note on screen.
 - **Strings:** every user-visible string goes in `res/values/strings.xml`, appended at the
   end, named for the words themselves (`<string name="download">`, not `<string
   name="feature_download">`).

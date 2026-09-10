@@ -27,7 +27,8 @@ Two things at once:
 | Rate-app and permission-request bottom sheets | ✅ built (inherited from the skeleton) |
 | Home screen listing every note, most-recently-edited first, with an empty state | ✅ built |
 | Create a note for today from the bottom bar's centre button | ✅ built |
-| Open, edit and delete a note (deletion behind a confirmation step) | 🚧 planned — the editor and the save path exist; the route from a Home row into them does not |
+| Tap a note on Home to open it, edit it, and see it move back to the top of the list | ✅ built |
+| Delete a note, behind a confirmation step | 🚧 planned |
 | Month calendar with today marked and previous/next month navigation | 🚧 planned |
 | Tap a day to see that day's notes, and add a note to that day | 🚧 planned |
 | Future days are visibly disabled and cannot hold a note | 🚧 planned |

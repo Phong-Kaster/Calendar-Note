@@ -266,3 +266,40 @@
   `android.os.Bundle.putLong` is a no-op under this flag, so `NoteFragment.argumentsFor()` cannot be
   unit-tested — it would silently return an empty `Bundle` and any assertion would be meaningless.
   A test that needs a framework return value needs Robolectric, not this flag.
+
+---
+
+## A-009 — 2026-09-10 (iteration 6) — T-005 must resolve the failed-read defect before adding delete
+
+- **Tier:** 1 — a prerequisite added to an existing task inside the approved shape. No task added,
+  removed or reordered; PRD, DoD and architecture unchanged.
+- **Reason:** the fresh-context review of T-004 (finding 2) found that `NoteRepositoryImpl.getNote`
+  answers `null` both for "no such row" and for "the read threw", and that
+  `NoteViewModel.openNote` treats `null` as "start a new note". The editor therefore opens **blank
+  but correctly dated**, and its save **inserts** — the draft still carries `Note.UNSAVED_ID`, so
+  Room's `autoGenerate` hands out a fresh row. Home then shows two notes for that day: the original
+  with its old text and old list position, plus the retyped copy, with nothing telling the user
+  either happened.
+
+  T-004 is what made that branch reachable at all: until Home rows became clickable, every caller
+  of `NoteFragment.argumentsFor` left `noteId` at its default, so `getNote` had no in-app caller and
+  the fall-through was dead code. Today reaching it still needs a database failure. **T-005 is where
+  it stops being rare** — delete turns "the note you opened is not there" from a disk fault into
+  ordinary use, and a note deleted on one surface then opened from a stale Home row would silently
+  resurrect itself as a duplicate.
+- **Decision:** T-005 resolves it as a prerequisite, not a follow-up, and gains an acceptance
+  criterion: a unit test proving that opening a note the store cannot produce does not end in a
+  second row being written. The task file names the trap that comes with it — the existing
+  `NoteViewModelTest` case *a note that has since been deleted opens as a fresh one for the day
+  asked for* pins the current behaviour deliberately, so resolving this means changing that test on
+  purpose rather than working around it.
+- **Rejected:** fixing it inside T-004. The clean fix distinguishes refusal from failure in
+  `getNote`'s return type — a change to a public repository contract — and overturns a deliberate,
+  tested, documented T-003 decision, from inside a task whose scope is "the route in". It is a
+  Major, and `POLICIES.md` § Review Standards files a Major rather than expanding the current task
+  around it. Also rejected: keeping the requested id on the draft so the save updates in place —
+  that silently re-creates a note the user deleted, a different wrong answer rather than a smaller
+  one.
+- **Affected tasks:** T-005 gains one description bullet and one acceptance criterion.
+- **Expected impact:** T-005 grows slightly. The exposure window is one iteration, and it is
+  recorded in `knowledge/ISSUES.md` so it survives even if the plan changes shape.

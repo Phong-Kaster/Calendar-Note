@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.fragment.findNavController
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
@@ -64,6 +65,33 @@ class HomeFragment : CoreFragment() {
                     bundle = NoteFragment.argumentsFor(date = LocalDate.now()),
                 )
             },
+            onOpenNote = { note ->
+                // Two taps landing inside the same moment must not push two copies of the editor
+                // onto the back stack — leaving the note would then take two presses of back, and
+                // `safeNavigate` does not debounce for itself; it only swallows exceptions.
+                //
+                // The instrument for that is *where we are*, not `NavigationUtil.canNavigate()`.
+                // That clock is one 800 ms field shared by every control in the app, and
+                // `CoreBottomBar` arms it even for a tab tap that navigates nowhere — so tapping
+                // "Home" while already on Home would leave every row dead for the next 800 ms,
+                // ignoring taps for a reason the user cannot see. Asking the graph has no dead
+                // window at all: `navigate` moves `currentDestination` immediately, so the second
+                // tap of a double tap is already standing on the editor and is refused, while a
+                // deliberate tap a moment later still works.
+                val currentDestination = runCatching {
+                    findNavController().currentDestination?.id
+                }.getOrNull()
+
+                if (currentDestination == R.id.homeFragment) {
+                    safeNavigate(
+                        destination = R.id.toNote,
+                        // The note's own day, not today. The editor prefers the stored note's date
+                        // anyway; this argument is what a note that has gone missing falls back
+                        // to, and today would be the wrong day to fall back to.
+                        bundle = NoteFragment.argumentsFor(date = note.date, noteId = note.id),
+                    )
+                }
+            },
         )
 
         // Request notification, location and exact alarm permissions
@@ -90,12 +118,14 @@ class HomeFragment : CoreFragment() {
  *
  * @param uiState what to draw.
  * @param onCreateNote the user tapped the bottom bar's centre action button.
+ * @param onOpenNote the user tapped a row and wants that note opened.
  * @author Phong-Kaster
  */
 @Composable
 private fun HomeLayout(
     uiState: HomeUiState,
     onCreateNote: () -> Unit = {},
+    onOpenNote: (Note) -> Unit = {},
 ) {
     CoreLayout(
         modifier = Modifier,
@@ -103,7 +133,10 @@ private fun HomeLayout(
         topBar = { CoreTopBar(title = stringResource(R.string.home)) },
         bottomBar = { CoreBottomBar(onCreateNote = onCreateNote) },
         content = {
-            HomeNoteList(notes = uiState.notes)
+            HomeNoteList(
+                notes = uiState.notes,
+                onOpenNote = onOpenNote,
+            )
         },
     )
 }

@@ -164,6 +164,66 @@ class NoteRepositoryImplTest {
     }
 
     @Test
+    fun `editing an old note moves it to the head of the list`() = runTest {
+        // The list half of the ordering rule, and the one assertion that catches an accidental
+        // `ORDER BY createdAt`: note 10 is the *older* of the two by creation and becomes the newer
+        // by edit. A store that sorted by creation would leave it exactly where it was and every
+        // other test in this file would still pass.
+        //
+        // Written through `save` rather than by seeding a row with a high `updatedAt`, because the
+        // re-ordering the user sees is the product of the write path and the read path agreeing —
+        // seeding the answer would test the comparator twice and the write path not at all.
+        // Note 10 is dated three days back rather than today, so the last assertion below has
+        // something to say: an edit that re-filed the note onto the day it was edited would move a
+        // past note into today, and a fixture already dated today could not tell the difference.
+        val dao = FakeNoteDao(
+            rows = listOf(
+                entity(
+                    id = 10L,
+                    date = TODAY.minusDays(3L).toEpochDay(),
+                    createdAt = 1_000L,
+                    updatedAt = 1_000L,
+                ),
+                entity(id = 20L, createdAt = 5_000L, updatedAt = 5_000L),
+            ),
+        )
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+        assertEquals(listOf(20L, 10L), repository.notesFlow.first().map { note -> note.id })
+
+        val outcome = repository.save(
+            note = repository.getNote(id = 10L)!!.copy(content = "Coffee, oat milk, and bread"),
+        )
+
+        assertTrue(outcome is Outcome.Success)
+        val notes = repository.notesFlow.first()
+        assertEquals(listOf(10L, 20L), notes.map { note -> note.id })
+        // The edit changed a note; it did not add one. An `id` dropped on the way in would land as
+        // a third row here rather than replacing the first.
+        assertEquals(2, notes.size)
+        assertEquals("Coffee, oat milk, and bread", notes.first().content)
+        assertEquals(1_000L, notes.first().createdAt)
+        // Editing a note does not move it to another day.
+        assertEquals(TODAY.minusDays(3L), notes.first().date)
+    }
+
+    @Test
+    fun `a title edited to blank stays blank, and the heading falls back to the body`() = runTest {
+        // A title the user deliberately cleared must not come back. The tempting mistake is a
+        // `title.ifBlank { existing.title }` somewhere on the way down — it reads like kindness and
+        // it makes a field impossible to empty.
+        val dao = FakeNoteDao(rows = listOf(entity(id = 5L)))
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        val outcome = repository.save(note = repository.getNote(id = 5L)!!.copy(title = ""))
+
+        assertTrue(outcome is Outcome.Success)
+        val stored = repository.getNote(id = 5L)!!
+        assertEquals("", stored.title)
+        // What the row draws instead — the first written line of the body, not the old title.
+        assertEquals("Coffee, oat milk", stored.displayTitle)
+    }
+
+    @Test
     fun `the day a note was given is the day it is stored under`() = runTest {
         val dao = FakeNoteDao(rows = emptyList())
         val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)

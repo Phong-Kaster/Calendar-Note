@@ -16,6 +16,35 @@
 
 <!-- Newest first. Delete resolved entries outright rather than marking them done. -->
 
+### A note that fails to load opens as a blank editor, and saving it writes a *second* note
+
+- **What is wrong:** `NoteRepositoryImpl.getNote` answers `null` for two different situations — the
+  row is not there, and the read threw — and `NoteViewModel.openNote` treats `null` as "start a new
+  note" (`val note = stored ?: Note.draft(date = date)`). So the editor opens **blank but correctly
+  dated**, with no message. The user retypes and taps Save; `openedNote` is a draft carrying
+  `Note.UNSAVED_ID`, so Room's `autoGenerate` hands out a fresh row. Home then shows **two** notes
+  for that day: the original with its old text, untouched, plus the retyped copy.
+- **Why it matters:** it is the shape of data loss the rest of this screen was carefully built to
+  avoid — the note the user thought they were editing keeps its old text and its old list position,
+  and nothing anywhere says so. `NoteViewModelTest`'s *a note that has since been deleted opens as
+  a fresh one for the day asked for* pins the fall-through as intended, so no existing test will
+  ever catch it.
+- **When it became reachable:** T-004. Until the Home rows became clickable, every caller of
+  `argumentsFor` left `noteId` at its default, so `getNote` had no in-app caller and this branch was
+  dead code. Today it still needs a database failure to reach.
+- **When it stops being rare:** **T-005.** That task adds delete, and "opened a note that was
+  deleted" stops needing a disk fault — at which point a deleted note silently resurrects itself as
+  a duplicate.
+- **What would resolve it:** distinguish the two cases before the ViewModel has to guess — `getNote`
+  returning `Outcome<Note?>`, or a separate signal — and then decide each one deliberately: a note
+  that is *gone* should leave the screen (or say so), and a note that *failed to read* should
+  report the failure rather than impersonate a new note. The one thing it must not keep doing is
+  presenting a blank editor whose save inserts.
+- **Full record:** the fresh-context review of T-004, finding 2 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-004)'`.
+- **Do not:** "fix" it by keeping the requested id on the draft so the save updates in place. That
+  silently re-creates a note the user deleted, which is a different wrong answer, not a smaller one.
+
 ### The Note editor's keyboard handling is unverified below API 30
 
 - **What is wrong:** possibly nothing, and that is the problem — it cannot be checked here.
@@ -75,6 +104,10 @@
      process death takes the text with it — there is no `SavedStateHandle` and no
      `rememberSaveable`. "Typed 300 words, swiped back, lost them" is a one-gesture data loss.
      (Rotation *is* handled — `NoteViewModel.openNote` refuses to run twice — and tested.)
+     **Since T-004 this also loses *edits*, which is worse in kind than losing a new note.** A
+     discarded new note never existed, so "I never saved it" matches what the user sees; a
+     discarded *edit* returns them to Home showing the note with its old text, its old position and
+     its `updatedAt` unmoved — a screen indistinguishable from a save that quietly did nothing.
   2. **A refused save has no way forward.** Both a refusal and a genuine write failure surface as
      the same `we_are_sorry` toast ("something went wrong, please try again"), and retrying a
      *refusal* can never succeed. The editor exposes no date control, so the user cannot change the
@@ -82,7 +115,9 @@
 - **Why it is still open:** no DoD criterion asks for either. A discard confirmation and an autosave
   are different product decisions with different failure modes (autosave creates empty notes), and
   choosing one is not the engine's call. Part 2 is currently reachable only if the device clock
-  moves backwards between opening the editor and saving.
+  moves backwards between opening the editor and saving — T-004 re-checked this and it did *not*
+  change, because an existing note's date is always today or earlier, so re-saving it can never be
+  refused. Part 1 was re-examined in T-004 and deliberately left as it is; see that task file.
 - **What would resolve it:** for part 1, a decision — confirm-on-discard, or save-on-leave, or an
   explicit "notes are kept only when you tap Save". For part 2, distinguish refusal from failure in
   the outcome and give the refusal its own message naming the date.

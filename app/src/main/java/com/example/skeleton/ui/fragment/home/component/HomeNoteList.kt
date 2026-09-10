@@ -2,6 +2,8 @@ package com.example.skeleton.ui.fragment.home.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,9 +16,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -45,7 +50,13 @@ import java.time.format.FormatStyle
  * The list arrives already ordered — that is the store's promise, not this screen's — so nothing
  * here sorts it.
  *
+ * [onOpenNote] has **no default**, for the same reason `CoreBottomBar.onCreateNote` has none: a row
+ * draws a truncated note, so a tap that does nothing leaves the rest of the text unreachable — and
+ * it looks exactly like a working screen. Without a default, a new host has to decide what a tap
+ * means there.
+ *
  * @param notes the notes to show, most recently touched first.
+ * @param onOpenNote the user tapped a row and wants that note opened.
  * @param modifier applied to the scrolling container, or to the empty state when there is nothing
  *   to scroll.
  * @author Phong-Kaster
@@ -53,6 +64,7 @@ import java.time.format.FormatStyle
 @Composable
 fun HomeNoteList(
     notes: List<Note>,
+    onOpenNote: (Note) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (notes.isEmpty()) {
@@ -71,6 +83,7 @@ fun HomeNoteList(
         ) { note ->
             NoteRow(
                 note = note,
+                onClick = { onOpenNote(note) },
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -117,13 +130,19 @@ private fun HomeNoteListEmpty(
  * of the body when there is not. A note with neither still needs to say *something*, so the row
  * draws a placeholder; an unlabelled row looks like a rendering bug.
  *
+ * The whole card is the tap target, not the heading inside it. A row is what the user sees as one
+ * thing, and a tap that only counts when it lands on the text is a row that seems to ignore half
+ * the taps aimed at it.
+ *
  * @param note the note to draw.
+ * @param onClick the user tapped this row.
  * @param modifier applied to the card.
  * @author Phong-Kaster
  */
 @Composable
 private fun NoteRow(
     note: Note,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val heading =
@@ -140,6 +159,8 @@ private fun NoteRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // Clipped first so the ripple stops at the rounded corners.
+            .clip(shape = RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -149,6 +170,15 @@ private fun NoteRow(
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 shape = RoundedCornerShape(16.dp),
             )
+            .clickable(
+                // Without the label a screen reader reads the row's text and gives no hint that
+                // it is a door.
+                onClickLabel = stringResource(R.string.open_note),
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(bounded = true),
+                onClick = onClick,
+            )
+            // After the click, so the padding is inside the tap target.
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -213,6 +243,7 @@ private fun HomeNoteListPreview() {
                     updatedAt = 1_772_900_000_000L,
                 ),
             ),
+            onOpenNote = {},
         )
     }
 }
@@ -221,6 +252,9 @@ private fun HomeNoteListPreview() {
 @Composable
 private fun HomeNoteListEmptyPreview() {
     MyApplicationTheme {
-        HomeNoteList(notes = emptyList())
+        HomeNoteList(
+            notes = emptyList(),
+            onOpenNote = {},
+        )
     }
 }
