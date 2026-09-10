@@ -26,8 +26,8 @@ Two things at once:
 | Language picker in Settings — offers 7 languages, but only English and German have translations; the other 5 fall back to English | ⚠️ partial (inherited from the skeleton) |
 | Rate-app and permission-request bottom sheets | ✅ built (inherited from the skeleton) |
 | Home screen listing every note, most-recently-edited first, with an empty state | ✅ built |
-| Create a note for today from the bottom bar's centre button | 🚧 planned |
-| Open, edit and delete a note (deletion behind a confirmation step) | 🚧 planned |
+| Create a note for today from the bottom bar's centre button | ✅ built |
+| Open, edit and delete a note (deletion behind a confirmation step) | 🚧 planned — the editor and the save path exist; the route from a Home row into them does not |
 | Month calendar with today marked and previous/next month navigation | 🚧 planned |
 | Tap a day to see that day's notes, and add a note to that day | 🚧 planned |
 | Future days are visibly disabled and cannot hold a note | 🚧 planned |
@@ -42,13 +42,26 @@ Two things at once:
 These are the rules the note feature is being built to, not a description of code that exists yet —
 the Features table above is the source of truth for what is actually implemented.
 
-- **A note can never be dated in the future.** Today is allowed, tomorrow is not. The rule will be
-  enforced in the repository layer, below the UI, so that no caller can walk past it — a screen
-  that merely hides the affordance does not satisfy it.
+- **A note can never be dated in the future.** Today is allowed, tomorrow is not. Enforced in
+  `NoteRepositoryImpl.save`, below the UI, so that no caller can walk past it — a screen that
+  merely hides the affordance does not satisfy it. The refusal comes back as an
+  `Outcome.Error`; the store never throws at the screen above it.
+
 - **Notes are ordered most-recently-touched first** — by `updatedAt` descending, where "touched"
   means created *or* edited. Enforced twice on purpose: `NoteDao` orders in SQL, and
   `NoteRepositoryImpl` sorts the result again so the guarantee belongs to the store rather than to
   a query string, and so a plain JVM test can hold it to that.
+
+Those two are the project's whole domain rulebook, and the authoritative copy is
+`knowledge/DOMAIN.md`. The point below is **not** a third rule — it is the convention the code
+follows in order to keep the second one true:
+
+- **No screen stamps a note; the store does.** `NoteRepositoryImpl.save` sets `createdAt` on a note
+  that has never been stored and moves `updatedAt` on every save, reading a `Clock` injected into
+  it. Two screens reading two clocks would produce a list order nobody could explain. Which *day*
+  a note belongs to is the opposite case: that is the caller's choice — today from Home's centre
+  button, a selected day from the Calendar screen — and the store only checks it, by refusing a
+  day in the future.
 
 ## Tech stack
 
@@ -222,6 +235,12 @@ com/example/skeleton/
 │   │   │   ├── HomeFragment.kt
 │   │   │   ├── HomeUiState.kt
 │   │   │   └── HomeViewModel.kt
+│   │   ├── note/                           #     The note editor: one new or existing note
+│   │   │   ├── component/
+│   │   │   │   └── NoteEditor.kt           #       The scrolling title + body writing surface
+│   │   │   ├── NoteFragment.kt             #       Owns the nav arguments; argumentsFor() builds them
+│   │   │   ├── NoteUiState.kt
+│   │   │   └── NoteViewModel.kt
 │   │   └── setting/
 │   │       ├── component/
 │   │       │   └── SettingItem.kt

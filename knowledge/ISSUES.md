@@ -16,6 +16,85 @@
 
 <!-- Newest first. Delete resolved entries outright rather than marking them done. -->
 
+### The Note editor's keyboard handling is unverified below API 30
+
+- **What is wrong:** possibly nothing, and that is the problem — it cannot be checked here.
+  `NoteEditor` uses `Modifier.imePadding()` so the writing surface is not covered by the keyboard.
+  That is correct on API 30+. Below 30, `WindowInsets.ime` is a back-port that needs
+  `android:windowSoftInputMode="adjustResize"` (added to `MainActivity` in iteration 5) **and** is
+  historically suppressed by `android:windowTranslucentStatus`, which `res/values/themes.xml` sets
+  on `Core.Theme.JetpackCompose` (lines 17 and 26). `minSdk` is **24**.
+- **Why it matters:** if the inset reports zero on an older device, the editor reverts to the
+  Critical defect it was fixed for — the user types into a line the keyboard is covering, with no
+  scroll range able to reach it. DoD criterion 12's editor clause would be false on every device
+  below API 30 while all four Gradle tasks stay green.
+- **Why it is still open:** nothing in this repository can run an API 24–29 image. There is no
+  emulator, no `adb` capability, and `androidTest` needs a device. Removing
+  `windowTranslucentStatus` is a theme change affecting every screen's status bar, which does not
+  belong inside "create a note from Home" and would be guesswork without a device to compare
+  against.
+- **What would resolve it:** open a note on an API 29 emulator, tap the body, type past the
+  keyboard's top edge, and confirm the text stays visible. If it does not, the likely fix is
+  dropping `windowTranslucentStatus` (the edge-to-edge setup makes it redundant) rather than
+  anything in `NoteEditor`. Delete this entry once it has been observed either way.
+- **Full record:** the fresh-context review of T-003, finding 1 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-003)'`.
+- **Do not:** assume it works because the code reads correctly, and do not assume it is broken
+  either. Both would be inventing evidence.
+
+### The Note screen has no reference image, so nothing defends how it looks
+
+- **What is wrong:** T-003 added four `@Preview`s and **zero** `@PreviewTest`, so the app's only
+  text-entry screen has no committed rendering. `HomeNoteList` got one in T-002; `NoteEditor` did
+  not. Consequences, both concrete: DoD criterion 12's "the editor scrolls rather than clipping"
+  has no artifact at all, and criterion 2's perceptual half ("the accent reads as blue and is
+  legible on black") is unrecorded for the `primary`-filled Save control and the `primary` cursor —
+  the two places this screen paints the accent.
+- **Why it is still open:** the reason is real, not laziness, and it is the same one that kept
+  populated note rows unpinned in T-002 — `NoteEditor` prints its date through
+  `DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)` against `LocalConfiguration`, so the
+  rendering follows the **host's** locale. A reference image of it fails on a colleague's machine
+  for a reason that has nothing to do with the app, and the only way to green it again is
+  `updateDebugScreenshotTest` — the one command nobody is allowed to reach for. See the host-locked
+  entry below.
+- **What would resolve it:** either an `imageDifferenceThreshold` / pinned toolchain (which the
+  entry below already asks for), or a `@PreviewTest` that renders `NoteEditor` through a
+  locale-independent surface — the fields and the divider without the date line, or the date
+  supplied as a plain pre-formatted `String` parameter so the test can pass a fixed one. The second
+  is a small change to `NoteEditor`'s signature and is the cheaper of the two.
+- **Full record:** the fresh-context review of T-003, finding 8 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-003)'`.
+- **Do not:** record a reference image of the editor as it stands. It would be host-locked on the
+  date line, and a case that fails for the wrong reason teaches the next person to re-record.
+
+### Leaving the Note editor either loses the user's text or traps them on the screen
+
+- **What is wrong:** two gaps at the editor's exits, neither claimed to be handled anywhere.
+  1. **Nothing is saved on the way out.** `onBack` is wired only to the top bar's arrow, and it
+     pops without asking. The hardware/gesture back button bypasses the layout entirely, and
+     process death takes the text with it — there is no `SavedStateHandle` and no
+     `rememberSaveable`. "Typed 300 words, swiped back, lost them" is a one-gesture data loss.
+     (Rotation *is* handled — `NoteViewModel.openNote` refuses to run twice — and tested.)
+  2. **A refused save has no way forward.** Both a refusal and a genuine write failure surface as
+     the same `we_are_sorry` toast ("something went wrong, please try again"), and retrying a
+     *refusal* can never succeed. The editor exposes no date control, so the user cannot change the
+     thing that was refused.
+- **Why it is still open:** no DoD criterion asks for either. A discard confirmation and an autosave
+  are different product decisions with different failure modes (autosave creates empty notes), and
+  choosing one is not the engine's call. Part 2 is currently reachable only if the device clock
+  moves backwards between opening the editor and saving.
+- **What would resolve it:** for part 1, a decision — confirm-on-discard, or save-on-leave, or an
+  explicit "notes are kept only when you tap Save". For part 2, distinguish refusal from failure in
+  the outcome and give the refusal its own message naming the date.
+- **When it stops being cosmetic:** **T-008.** That task opens this same editor on a day the user
+  picked on the calendar, so a refusal becomes reachable by ordinary use rather than by a clock
+  change, and part 2 must be resolved there.
+- **Full record:** the fresh-context review of T-003, findings 5 and 6 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-003)'`.
+- **Do not:** add an autosave to make part 1 go away. A note created because somebody opened a
+  screen and left is worse than one they lost, and it breaks the "newest first" list with rows
+  nobody wrote.
+
 ### Screenshot references are exact-pixel and host-locked, and three orphaned ones are sitting in the tree
 
 - **What is wrong:** two sharp edges on the reference-image lifecycle, both found in iteration 3.

@@ -22,9 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.skeleton.R
 import com.example.skeleton.core.LocalNavController
 import com.example.skeleton.domain.enums.BottomBarDestination
 import com.example.skeleton.ui.theme.MyApplicationTheme
@@ -44,15 +43,31 @@ import com.example.skeleton.ui.theme.customizedTextStyle
 import com.example.skeleton.ui.util.NavigationUtil
 
 
+/**
+ * The bottom navigation bar every top-level screen wears: the tabs, plus the round action button
+ * in the middle that creates a note.
+ *
+ * [onCreateNote] has **no default**, and that is deliberate. This component is shared by Home and
+ * Settings alike, and a defaulted `= {}` would let a screen host the app's primary create action
+ * as a button that does nothing — which is precisely the state this bar was in before the note
+ * feature existed. Without a default, adding a third screen forces whoever adds it to decide what
+ * the middle button means there.
+ *
+ * The answer for both current screens is the same: create a note dated today. Creating a note is
+ * not a Home-only idea, so there is no reason for the button to change meaning or go grey when the
+ * user happens to be in Settings.
+ *
+ * @param onCreateNote the user tapped the centre action button.
+ * @author Phong-Kaster
+ */
 @Composable
-fun CoreBottomBar() {
+fun CoreBottomBar(
+    onCreateNote: () -> Unit,
+) {
     // For navigating to other destinations
     val navController = LocalNavController.current ?: rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-
-    var showBottomSheet by remember { mutableStateOf(false) }
-
 
     Row(
         modifier = Modifier
@@ -85,12 +100,16 @@ fun CoreBottomBar() {
                 .size(48.dp)
                 .clip(shape = CircleShape)
                 .background(color = MaterialTheme.colorScheme.primary)
-
-                .clickable { showBottomSheet = !showBottomSheet },
+                // Debounced like the tabs beside it: this navigates, and two taps arriving inside
+                // the same moment would push two copies of the Note screen onto the back stack.
+                .clickable(onClick = { if (NavigationUtil.canNavigate()) onCreateNote() }),
         ) {
             Icon(
                 imageVector = Icons.Rounded.Add,
-                contentDescription = null,
+                // Not null. The tabs each carry their label, but this button is icon-only, so
+                // without a description the app's primary create action is an unnamed button to
+                // anybody using a screen reader.
+                contentDescription = stringResource(R.string.add_note),
                 modifier = Modifier.size(30.dp),
                 tint = MaterialTheme.colorScheme.onPrimary
             )
@@ -132,11 +151,20 @@ private fun BottomBarElement(
             )
             .padding(top = 4.dp, bottom = 12.dp),
     ) {
+        // The selected tab is painted in the accent, the others in the ordinary foreground. Before
+        // this, both states were drawn in `onBackground` and the *only* signal that a tab was
+        // selected was that its text label appeared at all — so on a bar where every label is
+        // hidden, or read by somebody who does not know the label only shows when active, the bar
+        // never said where you were.
+        val tint =
+            if (enable) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onBackground
+
         Icon(
             painter = painterResource(drawableId),
             contentDescription = stringResource(id = stringId),
             modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onBackground,
+            tint = tint,
         )
 
         if (enable) {
@@ -146,7 +174,7 @@ private fun BottomBarElement(
                     fontSize = 14,
                     fontWeight = 600,
                 ),
-                color = MaterialTheme.colorScheme.onBackground,
+                color = tint,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -164,7 +192,7 @@ private fun PreviewBottomBar() {
     MyApplicationTheme(
         content = {
             Box(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
-                CoreBottomBar()
+                CoreBottomBar(onCreateNote = {})
             }
         }
     )

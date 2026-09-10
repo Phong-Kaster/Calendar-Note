@@ -50,4 +50,54 @@ data class Note(
     val displayTitle: String =
         if (title.isNotBlank()) title.trim()
         else content.lineSequence().firstOrNull(predicate = { line -> line.isNotBlank() })?.trim().orEmpty()
+
+    companion object {
+
+        /**
+         * The [id] of a note that has never been stored.
+         *
+         * `0` and not `-1`, because `0` is the value Room reads as "give this row a fresh id"
+         * (`@PrimaryKey(autoGenerate = true)`). Navigation uses `-1` for the same idea — see
+         * `NoteFragment` — and translates to this one at the edge of the screen.
+         */
+        const val UNSAVED_ID = 0L
+
+        /**
+         * The [createdAt] / [updatedAt] of a note that has never been stored.
+         *
+         * The store recognises it and stamps the real clock reading in its place, which is what
+         * makes "created" mean created: a note that already carries a stamp keeps it forever.
+         */
+        const val UNSAVED_AT = 0L
+
+        /**
+         * A note the user has begun writing and has not saved yet.
+         *
+         * Both timestamps are left [UNSAVED_AT] on purpose: **no screen stamps a note.** The store
+         * does, so that two notes saved from two different screens cannot end up stamped by two
+         * different clocks — which is what "most recently touched first" depends on.
+         *
+         * The [date] is a different matter and does come from the caller: which *day* a note
+         * belongs to is a choice — today from Home's centre button, a selected day from the
+         * Calendar screen — and only the caller knows which. The store checks that choice (it
+         * refuses a future day) but does not make it.
+         *
+         * @param date the day the note belongs to.
+         * @param title the heading; may be blank.
+         * @param content the body; may be blank.
+         * @author Phong-Kaster
+         */
+        fun draft(
+            date: LocalDate,
+            title: String = "",
+            content: String = "",
+        ): Note = Note(
+            id = UNSAVED_ID,
+            date = date,
+            title = title,
+            content = content,
+            createdAt = UNSAVED_AT,
+            updatedAt = UNSAVED_AT,
+        )
+    }
 }

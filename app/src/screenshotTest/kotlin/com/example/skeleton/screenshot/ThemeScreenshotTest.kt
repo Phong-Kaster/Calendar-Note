@@ -293,7 +293,7 @@ private fun OutlinesAndText() {
 private fun BottomBar() {
     ScreenshotScaffold(
         content = {
-            CoreBottomBar()
+            CoreBottomBar(onCreateNote = {})
         },
     )
 }
@@ -320,7 +320,7 @@ private fun BottomBar() {
 private fun BottomBarSystemNight() {
     ScreenshotScaffold(
         content = {
-            CoreBottomBar()
+            CoreBottomBar(onCreateNote = {})
         },
     )
 }

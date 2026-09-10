@@ -21,11 +21,13 @@ import com.example.skeleton.core.CoreLayout
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.component.ratebottomsheet.RateBottomSheet
+import com.example.skeleton.ui.fragment.note.NoteFragment
 import com.example.skeleton.ui.fragment.setting.component.SettingItem
 import com.example.skeleton.ui.util.AppUtil
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
 import com.example.skeleton.ui.util.RateUtil
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.time.LocalDate
 
 class SettingFragment : CoreFragment() {
     private val viewModel: SettingViewModel by viewModel()
@@ -50,6 +52,12 @@ class SettingFragment : CoreFragment() {
             },
             onShareApp = { AppUtil.shareApp(context = requireContext()) },
             onRateApp = { showRateBottomSheet = true },
+            onCreateNote = {
+                safeNavigate(
+                    destination = R.id.toNote,
+                    bundle = NoteFragment.argumentsFor(date = LocalDate.now()),
+                )
+            },
         )
 
 
@@ -81,11 +89,12 @@ private fun SettingLayout(
     onShareApp: () -> Unit = {},
     onOpenTermOfService: () -> Unit = {},
     onOpenPrivacyPolicy: () -> Unit = {},
+    onCreateNote: () -> Unit = {},
 
     ) {
     CoreLayout(
         bottomBar = {
-            CoreBottomBar()
+            CoreBottomBar(onCreateNote = onCreateNote)
         },
         topBar = {
             CoreTopBar(title = "Settings")

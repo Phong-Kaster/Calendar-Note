@@ -1,5 +1,6 @@
 package com.example.skeleton.data.repository
 
+import com.example.skeleton.common.Outcome
 import com.example.skeleton.data.database.local.dao.NoteDao
 import com.example.skeleton.data.database.local.entity.NoteEntity
 import com.example.skeleton.data.mapper.toDomain
@@ -10,12 +11,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Clock
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 /**
- * Holds [NoteRepositoryImpl] to the promise its interface makes: the notes come out most recently
- * touched first, whatever order they went in.
+ * Holds [NoteRepositoryImpl] to the two promises its interface makes: notes come out most recently
+ * touched first whatever order they went in, and a note dated after today never goes in at all.
  *
  * The DAO underneath is a fake — a list in memory, no Room, no Android, no device. That is the
  * point of the fake rather than a convenience: the real DAO sorts in SQL, and a SQL `ORDER BY` can
@@ -23,10 +28,16 @@ import java.time.LocalDate
  * have. So the fake deliberately hands back a **jumbled** list. If the repository were relying on
  * the database to sort for it, these tests would fail, which is exactly what they exist to notice.
  *
- * The ordering rule itself is not this file's invention: `knowledge/DOMAIN.md` states it, including
- * the trap it is there to prevent — ordering by `createdAt` looks perfect on a fresh database and
- * stops being right the first time somebody edits an old note. The second test below is that trap,
- * written down.
+ * Neither rule is this file's invention: `knowledge/DOMAIN.md` states both, including the traps
+ * they exist to prevent. Ordering by `createdAt` looks perfect on a fresh database and stops being
+ * right the first time somebody edits an old note — the second test below is that trap, written
+ * down. And the future-date boundary is stated inclusively on purpose, because an off-by-one in
+ * one direction lets tomorrow through and in the other makes it impossible to write a note at all;
+ * both directions are tested.
+ *
+ * The clock is a constructor parameter and every test that cares passes [CLOCK], a fixed one. A
+ * test that read the real clock could not assert on a timestamp at all, and "is today allowed?"
+ * would depend on what day the suite happened to run.
  *
  * @author Phong-Kaster
  */
@@ -119,9 +130,119 @@ class NoteRepositoryImplTest {
         assertEquals(note, note.toEntity().toDomain())
     }
 
+    // ---------- Saving: the store owns the clock ----------
+
+    @Test
+    fun `a brand-new note is stamped with the current time on both timestamps`() = runTest {
+        val dao = FakeNoteDao(rows = emptyList())
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        val outcome = repository.save(note = Note.draft(date = TODAY, title = "Groceries"))
+
+        assertTrue(outcome is Outcome.Success)
+        val stored = repository.notesFlow.first().single()
+        assertEquals(NOW_MILLIS, stored.createdAt)
+        assertEquals(NOW_MILLIS, stored.updatedAt)
+    }
+
+    @Test
+    fun `editing a note moves updatedAt and leaves createdAt where it was`() = runTest {
+        // This is the half of the ordering rule that a fresh database cannot show. If `save`
+        // stamped `createdAt` too, every note in the app would report having been written the
+        // moment it was last touched — and nothing on any screen would look wrong.
+        val dao = FakeNoteDao(rows = listOf(entity(id = 5L, createdAt = 1_000L, updatedAt = 1_000L)))
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        val existing = repository.getNote(id = 5L)!!
+        val outcome = repository.save(note = existing.copy(title = "Groceries, again"))
+
+        assertTrue(outcome is Outcome.Success)
+        val stored = repository.getNote(id = 5L)!!
+        assertEquals(1_000L, stored.createdAt)
+        assertEquals(NOW_MILLIS, stored.updatedAt)
+        assertEquals("Groceries, again", stored.title)
+    }
+
+    @Test
+    fun `the day a note was given is the day it is stored under`() = runTest {
+        val dao = FakeNoteDao(rows = emptyList())
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        repository.save(note = Note.draft(date = TODAY.minusDays(3L)))
+
+        assertEquals(TODAY.minusDays(3L), repository.notesFlow.first().single().date)
+    }
+
+    // ---------- Saving: the store owns the calendar (knowledge/DOMAIN.md, rule 1) ----------
+
+    @Test
+    fun `a note dated tomorrow is refused, and nothing is written`() = runTest {
+        val dao = FakeNoteDao(rows = emptyList())
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        val outcome = repository.save(note = Note.draft(date = TODAY.plusDays(1L)))
+
+        assertTrue(outcome is Outcome.Error)
+        // The refusal has to mean the row never appeared. A `save` that reported an error *and*
+        // wrote the row would pass an assertion on the return value alone.
+        assertEquals(emptyList<Note>(), repository.notesFlow.first())
+    }
+
+    @Test
+    fun `a note dated far in the future is refused too`() = runTest {
+        val repository = NoteRepositoryImpl(noteDao = FakeNoteDao(rows = emptyList()), clock = CLOCK)
+
+        val outcome = repository.save(note = Note.draft(date = TODAY.plusYears(5L)))
+
+        assertTrue(outcome is Outcome.Error)
+    }
+
+    @Test
+    fun `a note dated today is accepted`() = runTest {
+        // The boundary is inclusive. Getting this one wrong makes the app unable to write the only
+        // note the create button ever offers.
+        val repository = NoteRepositoryImpl(noteDao = FakeNoteDao(rows = emptyList()), clock = CLOCK)
+
+        val outcome = repository.save(note = Note.draft(date = TODAY))
+
+        assertTrue(outcome is Outcome.Success)
+    }
+
+    @Test
+    fun `a note dated yesterday is accepted`() = runTest {
+        val repository = NoteRepositoryImpl(noteDao = FakeNoteDao(rows = emptyList()), clock = CLOCK)
+
+        val outcome = repository.save(note = Note.draft(date = TODAY.minusDays(1L)))
+
+        assertTrue(outcome is Outcome.Success)
+    }
+
+    @Test
+    fun `an existing note cannot be edited into the future either`() = runTest {
+        // The rule covers every write path, not just creation. Moving an old note's date forward
+        // is the same violation as creating one there.
+        val dao = FakeNoteDao(rows = listOf(entity(id = 5L)))
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        val existing = repository.getNote(id = 5L)!!
+        val outcome = repository.save(note = existing.copy(date = TODAY.plusDays(1L)))
+
+        assertTrue(outcome is Outcome.Error)
+        assertEquals(TODAY, repository.getNote(id = 5L)!!.date)
+    }
+
+    // ---------- Reading one note ----------
+
+    @Test
+    fun `asking for a note that is not there is answered with null, not an error`() = runTest {
+        val repository = NoteRepositoryImpl(noteDao = FakeNoteDao(rows = emptyList()), clock = CLOCK)
+
+        assertNull(repository.getNote(id = 404L))
+    }
+
     private fun entity(
         id: Long,
-        date: Long = LocalDate.of(2026, 3, 14).toEpochDay(),
+        date: Long = TODAY.toEpochDay(),
         createdAt: Long = 1_000L,
         updatedAt: Long = 1_000L,
     ): NoteEntity = NoteEntity(
@@ -132,6 +253,26 @@ class NoteRepositoryImplTest {
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
+
+    private companion object {
+
+        /** The day every test in this file pretends it is. */
+        private val TODAY: LocalDate = LocalDate.of(2026, 3, 14)
+
+        /**
+         * A clock stopped mid-morning on [TODAY].
+         *
+         * Mid-morning rather than midnight so that no assertion here can pass or fail on which
+         * side of a day boundary the instant landed.
+         */
+        private val CLOCK: Clock = Clock.fixed(
+            TODAY.atStartOfDay(ZoneOffset.UTC).plusHours(9L).toInstant(),
+            ZoneOffset.UTC,
+        )
+
+        /** What [CLOCK] reads in epoch milliseconds — the stamp every save here should produce. */
+        private val NOW_MILLIS: Long = CLOCK.millis()
+    }
 }
 
 /**
@@ -139,6 +280,11 @@ class NoteRepositoryImplTest {
  *
  * [observeAll] returns the rows **in the order they were handed to the constructor**, on purpose.
  * A fake that sorted would be agreeing with the code under test instead of checking it.
+ *
+ * One thing it does *not* emulate: Room's `autoGenerate`. [upsert] keeps whatever id it is given,
+ * so two brand-new notes — both carrying [com.example.skeleton.domain.model.Note.UNSAVED_ID] —
+ * would land on the same row here where the real table would hand out two. No test below saves
+ * two new notes; a test that needs to will need a fake that counts.
  *
  * @param rows the rows the fake table starts with.
  * @author Phong-Kaster

@@ -11,7 +11,7 @@
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 17 tests as of iteration 4. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 38 tests as of iteration 5. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
 | Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
@@ -69,6 +69,52 @@ it drops a path from the index and leaves the file on disk.
 **Name the individual files, never the folder.** `git rm --cached -r <dir>` on
 `…/ThemeScreenshotTestKt/` would also untrack the six *committed* references living beside the
 strays, and the next commit would delete them from the branch.
+
+### `assembleDebug` + `testDebugUnitTest` green does **not** mean the tree compiles
+
+`app/src/screenshotTest/` is a fourth source set that neither task touches. Change the signature of
+a composable it renders and both report `BUILD SUCCESSFUL` while
+`compileDebugScreenshotTestKotlin` is broken — found in iteration 5 by giving `CoreBottomBar` a
+required parameter, which the two screenshot cases calling it did not pass.
+
+**Run `:app:validateDebugScreenshotTest` in the same command as the build whenever a composable's
+signature changes.** It is cheap (~15s) and it is the only task that compiles that source set. The
+same applies to `app/src/androidTest/`, which nothing here can compile at all.
+
+### Unit tests run against a *stub* `android.jar` — every framework call throws unless told not to
+
+A JVM unit test compiles against a stub `android.jar` where every framework method **throws**
+`"not mocked"` rather than doing nothing. One `Log.w` on an error path is therefore enough to make
+that whole path untestable: the test crashes on the log line instead of failing on the behaviour.
+Since iteration 5 `app/build.gradle.kts` carries
+`testOptions { unitTests { isReturnDefaultValues = true } }`, which makes those stubs return
+`0` / `false` / `null` instead. That is what lets `NoteRepositoryImpl`'s refusal path — DoD
+criterion 10 — be tested at all (amendment A-008).
+
+**The trap that comes with it: an unmocked framework call now returns a default silently.** So
+`android.os.Bundle.putLong` is a no-op in a unit test, and
+`NoteFragment.argumentsFor()` cannot be unit-tested — it returns an empty `Bundle` and every
+assertion against it passes vacuously. A test that needs framework *behaviour* rather than
+framework *silence* needs Robolectric, which is still not a dependency here. Do not write a test
+whose subject is a `Bundle`, an `Intent`, a `Uri` or a `SharedPreferences`.
+
+### Any new screen with a text field needs `imePadding()` — nothing here handles IME insets
+
+`MainActivity` calls `enableEdgeToEdge()` and `SystemBarUtil` calls
+`WindowCompat.setDecorFitsSystemWindows(window, false)`, so **the window is never resized when the
+keyboard opens**, and `CoreLayout` passes `contentWindowInsets = WindowInsets(0,0,0,0)` — it
+deliberately consumes nothing. Before iteration 5 there was no full-screen text input in the app,
+so this had never bitten; the Note editor's first version scrolled correctly with the keyboard
+closed and was unusable with it open. The viewport stayed full-screen height, the keyboard covered
+the bottom 40% of it, and no amount of scrolling could lift the covered strip into view, because
+the scroll range is `content − viewport` and the viewport was never shortened.
+
+`Modifier.imePadding()` **before** `verticalScroll` in the chain — it has to shrink the viewport,
+not the content inside it. `MainActivity` also carries
+`android:windowSoftInputMode="adjustResize"`, which is what `WindowInsets.ime` needs below API 30.
+**That half is unverified** — see `knowledge/ISSUES.md`; `values/themes.xml` sets
+`windowTranslucentStatus`, which historically suppresses the back-ported inset, and nothing here
+can run an API 24–29 image.
 
 ### A piped Gradle command reports the *pipe's* exit code, not Gradle's
 
@@ -149,6 +195,21 @@ confirmed against the code that exists.
   `private val`, not a companion.
 - **Repositories** never throw across the boundary — they return `null` / `emptyList()` /
   `common.Outcome<T>`, and re-throw `CancellationException`.
+- **The notes store owns the clock, and it is injected.** `NoteRepositoryImpl` takes
+  `clock: Clock = Clock.systemDefaultZone()` and is the only thing in the app that stamps
+  `createdAt` / `updatedAt` or decides what "today" is for the future-date rule. No screen stamps a
+  note. Which *day* a note belongs to is the caller's choice and does travel down from the UI —
+  `LocalDate.now()` appears in `HomeFragment`, `SettingFragment`, `NoteFragment` (as a fallback for
+  a missing nav argument) and `NoteUiState`'s default. Keep any *new* time-dependent rule behind
+  the injected `Clock`: the four UI reads are invisible to every test in this project.
+- **Navigation arguments are hand-rolled — there is no Safe Args plugin.** Build the `Bundle` with
+  a `companion object` factory on the destination Fragment (`NoteFragment.argumentsFor(...)`) so the
+  key names exist in one place, and navigate with `safeNavigate(destination, bundle)`. Note the
+  sharp edge: `safeNavigate` catches and logs, so a mistyped key or a missing required argument
+  produces **no crash and no compiler error** — just a button that appears to do nothing. Give every
+  `<argument>` a `defaultValue` and pick sentinels that cannot be real values (`NoteFragment` uses
+  `-1L` for "no note yet" and `Long.MIN_VALUE` for "no day given"; `-1` as an epoch day is a real
+  date, 1969-12-31, so it is *not* usable as the day sentinel).
 - **Strings:** every user-visible string goes in `res/values/strings.xml`, appended at the
   end, named for the words themselves (`<string name="download">`, not `<string
   name="feature_download">`).
@@ -168,12 +229,17 @@ confirmed against the code that exists.
 - **No lint baseline / no ktlint / no detekt** is configured. "Lint" means Android Gradle Plugin lint.
 - **Test surface — three source sets, two of which need no device:**
   - `app/src/test/` — plain JVM unit tests: the `ExampleUnitTest` stub,
-    `ui/theme/DarkColorSchemeTest.kt`, and (iteration 4) `domain/model/NoteTest.kt` plus
-    `data/repository/NoteRepositoryImplTest.kt`, which runs a `runTest` coroutine against a
-    hand-written fake DAO. **These can touch Compose's non-`@Composable` API** —
-    `darkColorScheme()`, `Color` and Java reflection over `ColorScheme` all work with no Android
-    context and no extra dependency. Worth knowing before assuming a Compose-related property needs
-    an emulator. There is no Robolectric.
+    `ui/theme/DarkColorSchemeTest.kt`, `domain/model/NoteTest.kt`,
+    `data/repository/NoteRepositoryImplTest.kt` (a `runTest` coroutine against a hand-written fake
+    DAO) and, from iteration 5, `ui/fragment/note/NoteViewModelTest.kt`. **These can touch
+    Compose's non-`@Composable` API** — `darkColorScheme()`, `Color` and Java reflection over
+    `ColorScheme` all work with no Android context and no extra dependency. Worth knowing before
+    assuming a Compose-related property needs an emulator. There is no Robolectric.
+    **A ViewModel is testable here too**, which iteration 5 established: `Dispatchers.setMain(...)`
+    from `kotlinx-coroutines-test` replaces the `Dispatchers.Main` that `viewModelScope` posts to
+    and that does not exist off a device. With an `UnconfinedTestDispatcher` every `launch` runs to
+    completion where it is started, so a test can call a ViewModel function and assert on
+    `uiState.value` on the next line. Reach for this before declaring a screen's logic unprovable.
   - `app/src/screenshotTest/kotlin/…/screenshot/` — Compose Preview Screenshot Tests
     (`@PreviewTest @Preview`), rendered host-side by layoutlib. Imported in iteration 3.
     `ScreenshotScaffold.kt` is the wrapper every case goes through: it renders the subject inside

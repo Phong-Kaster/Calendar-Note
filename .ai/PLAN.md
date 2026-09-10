@@ -23,9 +23,15 @@ in the repository to copy the shape from.
    delete. Each leaves the app usable at a higher level than the one before. Persistence lands in
    T-002 because a list with nothing behind it is not observable behaviour.
 3. **Calendar** (T-006 → T-008), likewise: show the grid, then show a day's notes, then add to a
-   day. The future-date rule lands in the repository in T-008 rather than in the calendar UI in
-   T-006, because a rule enforced only in a grid cell is a rule that a second caller can walk past.
-   T-006 disables the cell; T-008 makes the disabling redundant.
+   day. ~~The future-date rule lands in the repository in T-008~~ — **corrected in iteration 5
+   (amendment A-006): it landed in T-003.** The original reasoning was right about *where* the rule
+   belongs (the repository, not a grid cell) and wrong about *when*: it timed the rule to the task
+   where a future date first becomes **selectable**, which is a fact about the UI, while the rule is
+   about what the data layer accepts. The moment `save` existed and took any date it was handed, the
+   code contradicted `knowledge/DOMAIN.md`. **The lesson worth carrying: schedule a domain rule to
+   the task that creates its first write path, not to the task that creates its first tempting
+   caller.** T-006 still disables the cell; T-008 is now the second caller reaching a guard that
+   already holds.
 4. **Documentation and the human-inspection package last** (T-009), when the package tree is final.
 
 **Integration approach.** The demo `Post` / network stack (`PostApi`, `PostRepository`, `PostDao`,
@@ -51,7 +57,16 @@ The layers, in increasing cost:
   future-date rule, `updatedAt` ordering, notes-for-a-date filtering, and the day-cell state
   mapping (past / today / future). These are written against a fake DAO so they need no Room and no
   Android context. This is where DoD criterion 10 lives, and it must never depend on a human looking
-  at a screen.
+  at a screen. **Iteration 5 widened this layer twice, and both are worth reusing:** a ViewModel is
+  testable here (`Dispatchers.setMain` + an unconfined test dispatcher — see
+  `knowledge/PROJECT.md`), so screen *logic* need not wait for a host-side UI test; and error paths
+  are testable now that framework stubs return defaults instead of throwing (A-008).
+
+  **A test is not evidence until it has been made to fail.** Iteration 5 mutated the
+  implementation three times and recorded which tests broke, because a green suite against correct
+  code is indistinguishable from a green suite against a tautology — and iteration 4 had already
+  been bitten by a fake DAO that would have agreed with the code instead of checking it. Do this for
+  any test that carries a DoD criterion on its own, criterion 10 above all.
 - **Build + lint** on every checkpoint. Criterion 13's command set now also includes
   `:app:validateDebugScreenshotTest` (D-001; `DoD.md` itself is immutable to the engine and was not
   edited to say so — see A-002).
@@ -89,12 +104,16 @@ can only be checked by rendering it, which is precisely the capability this repo
 - ✅ T-001 — Dark-only theme with blue primary, app named "Calendar Note", README seeded (depends on: —)
 - ✅ T-010 — Import the host-side screenshot harness from `loop/todo-calendar-screens` (depends on: T-001)
 - ✅ T-002 — Home shows persisted notes newest-first, with an empty state (depends on: T-001)
-- T-003 — User can create a note for today from Home (depends on: T-002)
-- T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003)
+- ✅ T-003 — User can create a note for today from Home (depends on: T-002) — **also carried the
+  future-date rule (A-006) and the load-existing-note path (A-007), so DoD criterion 10 is done**
+- T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003) — **reduced by
+  A-007 to the Home-row route, the re-sort evidence and the blanked-title case**
 - T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010)
 - T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
 - T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
-- T-008 — Add a note to the selected day; the repository refuses future-dated notes (depends on: T-007, T-003)
+- T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006: the
+  refusal is implemented and tested; this task is the second caller reaching it, plus surfacing a
+  refusal distinguishably**
 - T-009 — README, package tree, strings audit, and the human-inspection checklist (depends on: T-005, T-008)
 
 ## Known Risks

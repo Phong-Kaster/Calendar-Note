@@ -175,3 +175,94 @@
 - **Expected impact:** none on schedule. The standing consequence is a technique worth reusing, now
   in `knowledge/PROJECT.md`: when hand-writing a Room migration here, copy Room's generated
   statement rather than composing one from the entity by eye.
+
+---
+
+## A-006 — 2026-09-10 (iteration 5) — the future-date rule lands in T-003, not T-008
+
+- **Tier:** 1 — a prerequisite moved earlier inside the approved task shape. No change to the PRD,
+  the DoD, the architecture or the task graph. `knowledge/DOMAIN.md` is untouched; the rule is
+  implemented, not edited.
+- **Reason:** `PLAN.md` put the rule in T-008 on the reasoning that the Calendar screen is where a
+  future date first becomes *selectable*. That reasoning is about the UI, and the rule is not:
+  `knowledge/DOMAIN.md` says the enforcement point is "in the repository layer, below the UI, so
+  that no caller can bypass it", and adds that "a UI that merely hides the affordance does not
+  satisfy this rule". T-003 is the task that creates the first write path. The moment
+  `NoteRepository.save` exists and accepts any date it is handed, the codebase contradicts the rule
+  as written — and ENGINE.md §9 classifies that as a domain defect to fix inside the current task,
+  not a gap to schedule. Deferring would have meant checkpointing code that is known-wrong against
+  a human-owned rule, then filing an `ISSUES.md` entry against my own fresh diff.
+- **Decision:** `NoteRepositoryImpl.save` refuses any note dated after `LocalDate.now(clock)` and
+  reports it as `Outcome.Error`. `isAfter`, so today is allowed — the boundary the rule spells out
+  explicitly. Enforced on every write path, so editing an existing note's date into the future is
+  refused identically. **DoD criterion 10 is therefore satisfied by this checkpoint**, with the
+  test it names: tomorrow refused, today and yesterday accepted, and the row verified absent after
+  a refusal so that a `save` which errored *and* wrote would still fail.
+- **Rejected:** enforcing it in the ViewModel, or only in T-008's calendar cell. Both are the "a
+  rule enforced in one caller is a rule the second caller walks past" failure `PLAN.md` itself
+  warns about two paragraphs earlier.
+- **Affected tasks:** T-003 gains the rule and the test. **T-008 keeps its calendar work and its
+  acceptance changes from implementing the refusal to re-verifying it** — its own tests stay, as a
+  second caller reaching the same guard is worth its own case. No task added, removed or reordered.
+- **Expected impact:** T-008 gets smaller. The `Clock` seam this needed is also what made
+  `createdAt`/`updatedAt` stamping testable, which was not the motivation but is the larger win.
+
+---
+
+## A-007 — 2026-09-10 (iteration 5) — T-003 loads an existing note as well as creating one
+
+- **Tier:** 1 — one prerequisite folded from T-004 into T-003. No change to the PRD, the DoD or the
+  architecture; the task graph keeps all nine tasks and their order.
+- **Reason:** `.ai/TASKS/T-003.md` asked for a nav destination carrying **both** a date and a note
+  id (`-1` for new), so the navigation contract would not need reshaping in T-004 or T-008. Adding
+  the id argument while `NoteViewModel` ignored it would have shipped a live trap: a real id
+  arriving on a screen that pre-fills nothing, whose save then upserts that row — blanking a note
+  the user only meant to open. The two honest options were to leave the id argument out until T-004
+  or to honour it now. Honouring it costs `NoteRepository.getNote(id)`, which gets its caller in the
+  same checkpoint, so it is not a method with nothing wired to it (`POLICIES.md` § Task
+  Decomposition).
+  The stronger reason is the one found while writing the stamping logic: `DOMAIN.md` rule 2 defines
+  *two* behaviours — creating sets both timestamps, editing moves `updatedAt` and leaves `createdAt`
+  alone. Both live in the same four lines of `save`. Testing the create half now and the edit half a
+  task later would leave the trap (`createdAt` clobbered on every edit) untested in the checkpoint
+  that introduces it, and it is invisible on a fresh database.
+- **Decision:** T-003 adds `NoteRepository.getNote(id): Note?`, `NoteViewModel.openNote` loads a
+  stored note when given a real id, and `save` preserves that note's `id` and `createdAt`. Both
+  halves of rule 2 are tested here.
+- **Rejected:** leaving the `noteId` argument out of the nav graph until T-004. Cheaper by two lines
+  of XML, but it makes the create path the only one the screen supports while the screen is already
+  general enough to do both.
+- **Affected tasks:** T-003 gains `getNote` and the load path. **T-004 is reduced to what makes
+  editing observable** — Home rows become clickable, they navigate through the route that now
+  exists, and the list re-sorts. Its acceptance keeps the re-sort evidence. No task added, removed
+  or reordered.
+- **Expected impact:** T-004 gets smaller. The residual cost is honest and recorded: `getNote` and
+  the `noteId` argument have no *in-app* caller until T-004, so today they are exercised only by
+  tests.
+
+---
+
+## A-008 — 2026-09-10 (iteration 5) — unit tests may run against stubbed Android framework calls
+
+- **Tier:** 1 — a test-runtime setting in `app/build.gradle.kts`. No production code path changes,
+  no dependency added, no architecture or contract affected.
+- **Reason:** a JVM unit test here runs against a stub `android.jar` in which every framework method
+  **throws** `"not mocked"`. `NoteRepositoryImpl.save` logs one line when it refuses a future-dated
+  note, and DoD criterion 10 requires a unit test proving exactly that refusal — so the test did not
+  fail on behaviour, it crashed on `Log.w`. The same wall stands in front of every error path in
+  every repository in this project: `notesFlow`'s `.catch` has been untestable for the same reason
+  since T-002. The alternative was to strip logging from the paths tests reach, which trades an
+  observable production behaviour for a testable one — the wrong direction.
+- **Decision:** `testOptions { unitTests { isReturnDefaultValues = true } }`. Framework stubs return
+  `0` / `false` / `null` instead of throwing, and the code under test runs.
+- **Rejected:** adding Robolectric. It is the real answer for a test that needs framework
+  *behaviour* rather than framework *silence*, and it is a new dependency with its own runtime and
+  configuration — far past the scope of "create a note from Home". Also rejected: removing the log
+  lines.
+- **Affected tasks:** none. No task added, removed or reordered.
+- **Expected impact:** error paths in repositories and ViewModels become testable, which is a gain
+  this run will keep using. The cost is recorded in `knowledge/PROJECT.md` and is not zero: an
+  unmocked framework call in a unit test now returns a default **quietly**. Concretely,
+  `android.os.Bundle.putLong` is a no-op under this flag, so `NoteFragment.argumentsFor()` cannot be
+  unit-tested — it would silently return an empty `Bundle` and any assertion would be meaningless.
+  A test that needs a framework return value needs Robolectric, not this flag.

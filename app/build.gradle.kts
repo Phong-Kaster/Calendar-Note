@@ -61,6 +61,26 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests {
+            // Why this is here (simple story): a JVM unit test runs against a stub `android.jar`
+            // where every framework method throws "not mocked" instead of doing nothing. So a
+            // single `Log.w(...)` on an error path is enough to make that path untestable — the
+            // test does not fail on the behaviour being wrong, it crashes on the log line.
+            //
+            // That is not hypothetical here. `NoteRepositoryImpl.save` logs when it refuses a
+            // future-dated note, and DoD criterion 10 requires a unit test proving exactly that
+            // refusal. With this flag the framework stubs return their default (0 / false / null)
+            // and the code under test runs.
+            //
+            // The cost, stated plainly: any *other* unmocked framework call in a unit test now
+            // returns a default quietly instead of announcing itself. Nothing under test in this
+            // project relies on a framework return value — the repositories use `android.util.Log`
+            // and nothing else — but a future test that does needs Robolectric, not this flag.
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {

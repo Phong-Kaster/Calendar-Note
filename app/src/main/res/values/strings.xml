@@ -38,4 +38,9 @@
     <!-- Notes -->
     <string name="no_notes_yet">No notes yet</string>
     <string name="untitled_note">Untitled note</string>
+    <string name="note">Note</string>
+    <string name="add_note">Add note</string>
+    <string name="save">Save</string>
+    <string name="title">Title</string>
+    <string name="write_your_note_here">Write your note here…</string>
 </resources>

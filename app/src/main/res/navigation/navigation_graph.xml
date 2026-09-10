@@ -20,6 +20,31 @@
         android:name="com.example.skeleton.ui.fragment.setting.language.SettingLanguageFragment"
         android:label="Setting Language Fragment" />
 
+    <!--
+        The note editor. Both arguments carry a default, so a navigate() that forgets them opens a
+        new note for today rather than throwing: this project has no Safe Args plugin, and
+        safeNavigate swallows the exception a missing required argument would raise, which would
+        turn a typo into a button that silently does nothing. Build the bundle with
+        NoteFragment.argumentsFor(...) — it owns these two key names.
+    -->
+    <fragment
+        android:id="@+id/noteFragment"
+        android:name="com.example.skeleton.ui.fragment.note.NoteFragment"
+        android:label="Note Fragment">
+
+        <!-- -1 means "no stored note yet"; any other value is a row id to edit. -->
+        <argument
+            android:name="noteId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+
+        <!-- The note's day as LocalDate.toEpochDay(). Long.MIN_VALUE means "use today". -->
+        <argument
+            android:name="noteEpochDay"
+            android:defaultValue="-9223372036854775808L"
+            app:argType="long" />
+    </fragment>
+
     <!-- FOUR MAIN SCREEN-->
     <action
         android:id="@+id/toHome"
@@ -38,6 +63,18 @@
         app:popUpTo="@id/homeFragment" />
 
     <!--CONTENT FRAGMENTS-->
+    <!--
+        No popUpTo here, unlike the two tab actions above: the screen the user came from has to
+        stay on the back stack, because saving a note returns to it with safeNavigateUp().
+    -->
+    <action
+        android:id="@+id/toNote"
+        app:destination="@id/noteFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right" />
+
     <action
         android:id="@+id/toSettingLanguage"
         app:destination="@id/settingLanguageFragment"

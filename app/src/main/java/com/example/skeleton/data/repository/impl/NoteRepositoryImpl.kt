@@ -1,16 +1,22 @@
 package com.example.skeleton.data.repository.impl
 
 import android.util.Log
+import com.example.skeleton.common.Outcome
 import com.example.skeleton.data.database.local.dao.NoteDao
 import com.example.skeleton.data.mapper.toDomain
+import com.example.skeleton.data.mapper.toEntity
 import com.example.skeleton.domain.model.Note
 import com.example.skeleton.domain.repository.NoteRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import java.time.Clock
+import java.time.LocalDate
 
 /**
  * The notes store, backed by the `notes` table.
@@ -20,12 +26,19 @@ import kotlinx.coroutines.flow.map
  * copy here would only create something that can disagree with the database.
  *
  * @param noteDao the table's accessor.
- * @param ioDispatcher where the reading and mapping happen. A constructor parameter rather than a
- *   hardcoded `Dispatchers.IO` so a test can hand over a dispatcher it controls.
+ * @param clock where "now" and "today" come from. A constructor parameter and not a direct
+ *   `System.currentTimeMillis()` / `LocalDate.now()` call, because two of this class's promises —
+ *   that a new note is stamped with the current time, and that a note dated after today is
+ *   refused — are only checkable if a test can decide what time it is. One `Clock` rather than two
+ *   lambdas so that the millisecond it stamps and the day it compares against can never come from
+ *   two different readings.
+ * @param ioDispatcher where the reading, writing and mapping happen. Also a constructor parameter
+ *   so a test can hand over a dispatcher it controls.
  * @author Phong-Kaster
  */
 class NoteRepositoryImpl(
     private val noteDao: NoteDao,
+    private val clock: Clock = Clock.systemDefaultZone(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : NoteRepository {
 
@@ -45,6 +58,51 @@ class NoteRepositoryImpl(
             emit(emptyList())
         }
         .flowOn(ioDispatcher)
+
+    override suspend fun getNote(id: Long): Note? = withContext(ioDispatcher) {
+        try {
+            noteDao.getById(id = id)?.toDomain()
+        } catch (e: CancellationException) {
+            // Re-thrown, never swallowed: a cancelled read is the screen going away, not a
+            // failure, and turning it into `null` would tell the caller the note does not exist.
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "getNote($id) failed", e)
+            null
+        }
+    }
+
+    override suspend fun save(note: Note): Outcome<Unit> = withContext(ioDispatcher) {
+        val today = LocalDate.now(clock)
+
+        // The future-date rule, from `knowledge/DOMAIN.md`. `isAfter` and not `>=` on purpose:
+        // today is allowed, tomorrow is not. An off-by-one in this direction makes it impossible
+        // to write a note at all, which is why the domain rule spells the boundary out.
+        if (note.date.isAfter(today)) {
+            Log.w(TAG, "save refused: ${note.date} is after $today")
+            return@withContext Outcome.Error(message = "A note cannot be dated after $today.")
+        }
+
+        val now = clock.millis()
+        val stamped = note.copy(
+            // A note that has never been stored gets both stamps now. A note that has been stored
+            // before keeps the `createdAt` it already has — clobbering it here is the exact bug
+            // that makes "created" and "last edited" the same date for every note in the app, and
+            // nothing on a screen would show it.
+            createdAt = if (note.createdAt == Note.UNSAVED_AT) now else note.createdAt,
+            updatedAt = now,
+        )
+
+        try {
+            noteDao.upsert(note = stamped.toEntity())
+            Outcome.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "save(id=${note.id}) failed", e)
+            Outcome.Error(message = "The note could not be saved.", throwable = e)
+        }
+    }
 
     companion object {
 

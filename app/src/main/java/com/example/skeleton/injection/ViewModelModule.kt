@@ -3,6 +3,7 @@ package com.example.skeleton.injection
 
 
 import com.example.skeleton.ui.fragment.home.HomeViewModel
+import com.example.skeleton.ui.fragment.note.NoteViewModel
 import com.example.skeleton.ui.fragment.setting.SettingViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -14,4 +15,7 @@ val viewModelModule = module {
 
     // Home View Model
     viewModel { HomeViewModel(noteRepository = get()) }
+
+    // Note View Model
+    viewModel { NoteViewModel(noteRepository = get()) }
 }

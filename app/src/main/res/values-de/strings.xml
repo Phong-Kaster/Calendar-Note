@@ -39,4 +39,9 @@
     <!-- Notes -->
     <string name="no_notes_yet">Noch keine Notizen</string>
     <string name="untitled_note">Notiz ohne Titel</string>
+    <string name="note">Notiz</string>
+    <string name="add_note">Notiz hinzufügen</string>
+    <string name="save">Speichern</string>
+    <string name="title">Titel</string>
+    <string name="write_your_note_here">Schreibe hier deine Notiz…</string>
 </resources>

@@ -17,7 +17,9 @@ import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.fragment.home.component.HomeNoteList
 import com.example.skeleton.ui.fragment.home.component.HomeRequestPermission
 import com.example.skeleton.ui.fragment.home.component.isNotificationGranted
+import com.example.skeleton.ui.fragment.note.NoteFragment
 import com.example.skeleton.ui.theme.MyApplicationTheme
+import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
 import com.example.skeleton.ui.util.PermissionUtil.isLocationGranted
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.LocalDate
@@ -54,7 +56,15 @@ class HomeFragment : CoreFragment() {
 
         val uiState by viewModel.uiState.collectAsState()
 
-        HomeLayout(uiState = uiState)
+        HomeLayout(
+            uiState = uiState,
+            onCreateNote = {
+                safeNavigate(
+                    destination = R.id.toNote,
+                    bundle = NoteFragment.argumentsFor(date = LocalDate.now()),
+                )
+            },
+        )
 
         // Request notification, location and exact alarm permissions
         HomeRequestPermission(
@@ -79,17 +89,19 @@ class HomeFragment : CoreFragment() {
  * previews at the bottom of this file draw it with made-up data and no database behind them.
  *
  * @param uiState what to draw.
+ * @param onCreateNote the user tapped the bottom bar's centre action button.
  * @author Phong-Kaster
  */
 @Composable
 private fun HomeLayout(
     uiState: HomeUiState,
+    onCreateNote: () -> Unit = {},
 ) {
     CoreLayout(
         modifier = Modifier,
         showLoading = uiState.isLoading,
         topBar = { CoreTopBar(title = stringResource(R.string.home)) },
-        bottomBar = { CoreBottomBar() },
+        bottomBar = { CoreBottomBar(onCreateNote = onCreateNote) },
         content = {
             HomeNoteList(notes = uiState.notes)
         },
