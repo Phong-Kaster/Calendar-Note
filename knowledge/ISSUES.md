@@ -16,6 +16,42 @@
 
 <!-- Newest first. Delete resolved entries outright rather than marking them done. -->
 
+### Screenshot references are exact-pixel and host-locked, and three orphaned ones are sitting in the tree
+
+- **What is wrong:** two sharp edges on the reference-image lifecycle, both found in iteration 3.
+  1. **Validation is exact-pixel against images produced on one machine.** No
+     `imageDifferenceThreshold` is configured and no JDK toolchain is pinned
+     (`app/build.gradle.kts` sets only `compileOptions` source/target 11, and there is no
+     `jvmToolchain`). The six committed PNGs were rendered by layoutlib on Windows with this host's
+     JDK and Compose BOM `2024.09.00`. Text rasterisation is not guaranteed identical across OS,
+     JDK or a Compose bump — so `validateDebugScreenshotTest`, which DoD criterion 13 requires, can
+     go red on a different machine for reasons that have nothing to do with the palette. The only
+     thing that makes it green again is `updateDebugScreenshotTest`, which is exactly the command
+     nobody is allowed to reach for. That is the trap: a criterion whose only escape hatch is
+     forbidden.
+  2. **Three orphaned reference PNGs are untracked in
+     `app/src/screenshotTestDebug/reference/…/ThemeScreenshotTestKt/`:**
+     `PaletteAccents_Palette - accents_479b9379_0.png`,
+     `PaletteSurfaces_Palette - surfaces_56c32381_0.png`, and
+     `ScreenShell_Screen shell_4c69c6b2_0.png`. They are earlier renderings whose previews then
+     changed `name`/`widthDp`/`heightDp`, which changes the filename hash — the plugin writes a new
+     file and leaves the old one. They were deliberately **not** committed, so the tracked reference
+     set is exactly the six live images, but the files are still on disk.
+- **Why it is still open:** the engine cannot delete files. `rm` is denied by the permission layer
+  (`POLICIES.md` rates deletion high-risk and no deletion capability has been granted), and
+  ENGINE.md §13 forbids routing around a denied action. Pinning a JDK toolchain is a build-
+  configuration change with its own blast radius and does not belong inside an unrelated task.
+- **What would resolve it:** a human deletes the three files listed above; and either a
+  `screenshotTests { imageDifferenceThreshold = … }` block is added with a justified number, or a
+  `jvmToolchain` is pinned, or the references are documented as host-locked with the generating
+  JDK/OS/AGP recorded next to them. Delete this entry when the strays are gone and one of those
+  three is done.
+- **Full record:** the fresh-context review of T-010; find the checkpoint with
+  `git log --oneline --all --grep='loop(T-010)'`.
+- **Do not:** run `updateDebugScreenshotTest` to clear a red validation. Work out *why* the pixels
+  moved first — on this host a diff means a real rendering change, and re-recording erases exactly
+  the regression the images exist to catch.
+
 ### `CLAUDE.md` imports three rule files that do not exist
 
 - **What is wrong:** `CLAUDE.md` `@`-imports `.claude/view-model-layer.md`,
@@ -108,10 +144,18 @@
   two components it explicitly named (`CoreLayout`, `CoreBottomBar`), and DoD criterion 2 binds only
   code **this run introduces** — so rewriting eleven unrelated pre-existing screens would be
   modifying unrelated files (ENGINE.md §14), not completing the task.
+- **The screenshot harness does not catch this, and it never will.** T-010 landed
+  `validateDebugScreenshotTest` in iteration 3 and it passes with every one of these 65 literals
+  still in place — because `Color.White` and `colorScheme.onBackground` render the same pixels.
+  DoD criterion 2 therefore has **no automated gate of any kind**: it is checked by a reader, or it
+  is not checked. Say so plainly whenever criterion 2 is reported on; a green screenshot run is not
+  evidence for it.
 - **What would resolve it:** repoint each literal at `MaterialTheme.colorScheme.*`, one file per
-  change, verifying appearance against a screenshot reference after T-010 lands the harness. Delete
-  this entry when the only survivors are the three deliberate ones noted above
-  (`Color.Transparent`, `Color.Unspecified`, and `customizedTextStyle`'s default).
+  change, verifying appearance against a screenshot reference. Delete this entry when the only
+  survivors are the three deliberate ones noted above (`Color.Transparent`, `Color.Unspecified`,
+  and `customizedTextStyle`'s default). A custom lint rule — or a `grep` for colour literals under
+  `ui/` outside `ui/theme/`, wired into the build — would turn criterion 2 into something a command
+  can fail, and is the only way it stops depending on someone remembering to look.
 - **Full record:** the checkpoint that established the theme convention — find it with
   `git log --oneline --all --grep='loop(T-001)'`, then read `.ai/TASKS/T-001.md` at that commit
   (`MSYS_NO_PATHCONV=1 git show <sha>:.ai/TASKS/T-001.md`). Cited this way on purpose: the Cleanup

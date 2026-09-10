@@ -108,3 +108,39 @@
   that deletes this amendment. It was **not** escalated because it blocks nothing: the conservative
   route (keep an enabled check green) is available, reversible, and its worst failure is a clumsy
   German phrase, not a wrong app.
+
+---
+
+## A-004 — 2026-09-10 (iteration 3) — the screenshot layer does not evidence DoD criterion 2
+
+- **Tier:** 1 — corrects a factual claim about what a verification layer proves. No change to the
+  PRD, the DoD, the architecture, or the task graph. The approved verification shape already lists
+  review and human inspection as layers; this only moves criterion 2 between existing layers.
+- **Reason:** T-010 landed the screenshot harness on the strength of a claim in `PLAN.md` that it
+  would cover the perceptual halves of criteria 1, 2, 7 and 9. The fresh-context review of T-010
+  showed that is **false for criterion 2**, and gave the proof rather than the argument: fourteen
+  files under `ui/` hold 65 hardcoded colour literals *today*, and all six screenshot cases pass
+  with `diffPercent 0.0`. A screenshot cannot distinguish `Color.White` from
+  `colorScheme.onBackground` — both are `#FFFFFF` pixels. Criterion 2 is about where a value came
+  from, which is a property of the source, not of the rendering.
+  What made this worth an amendment rather than a note: the wrong claim had been **written into the
+  test file's own header comment** as settled fact. Left there, the next reader treats criterion 2
+  as defended, the reviewer stops looking for it because a command appears to cover it, and the run
+  reports a verified `DONE` over a requirement nothing checked. That is `POLICIES.md` § Evidence
+  Requirements' third route — quietly treating the machine-checkable subset as the whole
+  requirement — arriving by accident instead of by intent.
+- **Decision:** criterion 2 is carried by the fresh-context review of each diff, and by nothing
+  else, until a static check exists. Recorded in three places so it cannot be quietly forgotten:
+  the header comment of `ThemeScreenshotTest.kt` (which now states what the images do **not**
+  prove), `.ai/PLAN.md` § Verification approach, and the hardcoded-colour entry in
+  `knowledge/ISSUES.md`. Criteria 1, 7 and 9 are unaffected — those *are* properties of the
+  rendering, and the images do defend them.
+- **Rejected:** writing a custom lint rule or a grep-based Gradle check inside T-010. It is the
+  right fix and it is proposed in `knowledge/ISSUES.md`, but building a new static-analysis gate is
+  not "import the harness", and slipping it in would make T-010's evidence about two different
+  things at once.
+- **Affected tasks:** T-002 through T-009 — each states criterion 2's evidence as review, not as a
+  green screenshot run. No task is added, removed or reordered.
+- **Expected impact:** none on schedule. The effect is on honesty of reporting: at Final
+  Verification, criterion 2 must be reported as reviewed-by-reading, and criteria 1, 7 and 9 as
+  "approved once by a human, defended since by `validateDebugScreenshotTest`".

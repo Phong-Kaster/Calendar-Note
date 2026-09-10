@@ -12,8 +12,10 @@
 
 - **Phase:** executing
 - **Loop Branch:** `loop/calendar-note-app`
-- **Next task:** **T-010** — import the host-side screenshot harness from
-  `loop/todo-calendar-screens`. Its only dependency (T-001) is complete. Nothing is pending.
+- **Next task:** **T-002** — Home shows persisted notes newest-first, with an empty state. Its
+  dependency (T-001) is complete. Nothing is pending. This is the first task that writes the Note
+  feature: entity + DAO + `AppDatabase` version 3 + `MIGRATION_2_3` + repository + `HomeViewModel`
+  repointed off the demo `Post` list.
 - **DONE-candidate:** no
 - **DoD:** ✅ approved 2026-09-10, A5 overruled to title + body. Immutable from here — propose
   changes (Tier 3), never apply them.
@@ -21,9 +23,10 @@
   re-consumed.
 - **Capabilities:** `knowledge/capabilities.json` grants `./gradlew`
   assemble/compile/test/lint, `validate|updateDebugScreenshotTest`, and
-  `MSYS_NO_PATHCONV=1 git show|ls-tree`. **Build, unit test and lint are now all verified working**
-  (iteration 2) — see `knowledge/PROJECT.md` § Toolchain. The two screenshot tasks remain unrun
-  because the harness they drive is not imported yet; that is T-010.
+  `MSYS_NO_PATHCONV=1 git show|ls-tree`. **All six are now verified working** — build, unit test and
+  lint in iteration 2, the two screenshot tasks in iteration 3. See `knowledge/PROJECT.md`
+  § Toolchain. **`rm` is denied**, so the engine cannot delete a file it creates by mistake; that is
+  not a bug to route around (ENGINE.md §13) but a constraint to plan for.
 - **`knowledge/DOMAIN.md` exists** (two rules: no future-dated notes; `updatedAt`-descending
   ordering). Read it at Orient every iteration. It outranks the codebase, and it is deny-listed —
   a rule you disagree with is an escalation, never an edit. Neither rule is implemented yet; both
@@ -31,17 +34,20 @@
 
 ### First thing the next iteration should do
 
-Read `knowledge/PROJECT.md` § Toolchain before running anything — it now carries three traps that
-cost this iteration real time: a **piped Gradle command reports the pipe's exit code**, so a
-`BUILD FAILED` looks like a pass; **Gradle run in the background races your own edits**; and **lint
-fails on a missing German translation**, which makes adding a string a two-file operation.
+Read `knowledge/PROJECT.md` § Toolchain before running anything. It carries five traps, all earned
+by a real failure: a **piped Gradle command reports the pipe's exit code**, so a `BUILD FAILED`
+looks like a pass; **Gradle run in the background races your own edits**; **lint fails on a missing
+German translation**, which makes adding a string a two-file operation; **`updateDebugScreenshotTest`
+orphans reference images** rather than replacing them when a preview's size or name changes; and
+**a green `validateDebugScreenshotTest` is not evidence for DoD criterion 2** — a screenshot cannot
+tell a hardcoded literal from a theme lookup.
 
 ## Progress
 
 | Task | Status | Evidence |
 |---|---|---|
 | T-001 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 55 warnings`) + `testDebugUnitTest` (6 tests, 0 failures) all green; no `lightColorScheme`/`isSystemInDarkTheme`/dynamic-colour hits in `app/src/main`; 36/36 Material roles assigned **and now guarded by `DarkColorSchemeTest`**; README tree verified against all 82 source files. Fresh-context review: 16 findings, 1 Critical + 4 Major all fixed, 3 filed to `ISSUES.md`. Full record in `.ai/TASKS/T-001.md`. **3 perceptual items await human eyes** (see that file). |
-| T-010 | pending | — (new — amendment A-002; runs between T-001 and T-002) |
+| T-010 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 59 warnings`) + `testDebugUnitTest --rerun-tasks` (6 tests, 0 failures) + `validateDebugScreenshotTest` (**6 cases, 0 failures**) all green. `ScreenshotScaffold.kt` diffed byte-identical against `loop/todo-calendar-screens`. Six reference PNGs committed. Fresh-context review: 16 findings, 0 Critical; 3 Major + 5 Minor fixed, the rest filed. Full record in `.ai/TASKS/T-010.md`. **Human approval of the six images is still open** — see that file. |
 | T-002 | pending | — |
 | T-003 | pending | — |
 | T-004 | pending | — |
@@ -99,11 +105,77 @@ criterion 13 over a real defect.
 and its skills), they were already untracked on `main` before the run began, and `.loop/` is a
 protected path the engine may not write to. **They are not the debris of a crashed invocation.**
 
+Since iteration 3 there are also **three untracked orphan PNGs** under
+`app/src/screenshotTestDebug/reference/com/example/skeleton/screenshot/ThemeScreenshotTestKt/`:
+`PaletteAccents_…_479b9379_0.png`, `PaletteSurfaces_…_56c32381_0.png`,
+`ScreenShell_…_4c69c6b2_0.png`. They are superseded renderings that `updateDebugScreenshotTest`
+left behind when previews changed size; the six live references *are* committed. They are untracked
+rather than deleted because `rm` is denied to the engine. Listed in `knowledge/ISSUES.md` for a
+human to remove. **Do not treat them as this run's debris and do not try to route around the deny
+rule to delete them.**
+
 At Recover (ENGINE.md §6.1), a dirty tree means a previous invocation crashed mid-flight — but only
-if the dirt is *this run's*. Treat these three paths as clean; anything else untracked or modified is
+if the dirt is *this run's*. Treat the paths above as clean; anything else untracked or modified is
 genuine debris to salvage or revert. Do not `git clean` them.
 
 ## Recent Iterations
+
+### Iteration 3 — 2026-09-10 — T-010, salvaged from a crashed invocation
+
+- **Started at Recover, not at Select.** The working tree was dirty with debris that was *not* on
+  the expected-untracked list: modified `app/build.gradle.kts`, `gradle.properties`,
+  `gradle/libs.versions.toml`, plus untracked `app/src/screenshotTest/` and
+  `app/src/screenshotTestDebug/`. Build outputs were stamped 11:00 against a 10:35 `STATE.md` and a
+  `loop(T-001)` tip, so an invocation had done most of T-010 and died before checkpointing. `.ai/`
+  was untouched, so the debris was self-consistent rather than half-written.
+- **Verified before building on it** (ENGINE.md §6.1: never build on unverified debris). The import
+  was faithful — `ScreenshotScaffold.kt` diffed byte-identical against
+  `loop/todo-calendar-screens` — and all four Gradle tasks passed, with the screenshot XML reporting
+  4 real cases rather than a vacuous zero. Salvaged rather than reverted.
+- **Learned:**
+  - **The screenshot harness works on this toolchain, unchanged.** `validateDebugScreenshotTest`
+    and `updateDebugScreenshotTest` both run host-side, ~15s, no emulator. Two more `PROJECT.md`
+    toolchain rows went from `no` to `yes`; every granted capability is now exercised.
+  - **`updateDebugScreenshotTest` orphans references instead of replacing them.** The filename
+    carries a hash of the preview's *parameters*, so changing `widthDp` writes a new file and leaves
+    the old one — and validation ignores strays and stays green, so nothing tells you. Two update
+    runs produced three orphans. → `knowledge/PROJECT.md`.
+  - **`rm` is denied.** Discovered trying to clean those orphans. Not routed around (ENGINE.md §13):
+    only the six live PNGs were staged, the strays are left untracked, and both the orphan list and
+    the missing capability are in `knowledge/ISSUES.md` for a human. Worth knowing before creating
+    a file you will want to remove.
+  - **The review found the iteration's real defect, and it was a sentence.** The test file's header
+    asserted that these images make DoD criteria 1 **and 2** machine-defendable. Criterion 2 is not
+    covered and cannot be: `Color.White` and `colorScheme.onBackground` are the same pixels. The
+    reviewer proved it rather than argued it — 65 hardcoded literals are in the tree right now and
+    every case passes at `diffPercent 0.0`. Left standing, that comment would have retired criterion
+    2 from being checked at all, which is exactly `POLICIES.md` § Evidence Requirements' forbidden
+    third route arriving by accident. → amendment **A-004**; the file now says what it does *not*
+    prove, and `ISSUES.md` carries the residue.
+  - **Writing the images down as "approved" is not the same as approving them.** The engine can
+    look at a PNG and did — all six are correct. That is not the human approval the acceptance
+    criterion asks for, and the difference is the whole point of the image existing. Recorded as
+    still open rather than quietly closed.
+  - **A swatch can be wrong in a way only rendering shows.** The `inversePrimary` row paired a fill
+    with an on-colour Material never puts together — 3.94:1, under AA — asking a human to approve a
+    combination the app will never paint. And `surfaceDim` renders as a seamless black rectangle,
+    which is *correct* (`Theme.kt` assigns it the ground on purpose) but reads as a missing row; it
+    is now labelled so nobody "fixes" the theme over it.
+  - **README was the third Major.** `CLAUDE.md` requires README sync in the same change as a
+    structural addition, and criterion 13 names `validateDebugScreenshotTest` — yet neither the
+    command, the reference location, nor the never-re-record-to-go-green rule was written anywhere a
+    human would look. Added, with a test-source-set table.
+- **Reconciled:** two toolchain rows verified + four operational facts → `knowledge/PROJECT.md`
+  (orphaned references, spaces in reference filenames, `rm` denied, what a screenshot cannot prove);
+  one new `ISSUES.md` entry (host-locked exact-pixel references, no threshold or toolchain pin, plus
+  the three orphans) and the hardcoded-colour entry extended with criterion 2's missing gate;
+  amendment **A-004**; `PLAN.md`'s verification section corrected; `CoreBottomBar`'s uncovered active
+  state carried forward to T-006 in `.ai/TASKS/T-010.md`.
+- **Not done, on purpose:** no `imageDifferenceThreshold` and no `jvmToolchain` were added. Both are
+  the right fix for the host-lock risk and both are build-configuration changes with their own blast
+  radius; guessing at a threshold number with no observed drift to calibrate against would be
+  inventing evidence. Filed instead.
+- **Checkpoint:** see the `loop(T-010)` commit.
 
 ### Iteration 2 — 2026-09-10 — T-001, and the first build this repository has ever run
 

@@ -55,11 +55,18 @@ The layers, in increasing cost:
 - **Build + lint** on every checkpoint. Criterion 13's command set now also includes
   `:app:validateDebugScreenshotTest` (D-001; `DoD.md` itself is immutable to the engine and was not
   edited to say so — see A-002).
-- **Screenshot tests** (`app/src/screenshotTest/`, host-side layoutlib, no device) for everything
-  that is judged by looking: marker contrast in *combined* states, disabled-day styling, empty
-  states, the delete confirmation's two controls, the dark-and-blue theme itself. The prior run's
-  suite names the three regressions it caught, all of which passed a green unit suite — write the
-  equivalent cases rather than rediscovering them.
+- **Screenshot tests** (`app/src/screenshotTest/`, host-side layoutlib, no device) — **live since
+  iteration 3**, six cases, references committed. For everything that is judged by looking: marker
+  contrast in *combined* states, disabled-day styling, empty states, the delete confirmation's two
+  controls, the dark-and-blue theme itself. The prior run's suite names the three regressions it
+  caught, all of which passed a green unit suite — write the equivalent cases rather than
+  rediscovering them.
+
+  **But a screenshot cannot see criterion 2** (amendment A-004). `Color.White` and
+  `colorScheme.onBackground` render identical pixels, so "colour comes from the theme, never
+  hardcoded" gets **no** help from this layer — the six cases pass today with 65 hardcoded literals
+  still in the tree. Criterion 2 is carried by the fresh-context review of each diff and by nothing
+  else. Every task from here states that honestly rather than pointing at a green screenshot run.
 - **Human inspection, once per image.** What remains for a person is approving each reference image
   the first time it is generated. T-009 collects those approvals rather than a full manual
   walkthrough.
@@ -79,8 +86,8 @@ can only be checked by rendering it, which is precisely the capability this repo
 
 ## Task Graph
 
-- T-001 — Dark-only theme with blue primary, app named "Calendar Note", README seeded (depends on: —)
-- T-010 — Import the host-side screenshot harness from `loop/todo-calendar-screens` (depends on: T-001)
+- ✅ T-001 — Dark-only theme with blue primary, app named "Calendar Note", README seeded (depends on: —)
+- ✅ T-010 — Import the host-side screenshot harness from `loop/todo-calendar-screens` (depends on: T-001)
 - T-002 — Home shows persisted notes newest-first, with an empty state (depends on: T-001)
 - T-003 — User can create a note for today from Home (depends on: T-002)
 - T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003)

@@ -64,9 +64,11 @@ the Features table above is the source of truth for what is actually implemented
 ## Build and check
 
 ```bash
-./gradlew :app:assembleDebug        # build the debug APK
-./gradlew :app:testDebugUnitTest    # JVM unit tests
-./gradlew :app:lintDebug            # Android Gradle Plugin lint
+./gradlew :app:assembleDebug                 # build the debug APK
+./gradlew :app:testDebugUnitTest             # JVM unit tests
+./gradlew :app:lintDebug                     # Android Gradle Plugin lint
+./gradlew :app:validateDebugScreenshotTest   # compare the UI against the committed reference images
+./gradlew :app:updateDebugScreenshotTest     # re-record those images (see the warning below)
 ```
 
 `local.properties` must exist with your `sdk.dir` — it is git-ignored, so a fresh clone will not
@@ -77,12 +79,40 @@ build until you create it.
 > fails. This is easy to forget and the failure message does not mention the file you actually
 > edited.
 
+> **`updateDebugScreenshotTest` overwrites the reference images, so it is never the fix for a
+> failing validation.** If `validateDebugScreenshotTest` goes red, something about the rendering
+> changed — decide whether that change was intended *first*. Re-recording to make the red go away
+> silently erases the regression the test existed to catch. Run it only when you meant to change
+> what the UI looks like, and eyeball the new images before committing them.
+
+### Test source sets
+
+| Path | What lives there | Needs a device? |
+|---|---|---|
+| `app/src/test/` | Plain JVM unit tests. Compose's non-`@Composable` API (`darkColorScheme()`, `Color`) works here. | no |
+| `app/src/screenshotTest/` | Compose Preview Screenshot Tests — `@PreviewTest @Preview` functions rendered host-side by layoutlib. | no |
+| `app/src/screenshotTestDebug/reference/` | The committed reference PNGs those tests are compared against. | — |
+| `app/src/androidTest/` | Instrumented tests. | yes |
+
+The screenshot suite is how this project checks things that only exist as pixels — that the theme
+really is dark, that the accent really is a legible blue, that a border is actually visible. A build
+and a unit test are equally happy with an unreadable palette, so those properties are pinned as
+images a human approved once.
+
+Two things worth knowing before you add a case:
+
+- The reference filename ends in a hash of the preview's parameters. Change `name`, `widthDp` or
+  `heightDp` and the old PNG is **orphaned** rather than replaced — delete it by hand, or dead
+  images pile up in the reference folder.
+- Anything that animates (`basicMarquee`, `AnimatedContent`, Lottie) renders differently each run
+  and makes validation a coin flip. Use a static equivalent inside a screenshot case.
+
 ---
 
 ## Package tree
 
-Rooted at `app/src/main/java/com/example/skeleton/`. Subfolders are listed before the `.kt` files
-that sit alongside them.
+Rooted at `app/src/main/java/com/example/skeleton/` — the app's own code. The test source sets are
+listed in the table above. Subfolders are listed before the `.kt` files that sit alongside them.
 
 ```
 com/example/skeleton/

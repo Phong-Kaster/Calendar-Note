@@ -13,8 +13,8 @@
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
 | Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL in 3s` (only the `ExampleUnitTest` stub exists) |
 | Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
-| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **no** — granted, harness not yet imported here (verified on `loop/todo-calendar-screens`) |
-| Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **no** — granted, harness not yet imported here (verified on `loop/todo-calendar-screens`) |
+| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
+| Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
 
 Success looks like a literal `BUILD SUCCESSFUL` line. Lint additionally writes
 `app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt`,
@@ -23,6 +23,26 @@ tail.
 
 `updateDebugScreenshotTest` **overwrites** the committed reference images. It is never the fix for a
 failing `validateDebugScreenshotTest` — that re-baselines the regression the test existed to catch.
+
+### `updateDebugScreenshotTest` orphans reference images rather than replacing them
+
+A reference filename ends in a hash of the preview's *parameters*: `PaletteAccents_Palette -
+accents_479b9379_0.png`. Change the `@Preview` body only and the same file is overwritten in place.
+Change `name`, `widthDp` or `heightDp` and the plugin writes a **new** file under a new hash and
+leaves the old one sitting there. `validateDebugScreenshotTest` ignores the strays and stays green,
+so nothing ever tells you. Iteration 3 produced three of them in two `update` runs.
+
+**After any `update` run that changed a preview's parameters, list the reference folder and check
+the surviving filenames against the case names** — otherwise dead images get committed and the
+folder stops being readable. Note also that the filenames contain spaces (from `@Preview(name = …)`),
+which breaks unquoted shell paths.
+
+### The engine cannot delete files here
+
+`rm` is not in the granted capability set (`POLICIES.md` rates deletion high-risk), so orphaned
+references and any other stray file must be removed by a human or left untracked. Plan for it:
+prefer not creating the stray in the first place — pick a preview's `name`/`widthDp`/`heightDp`
+before recording it, not after.
 
 ### A piped Gradle command reports the *pipe's* exit code, not Gradle's
 
@@ -117,12 +137,23 @@ confirmed against the code that exists.
 - `compileSdk 36`, `targetSdk 36`, `minSdk 24`, `jvmTarget 11`.
 - **No CI configuration exists** in this repository — there is no pipeline to inherit commands from.
 - **No lint baseline / no ktlint / no detekt** is configured. "Lint" means Android Gradle Plugin lint.
-- **Test surface:** `app/src/test/` holds the `ExampleUnitTest` stub plus
-  `ui/theme/DarkColorSchemeTest.kt` (iteration 2) — the first test that exercises real app code.
-  `app/src/androidTest/.../ExampleInstrumentedTest.kt` requires a device or emulator. There is no
-  Robolectric. **Plain JVM unit tests can touch Compose's non-`@Composable` API** — `darkColorScheme()`,
-  `Color`, and Java reflection over `ColorScheme` all work in `test/` with no Android context and no
-  extra dependency. Useful to know before assuming a Compose-related property needs an emulator.
+- **Test surface — three source sets, two of which need no device:**
+  - `app/src/test/` — plain JVM unit tests: the `ExampleUnitTest` stub plus
+    `ui/theme/DarkColorSchemeTest.kt`. **These can touch Compose's non-`@Composable` API** —
+    `darkColorScheme()`, `Color` and Java reflection over `ColorScheme` all work with no Android
+    context and no extra dependency. Worth knowing before assuming a Compose-related property needs
+    an emulator. There is no Robolectric.
+  - `app/src/screenshotTest/kotlin/…/screenshot/` — Compose Preview Screenshot Tests
+    (`@PreviewTest @Preview`), rendered host-side by layoutlib. Imported in iteration 3.
+    `ScreenshotScaffold.kt` is the wrapper every case goes through: it renders the subject inside
+    `MyApplicationTheme` on `colorScheme.background`, because a bare `@Preview` renders against
+    Studio's white with Material's baseline colours — which is how hardcoded colours survive review.
+    References live in `app/src/screenshotTestDebug/reference/…` and are committed.
+  - `app/src/androidTest/` — instrumented; needs a device or emulator.
+- **What a screenshot test cannot do:** tell a hardcoded literal from a theme lookup. `Color.White`
+  and `colorScheme.onBackground` render the same pixels. Do not treat a green
+  `validateDebugScreenshotTest` as evidence that colour is coming from the theme — that needs a
+  static check or a reader. See `knowledge/ISSUES.md`.
 - **The HTTP client is Ktor, not Retrofit.** `injection/NetworkModule.kt` builds
   `io.ktor.client.HttpClient(OkHttp)` with `HttpTimeout` + `ContentNegotiation`/kotlinx-serialization;
   the catalogue declares `ktor-client-core`, `ktor-client-okhttp`, `ktor-serialization-kotlinx-json`
@@ -133,8 +164,8 @@ confirmed against the code that exists.
   `CLAUDE.md` requires. It carries a feature table marking each feature built vs. planned — keep
   that table honest in the same change that lands a feature.
 - The dependency catalogue is `gradle/libs.versions.toml`; all dependencies are declared through it.
-  `kotlinx-coroutines-test` and Robolectric are **not** in it — any `suspend`/`Flow` unit test needs
-  a dependency added first.
+  As of iteration 3 it carries `kotlinx-coroutines-test` (for `runTest`), `room-testing` (in-memory
+  database) and `screenshot-validation-api`. Robolectric is still **not** there.
 - **`.loop/`, `.claude/skills/` and `.agents/skills/` are permanently untracked** human-installed
   tooling. They show up in every `git status` and are not the debris of a crashed run.
 
@@ -161,22 +192,12 @@ truth (the file genuinely is not on that branch), not the mangling.
 **Check sibling `loop/*` branches before concluding this repository cannot do something.** The
 bootstrap iteration of the current run declared the perceptual DoD criteria unprovable while a
 verified host-side screenshot harness sat on that branch, reachable with baseline capabilities the
-whole time. `git branch --list 'loop/*'` costs nothing.
+whole time. `git branch --list 'loop/*'` costs nothing. The harness was imported in iteration 3 and
+is now part of this branch; what remains useful on `loop/todo-calendar-screens` (tip `969f278`):
 
-What is there (tip `969f278`), verified working on AGP 9.0.1 / Kotlin 2.2.10:
-
-- **Compose Preview Screenshot Testing**, host-side via layoutlib — no emulator, no device, no `adb`.
-  Four pieces, all required: the `com.android.compose.screenshot` plugin +
-  `screenshot-validation-api` (version `0.0.1-alpha15`) in `gradle/libs.versions.toml`;
-  `alias(libs.plugins.screenshot)` and
-  `experimentalProperties["android.experimental.enableScreenshotTest"] = true` and the two
-  `screenshotTestImplementation` lines in `app/build.gradle.kts`;
-  `android.experimental.enableScreenshotTest=true` in `gradle.properties`; and the test sources in
-  `app/src/screenshotTest/kotlin/...`, with references in `app/src/screenshotTestDebug/reference/`.
-- **`ScreenshotScaffold.kt`** — wraps content in `MyApplicationTheme` on `colorScheme.background`.
-  This is the part that took the work, and the reason it exists is recorded in its own KDoc: a bare
-  `@Preview` renders against Studio's white with Material's baseline colours, which is how a screen
-  full of hardcoded `Color.White` looked fine in the preview pane and was unreadable in the app.
+- **`CalendarScreenshotTest.kt` and `TodoScreenshotTest.kt`** — patterns to copy from when T-006 and
+  T-007 write calendar cases. Read them; do not import them, as they reference composables that do
+  not exist here.
 - **That run's calendar grid is Sunday-first**, and its screenshot suite pins the weekday header
   against the grid for exactly that reason.
 - Its `Note` model differs from this run's (`epochDay`/`title`/`createdAt` there;

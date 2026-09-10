@@ -3,11 +3,16 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.screenshot)
     kotlin("plugin.serialization")
 }
 
 android {
     namespace = "com.example.skeleton"
+
+    // Compose Preview Screenshot Testing renders previews with layoutlib on the JVM. No emulator,
+    // no connected device, so it runs anywhere `gradlew` runs.
+    experimentalProperties["android.experimental.enableScreenshotTest"] = true
     compileSdk {
         version = release(36)
     }
@@ -73,6 +78,15 @@ dependencies {
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
+
+    // `runTest` for suspend/Flow unit tests, and an in-memory Room database for DAO tests.
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.room.testing)
+
+    // Screenshot tests live in src/screenshotTest/ and are recorded/validated by the
+    // update|validateDebugScreenshotTest tasks.
+    screenshotTestImplementation(libs.screenshot.validation.api)
+    screenshotTestImplementation(libs.androidx.compose.ui.tooling)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
