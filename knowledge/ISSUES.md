@@ -28,8 +28,8 @@
   says these are inspected, never edited. Fixing the import names is the human's call.
 - **What would resolve it:** the human renames the imports to the real filenames (or renames the
   files), and decides whether `wiki-connection.md` should exist.
-- **Full record:** `git show <bootstrap-sha>:knowledge/PROJECT.md` — the *Sources Consulted* section
-  lists which rule files were actually read.
+- **Full record:** `git show 9b25307:knowledge/PROJECT.md` — the *Sources Consulted* section lists
+  which rule files were actually read.
 - **Do not:** assume the ViewModel and Compose rules are unavailable because the import is broken.
   They were read directly from `.claude/viewmodel-layer.md` and `.claude/jetpack-compose-ui.md` at
   bootstrap and their conventions are summarised in `knowledge/PROJECT.md`. Also do not "fix" this by
@@ -47,6 +47,6 @@
   is not yet approved.
 - **What would resolve it:** the human approves the `./gradlew` capability; the first iteration that
   runs a build replaces the `no` entries with real observed output and deletes this entry.
-- **Full record:** `git show <bootstrap-sha>:.ai/ESCALATION.md` — the capability proposals.
+- **Full record:** `git show 9b25307:.ai/ESCALATION.md` — the capability proposals (C1, C2, C3).
 - **Do not:** mark any task complete on the strength of "the code looks right". ENGINE.md §10
   requires build/test/lint evidence, and until this entry is gone there is none.

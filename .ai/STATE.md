@@ -93,6 +93,11 @@ genuine debris to salvage or revert. Do not `git clean` them.
   `CLAUDE.md` imports); operational facts written to `knowledge/PROJECT.md`; one Escalation Request
   written covering the DoD approval, the standing toolchain capability, and the host-side UI-test
   proposal that would close part of the evidence gap. No plan amendments (the plan is new).
+- **Checkpoint:** `9b25307`, plus one follow-up commit backfilling that SHA into the two
+  `knowledge/ISSUES.md` entries. `POLICIES.md` requires every entry to cite the commit holding its
+  full record, and a commit cannot contain its own hash — amending would only have moved the
+  self-reference, so the backfill is a second commit rather than a history rewrite. Both entries now
+  resolve after the Cleanup Commit removes `.ai/`.
 
 ## Iteration Index
 
