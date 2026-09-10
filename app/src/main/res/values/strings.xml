@@ -44,4 +44,12 @@
     <string name="title">Title</string>
     <string name="write_your_note_here">Write your note here…</string>
     <string name="open_note">Open note</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_this_note">Delete this note?</string>
+    <string name="the_note_will_be_removed_permanently">The note will be removed from this device. This cannot be undone.</string>
+    <string name="note_deleted">Note deleted</string>
+    <string name="this_note_is_no_longer_there">This note is no longer there</string>
+    <string name="the_note_could_not_be_opened">The note could not be opened</string>
+    <string name="the_note_could_not_be_deleted">The note could not be deleted</string>
 </resources>

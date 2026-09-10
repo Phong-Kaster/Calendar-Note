@@ -16,34 +16,56 @@
 
 <!-- Newest first. Delete resolved entries outright rather than marking them done. -->
 
-### A note that fails to load opens as a blank editor, and saving it writes a *second* note
+### A bottom sheet dismissed by its own button vanishes instead of animating out
 
-- **What is wrong:** `NoteRepositoryImpl.getNote` answers `null` for two different situations — the
-  row is not there, and the read threw — and `NoteViewModel.openNote` treats `null` as "start a new
-  note" (`val note = stored ?: Note.draft(date = date)`). So the editor opens **blank but correctly
-  dated**, with no message. The user retypes and taps Save; `openedNote` is a draft carrying
-  `Note.UNSAVED_ID`, so Room's `autoGenerate` hands out a fresh row. Home then shows **two** notes
-  for that day: the original with its old text, untouched, plus the retyped copy.
-- **Why it matters:** it is the shape of data loss the rest of this screen was carefully built to
-  avoid — the note the user thought they were editing keeps its old text and its old list position,
-  and nothing anywhere says so. `NoteViewModelTest`'s *a note that has since been deleted opens as
-  a fresh one for the day asked for* pins the fall-through as intended, so no existing test will
-  ever catch it.
-- **When it became reachable:** T-004. Until the Home rows became clickable, every caller of
-  `argumentsFor` left `noteId` at its default, so `getNote` had no in-app caller and this branch was
-  dead code. Today it still needs a database failure to reach.
-- **When it stops being rare:** **T-005.** That task adds delete, and "opened a note that was
-  deleted" stops needing a disk fault — at which point a deleted note silently resurrects itself as
-  a duplicate.
-- **What would resolve it:** distinguish the two cases before the ViewModel has to guess — `getNote`
-  returning `Outcome<Note?>`, or a separate signal — and then decide each one deliberately: a note
-  that is *gone* should leave the screen (or say so), and a note that *failed to read* should
-  report the failure rather than impersonate a new note. The one thing it must not keep doing is
-  presenting a blank editor whose save inserts.
-- **Full record:** the fresh-context review of T-004, finding 2 — find the checkpoint with
-  `git log --oneline --all --grep='loop(T-004)'`.
-- **Do not:** "fix" it by keeping the requested id on the draft so the save updates in place. That
-  silently re-creates a note the user deleted, which is a different wrong answer, not a smaller one.
+- **What is wrong:** `CoreBottomSheet` calls `sheetState.hide()` only on the `onDismissRequest`
+  path — a scrim tap or a swipe down. Both of the delete confirmation's **buttons** work by
+  dropping `enable` to false instead, so the `ModalBottomSheet` leaves composition immediately and
+  the sheet disappears in one frame while the same sheet swiped away slides out politely. Two
+  dismissals of one control, two different animations.
+- **Where:** `ui/component/CoreBottomSheet.kt:38-51`, reached from
+  `ui/fragment/note/component/NoteDeleteConfirmSheet.kt`.
+- **Why it matters:** only polish, but it is the *confirmation* of a destructive action — the one
+  moment the app most wants to look deliberate rather than glitchy. It is also the kind of thing
+  nobody files later because nobody can name it.
+- **Why it is still open:** `CoreBottomSheet` is a shared skeleton primitive with two other
+  callers (`RateBottomSheet`, `HomePermissionBottomSheet`), and changing how it closes changes all
+  three. That is not a change to make from inside "add delete to the Note screen" — it would be
+  modifying unrelated files (ENGINE.md §14) and the other two have no reference image to catch a
+  regression.
+- **What would resolve it:** give `CoreBottomSheet` a `hideThenDismiss()` the button paths can call
+  — `coroutineScope.launch { sheetState.hide(); onDismiss() }` — and repoint all three callers'
+  buttons at it, verifying each. **This is the first sheet in the app whose primary dismissal is a
+  button rather than a swipe**, which is why it surfaced now.
+- **Full record:** the fresh-context review of T-005, finding 8 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-005)'`.
+- **Do not:** work around it by having `NoteViewModel` delay lowering `confirmingDelete`. Timing a
+  state change to match an animation nobody told it about is how the double-tap-save defect got in.
+
+### Leaving the Note screen after a failed open is a one-way door
+
+- **What is wrong:** when `openNote` cannot produce a note — `NoteProblem.Gone` or
+  `NoteProblem.Unreadable` — `NoteFragment` shows a message, calls `consumeProblem()`, and then
+  calls `safeNavigateUp()`. `NavigationUtil.safeNavigateUp` catches and logs every exception, so if
+  the pop does not happen there is **no second chance**: `problem` has already been cleared, so the
+  `LaunchedEffect` will not re-fire, and `opened` is already true, so `openNote` will not run again.
+  The user is left on a permanently blank editor whose Save correctly does nothing and whose only
+  way out is the back gesture.
+- **Where:** `ui/fragment/note/NoteFragment.kt:119-136`, with `ui/util/NavigationUtil.kt:37-43`.
+- **Why it matters:** low probability, zero recovery. And the blankness is indistinguishable from
+  the defect this whole task removed — a screen showing an empty note that is not a note.
+- **Why it is still open:** the fix is a small ordering question with a real trade — consume the
+  problem only once the pop is observed, which means the Fragment has to observe the pop, and
+  nothing in this app does that yet. Reordering the two lines alone does not fix it: the pop can
+  fail either way.
+- **What would resolve it:** leave `problem` set until the destination change is observed (a
+  `NavController.OnDestinationChangedListener`, or checking `currentDestination` after the call),
+  and show the message from a state the screen can re-enter. Alternatively give the blank state an
+  explicit "go back" control so there is always a way out that does not depend on the pop.
+- **Full record:** the fresh-context review of T-005, finding 9 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-005)'`.
+- **Do not:** conclude it is unreachable because `safeNavigateUp` "always works". It is wrapped in
+  a `try`/`catch` precisely because it does not.
 
 ### The Note editor's keyboard handling is unverified below API 30
 
@@ -71,14 +93,18 @@
 - **Do not:** assume it works because the code reads correctly, and do not assume it is broken
   either. Both would be inventing evidence.
 
-### The Note screen has no reference image, so nothing defends how it looks
+### The Note *editor* has no reference image, so nothing defends how it looks
 
+- **Narrowed in iteration 7.** T-005 added `NoteScreenshotTest.kt`, so the Note screen is no longer
+  entirely unpinned — but what it pins is `NoteDeleteConfirmContent`, the confirmation's two
+  controls. Everything below still stands for `NoteEditor` itself, which remains unrendered.
 - **What is wrong:** T-003 added four `@Preview`s and **zero** `@PreviewTest`, so the app's only
   text-entry screen has no committed rendering. `HomeNoteList` got one in T-002; `NoteEditor` did
   not. Consequences, both concrete: DoD criterion 12's "the editor scrolls rather than clipping"
   has no artifact at all, and criterion 2's perceptual half ("the accent reads as blue and is
   legible on black") is unrecorded for the `primary`-filled Save control and the `primary` cursor —
-  the two places this screen paints the accent.
+  the two places this screen paints the accent. The delete confirmation paints `error`, not
+  `primary`, so the new image does not cover this.
 - **Why it is still open:** the reason is real, not laziness, and it is the same one that kept
   populated note rows unpinned in T-002 — `NoteEditor` prints its date through
   `DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)` against `LocalConfiguration`, so the

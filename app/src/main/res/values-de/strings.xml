@@ -45,4 +45,12 @@
     <string name="title">Titel</string>
     <string name="write_your_note_here">Schreibe hier deine Notiz…</string>
     <string name="open_note">Notiz öffnen</string>
+    <string name="delete">Löschen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="delete_this_note">Diese Notiz löschen?</string>
+    <string name="the_note_will_be_removed_permanently">Die Notiz wird von diesem Gerät entfernt. Das kann nicht rückgängig gemacht werden.</string>
+    <string name="note_deleted">Notiz gelöscht</string>
+    <string name="this_note_is_no_longer_there">Diese Notiz ist nicht mehr vorhanden</string>
+    <string name="the_note_could_not_be_opened">Die Notiz konnte nicht geöffnet werden</string>
+    <string name="the_note_could_not_be_deleted">Die Notiz konnte nicht gelöscht werden</string>
 </resources>

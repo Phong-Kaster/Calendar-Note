@@ -7,20 +7,32 @@ import com.example.skeleton.data.mapper.toDomain
 import com.example.skeleton.data.mapper.toEntity
 import com.example.skeleton.data.repository.impl.NoteRepositoryImpl
 import com.example.skeleton.domain.model.Note
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
 
 /**
- * Holds [NoteRepositoryImpl] to the two promises its interface makes: notes come out most recently
- * touched first whatever order they went in, and a note dated after today never goes in at all.
+ * Holds [NoteRepositoryImpl] to the promises its interface makes: notes come out most recently
+ * touched first whatever order they went in, a note dated after today never goes in at all, a note
+ * that is deleted goes away without taking its neighbours with it, and **nothing that goes wrong
+ * inside ever leaves as an exception**.
+ *
+ * That last one earns a second fake, [BrokenNoteDao], because a fail-soft contract is only a claim
+ * until something actually fails. It also earns the distinction the reading tests are about: a read
+ * has *three* answers here — the note, no note, or no answer — and collapsing the last two into one
+ * `null` is what let a failed read open a blank editor that duplicated the note it was meant to
+ * edit.
  *
  * The DAO underneath is a fake — a list in memory, no Room, no Android, no device. That is the
  * point of the fake rather than a convenience: the real DAO sorts in SQL, and a SQL `ORDER BY` can
@@ -153,11 +165,11 @@ class NoteRepositoryImplTest {
         val dao = FakeNoteDao(rows = listOf(entity(id = 5L, createdAt = 1_000L, updatedAt = 1_000L)))
         val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
 
-        val existing = repository.getNote(id = 5L)!!
+        val existing = repository.storedNote(id = 5L)
         val outcome = repository.save(note = existing.copy(title = "Groceries, again"))
 
         assertTrue(outcome is Outcome.Success)
-        val stored = repository.getNote(id = 5L)!!
+        val stored = repository.storedNote(id = 5L)
         assertEquals(1_000L, stored.createdAt)
         assertEquals(NOW_MILLIS, stored.updatedAt)
         assertEquals("Groceries, again", stored.title)
@@ -191,7 +203,7 @@ class NoteRepositoryImplTest {
         assertEquals(listOf(20L, 10L), repository.notesFlow.first().map { note -> note.id })
 
         val outcome = repository.save(
-            note = repository.getNote(id = 10L)!!.copy(content = "Coffee, oat milk, and bread"),
+            note = repository.storedNote(id = 10L).copy(content = "Coffee, oat milk, and bread"),
         )
 
         assertTrue(outcome is Outcome.Success)
@@ -214,10 +226,10 @@ class NoteRepositoryImplTest {
         val dao = FakeNoteDao(rows = listOf(entity(id = 5L)))
         val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
 
-        val outcome = repository.save(note = repository.getNote(id = 5L)!!.copy(title = ""))
+        val outcome = repository.save(note = repository.storedNote(id = 5L).copy(title = ""))
 
         assertTrue(outcome is Outcome.Success)
-        val stored = repository.getNote(id = 5L)!!
+        val stored = repository.storedNote(id = 5L)
         assertEquals("", stored.title)
         // What the row draws instead — the first written line of the body, not the old title.
         assertEquals("Coffee, oat milk", stored.displayTitle)
@@ -284,20 +296,138 @@ class NoteRepositoryImplTest {
         val dao = FakeNoteDao(rows = listOf(entity(id = 5L)))
         val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
 
-        val existing = repository.getNote(id = 5L)!!
+        val existing = repository.storedNote(id = 5L)
         val outcome = repository.save(note = existing.copy(date = TODAY.plusDays(1L)))
 
         assertTrue(outcome is Outcome.Error)
-        assertEquals(TODAY, repository.getNote(id = 5L)!!.date)
+        assertEquals(TODAY, repository.storedNote(id = 5L).date)
     }
 
-    // ---------- Reading one note ----------
+    // ---------- Reading one note: three answers, not two ----------
 
     @Test
-    fun `asking for a note that is not there is answered with null, not an error`() = runTest {
+    fun `asking for a note that is not there is a successful read of nothing, not an error`() = runTest {
+        // The distinction this asserts is the whole reason `getNote` returns an `Outcome`. "I
+        // looked and it is not there" is an ordinary answer a screen can act on — the note was
+        // deleted. Reporting it as an error would make it indistinguishable from a database that
+        // would not answer, and the screen above can only behave correctly if it can tell.
         val repository = NoteRepositoryImpl(noteDao = FakeNoteDao(rows = emptyList()), clock = CLOCK)
 
-        assertNull(repository.getNote(id = 404L))
+        val outcome = repository.getNote(id = 404L)
+
+        assertTrue(outcome is Outcome.Success)
+        assertNull((outcome as Outcome.Success).data)
+    }
+
+    @Test
+    fun `asking for a note that is there answers with it`() = runTest {
+        val repository = NoteRepositoryImpl(noteDao = FakeNoteDao(rows = listOf(entity(id = 5L))), clock = CLOCK)
+
+        val outcome = repository.getNote(id = 5L)
+
+        assertTrue(outcome is Outcome.Success)
+        assertEquals(5L, (outcome as Outcome.Success).data?.id)
+    }
+
+    @Test
+    fun `a read the database refuses is an error, not an empty answer`() = runTest {
+        // The other half of the same distinction, and the one that used to be invisible: before
+        // this, a thrown read came back as `null` — the same value as "no such note" — and the Note
+        // screen opened a blank editor whose save wrote a *second* note beside the original.
+        val repository = NoteRepositoryImpl(noteDao = BrokenNoteDao(), clock = CLOCK)
+
+        val outcome = repository.getNote(id = 5L)
+
+        assertTrue(outcome is Outcome.Error)
+    }
+
+    // ---------- Deleting ----------
+
+    @Test
+    fun `deleting a note takes it out of the emitted list`() = runTest {
+        val dao = FakeNoteDao(rows = listOf(entity(id = 5L), entity(id = 6L)))
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        val outcome = repository.delete(note = repository.storedNote(id = 5L))
+
+        assertTrue(outcome is Outcome.Success)
+        // Both halves matter. The row is gone from the list a screen collects, and the *other* note
+        // is untouched — a delete that took the wrong row, or every row, would satisfy the first
+        // assertion on its own.
+        assertEquals(listOf(6L), repository.notesFlow.first().map { note -> note.id })
+    }
+
+    @Test
+    fun `a deleted note cannot be read back`() = runTest {
+        val dao = FakeNoteDao(rows = listOf(entity(id = 5L)))
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        repository.delete(note = repository.storedNote(id = 5L))
+
+        val outcome = repository.getNote(id = 5L)
+        assertTrue(outcome is Outcome.Success)
+        assertNull((outcome as Outcome.Success).data)
+    }
+
+    @Test
+    fun `deleting a note that was never saved is refused, and nothing else goes with it`() = runTest {
+        // A draft has `UNSAVED_ID`, which matches no row. Room's `@Delete` would remove nothing and
+        // report no problem, so the screen above would announce a deletion that never happened —
+        // about a note the user can still see. The refusal is what makes that impossible.
+        val dao = FakeNoteDao(rows = listOf(entity(id = 5L)))
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+
+        val outcome = repository.delete(note = Note.draft(date = TODAY, title = "Groceries"))
+
+        assertTrue(outcome is Outcome.Error)
+        assertEquals(listOf(5L), repository.notesFlow.first().map { note -> note.id })
+    }
+
+    @Test
+    fun `deleting a note that is no longer there is reported, not announced as a success`() = runTest {
+        // The general case of the refusal below, and the one that gets ordinary once a second
+        // surface can delete: the id is a perfectly real one, it just does not match a row any
+        // more. Room's `@Delete` matches nothing and reports nothing wrong, so without the row
+        // count the screen would show "Note deleted" for a note that had already gone — or, worse
+        // once the Calendar screens land, for one that is still sitting in another list.
+        val dao = FakeNoteDao(rows = listOf(entity(id = 5L)))
+        val repository = NoteRepositoryImpl(noteDao = dao, clock = CLOCK)
+        val note = repository.storedNote(id = 5L)
+
+        assertTrue(repository.delete(note = note) is Outcome.Success)
+        val second = repository.delete(note = note)
+
+        assertTrue(second is Outcome.Error)
+    }
+
+    @Test
+    fun `a delete the database refuses is reported rather than thrown`() = runTest {
+        val repository = NoteRepositoryImpl(noteDao = BrokenNoteDao(), clock = CLOCK)
+
+        val outcome = repository.delete(
+            note = Note(
+                id = 5L,
+                date = TODAY,
+                title = "Groceries",
+                content = "Coffee, oat milk",
+                createdAt = 1_000L,
+                updatedAt = 1_000L,
+            ),
+        )
+
+        // A repository does not throw at the screen above it — the screen has to be able to tell
+        // the user something, and an exception crossing this boundary lands in a ViewModel that is
+        // catching nothing.
+        assertTrue(outcome is Outcome.Error)
+    }
+
+    @Test
+    fun `a database that will not be read shows an empty list instead of crashing the screen`() = runTest {
+        // `notesFlow` is collected by a ViewModel that catches nothing, so an exception escaping
+        // here would take the app down. "No notes" is the wrong answer and a survivable one.
+        val notes = NoteRepositoryImpl(noteDao = BrokenNoteDao(), clock = CLOCK).notesFlow.first()
+
+        assertEquals(emptyList<Note>(), notes)
     }
 
     private fun entity(
@@ -367,7 +497,64 @@ private class FakeNoteDao(rows: List<NoteEntity>) : NoteDao {
         return note.id
     }
 
-    override suspend fun delete(note: NoteEntity) {
-        storedRows.value = storedRows.value.filterNot { row -> row.id == note.id }
+    override suspend fun delete(note: NoteEntity): Int {
+        val before = storedRows.value
+        storedRows.value = before.filterNot { row -> row.id == note.id }
+        // The count Room would report, computed the same way Room computes it — how many rows the
+        // primary key actually matched. Returning a constant `1` here would make the repository's
+        // "a delete that removed nothing is an error" rule untestable, which is the fake agreeing
+        // with the code instead of checking it.
+        return before.size - storedRows.value.size
     }
+}
+
+/**
+ * A notes table where every single thing fails.
+ *
+ * It exists because the repository's fail-soft promise — *never throw at the screen above you* — is
+ * only a promise until something actually throws. There is no other way to reach those catch blocks
+ * on this toolchain: the real failure is a corrupt database file or a disk that will not read, and
+ * nothing here can produce either.
+ *
+ * [observeAll] throws on **collection** rather than when it is called, because
+ * `NoteRepositoryImpl` builds its `notesFlow` in a property initialiser — a fake that threw from
+ * the function itself would blow up in the constructor and never reach the code being tested.
+ *
+ * @author Phong-Kaster
+ */
+private class BrokenNoteDao : NoteDao {
+
+    override fun observeAll(): Flow<List<NoteEntity>> = flow { throw IOException("disk is gone") }
+
+    override fun observeByDate(epochDay: Long): Flow<List<NoteEntity>> =
+        flow { throw IOException("disk is gone") }
+
+    override suspend fun getById(id: Long): NoteEntity? = throw IOException("disk is gone")
+
+    override suspend fun upsert(note: NoteEntity): Long = throw IOException("disk is gone")
+
+    override suspend fun delete(note: NoteEntity): Int = throw IOException("disk is gone")
+}
+
+/**
+ * The note behind a read the test expects to succeed.
+ *
+ * `NoteRepository.getNote` answers with an [Outcome] rather than a nullable note, because "it is
+ * gone" and "I could not look" are different answers that call for different behaviour on screen.
+ * Most tests in this file are about *saving* something they first read back, and unwrapping that
+ * in-line five times would bury each assertion under ceremony.
+ *
+ * It asserts on the way through on purpose: a read that failed, or that found nothing, fails the
+ * test here — at the read — rather than three lines later as a mystifying null.
+ *
+ * @param id the row id to read.
+ * @author Phong-Kaster
+ */
+private suspend fun NoteRepositoryImpl.storedNote(id: Long): Note {
+    val outcome = getNote(id = id)
+    assertTrue("reading note $id should have succeeded", outcome is Outcome.Success)
+
+    val note = (outcome as Outcome.Success).data
+    assertNotNull("note $id should be in the store", note)
+    return note!!
 }

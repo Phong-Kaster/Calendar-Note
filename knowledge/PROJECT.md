@@ -11,7 +11,7 @@
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 41 tests as of iteration 6. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 61 tests as of iteration 7. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
 | Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
@@ -81,6 +81,35 @@ required parameter, which the two screenshot cases calling it did not pass.
 signature changes.** It is cheap (~15s) and it is the only task that compiles that source set. The
 same applies to `app/src/androidTest/`, which nothing here can compile at all.
 
+### One failing Gradle task aborts the others, and the leftover XML reads exactly like a pass
+
+Asking for four tasks in one command does **not** mean all four run. In iteration 7
+`validateDebugScreenshotTest` failed and `testDebugUnitTest` never executed — but
+`app/build/test-results/testDebugUnitTest/TEST-*.xml` was still sitting there from the *previous*
+invocation, with its old counts and `failures="0"`. Reading it produced a confident, wrong "the
+new tests pass", and the give-away was subtle: the counts had not gone **up** after two tests were
+added.
+
+**Read the counts only from a run whose own `BUILD SUCCESSFUL` you saw**, and treat a test count
+that did not move after adding tests as proof the task did not run — not as a puzzle about the
+tests. When a combined run fails, re-run the task you actually need on its own.
+
+### `ScreenshotScaffold` applies the theme *itself*, so a colour cannot be passed into it
+
+`ScreenshotScaffold` is where `MyApplicationTheme` is entered. Anything a caller writes as
+`MaterialTheme.colorScheme.…` — in a default argument or at the call site — is therefore evaluated
+**outside** it, against Material's baseline **light** scheme. Written as
+`ground: Color = MaterialTheme.colorScheme.background`, a change that reads like a no-op would
+have re-recorded every reference image on a **white** ground.
+
+That is why the parameter is the `ScreenshotGround` enum (`Background` / `Surface`) resolved inside
+the theme, rather than a `Color`. Caught in iteration 7 before it was recorded, while fixing a real
+version of the same class of mistake: the delete-confirmation case was rendering sheet contents on
+`colorScheme.background` when the real `CoreBottomSheet` paints `colorScheme.surface` — a reference
+that looks right and defends a contrast the user never sees. **Match the ground to what is actually
+behind the component**, and note that this is the one legitimate reason to run
+`updateDebugScreenshotTest`: you meant to change what the image shows, and you know why.
+
 ### Unit tests run against a *stub* `android.jar` — every framework call throws unless told not to
 
 A JVM unit test compiles against a stub `android.jar` where every framework method **throws**
@@ -115,6 +144,24 @@ not the content inside it. `MainActivity` also carries
 **That half is unverified** — see `knowledge/ISSUES.md`; `values/themes.xml` sets
 `windowTranslucentStatus`, which historically suppresses the back-ported inset, and nothing here
 can run an API 24–29 image.
+
+### The engine runs as a single `claude -p` invocation — a background subagent must be waited on *inside* the turn
+
+`.loop/run.ps1` invokes `& claude -p "<the iteration prompt>" --append-system-prompt … --settings …`.
+That is **non-interactive, one shot**: there is no second user turn, so **the moment the assistant
+turn ends, the process exits.** The Runtime then looks for `.ai/STATUS.md`, does not find one,
+counts a crash (`Read-ExecutionStatus` → `$null` → `$consecutiveCrashes++`), and re-invokes from the
+last checkpoint — losing everything the iteration had not committed.
+
+The consequence that matters: **a subagent launched with `run_in_background: true` is only useful if
+you keep issuing tool calls until its result arrives.** Ending the turn to "wait for the
+notification" is the same thing as abandoning the iteration. Either keep the turn alive with cheap
+calls, or launch the review synchronously (`run_in_background: false`) and let it block.
+
+Found in iteration 7 by reading `.loop/run.ps1` while a background reviewer was still running. It is
+also the most likely explanation for the two invocations that died mid-iteration earlier in this run
+(iterations 3 and 5 both began at Recover with a coherent partial tree and an untouched `.ai/`) —
+likely, not proven, since nothing recorded what those invocations were doing at the time.
 
 ### A piped Gradle command reports the *pipe's* exit code, not Gradle's
 
@@ -195,6 +242,19 @@ confirmed against the code that exists.
   `private val`, not a companion.
 - **Repositories** never throw across the boundary — they return `null` / `emptyList()` /
   `common.Outcome<T>`, and re-throw `CancellationException`.
+- **A read with three answers returns `Outcome<T?>`, not `T?`.** `NoteRepository.getNote` is the
+  worked example, and it is a **deliberate divergence from `.claude/repository-layer.md`**, whose
+  fail-soft table maps "single item fetch, null = not found" to a bare `T?`. That shape collapses
+  *"I looked and it is not there"* into *"I could not look"*, and the caller then has to guess —
+  which produced a real defect (a failed read opened a blank editor whose save wrote a second
+  note; fixed in iteration 7). `Success(note)` / `Success(null)` / `Error` keeps the three apart.
+  Use the rule file's simpler `T?` where a read genuinely has two answers; reach for this when the
+  caller would behave *differently* on "absent" and "unreadable".
+- **A write that may legitimately affect nothing reports how much it affected.** `NoteDao.delete`
+  returns `Int` and `NoteRepositoryImpl.delete` turns `0` into an `Outcome.Error`. Room's `@Delete`
+  matches on the primary key and is perfectly content to match no row and report nothing wrong, so
+  without the count the screen announces a deletion that never happened. The same applies to any
+  future `@Update` or `@Query("DELETE …")`.
 - **The notes store owns the clock, and it is injected.** `NoteRepositoryImpl` takes
   `clock: Clock = Clock.systemDefaultZone()` and is the only thing in the app that stamps
   `createdAt` / `updatedAt` or decides what "today" is for the future-date rule. No screen stamps a
@@ -243,7 +303,9 @@ confirmed against the code that exists.
   - `app/src/test/` — plain JVM unit tests: the `ExampleUnitTest` stub,
     `ui/theme/DarkColorSchemeTest.kt`, `domain/model/NoteTest.kt`,
     `data/repository/NoteRepositoryImplTest.kt` (a `runTest` coroutine against a hand-written fake
-    DAO) and, from iteration 5, `ui/fragment/note/NoteViewModelTest.kt`. **These can touch
+    DAO — **two** fakes since iteration 7, the second one failing every call, which is the only way
+    to reach the repository's catch blocks on this toolchain) and, from iteration 5,
+    `ui/fragment/note/NoteViewModelTest.kt`. **These can touch
     Compose's non-`@Composable` API** — `darkColorScheme()`, `Color` and Java reflection over
     `ColorScheme` all work with no Android context and no extra dependency. Worth knowing before
     assuming a Compose-related property needs an emulator. There is no Robolectric.

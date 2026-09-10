@@ -49,7 +49,14 @@ interface NoteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(note: NoteEntity): Long
 
-    /** Removes one note. */
+    /**
+     * Removes one note, matched on [NoteEntity.id].
+     *
+     * @return how many rows went — `1` normally, and **`0` when there was no such row**. Room is
+     *   perfectly happy to delete nothing and say nothing about it, so without this count the
+     *   repository above could not tell "removed" from "there was nothing there", and the screen
+     *   would announce a deletion that never happened.
+     */
     @Delete
-    suspend fun delete(note: NoteEntity)
+    suspend fun delete(note: NoteEntity): Int
 }

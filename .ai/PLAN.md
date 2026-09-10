@@ -74,6 +74,17 @@ The layers, in increasing cost:
   assertion could not fail, and it survived three mutations before a *reader* found it. Mutate
   toward each assertion the test claims to carry, and treat a fixture that already equals the
   expected value as the smell it is.
+
+  **Iteration 7 added the practice that makes mutating safe: mark every mutation with a comment
+  containing the literal word `MUTATION`, and grep for it before checkpointing.** That iteration
+  began at Recover with a *previous* invocation's mutation still applied in `NoteViewModel.delete`
+  — the process had died between applying it and reverting it. The debris was otherwise coherent,
+  complete and green-looking, which is precisely the danger: mutated code is *deliberately wrong*,
+  so a resumed invocation that builds on it inherits a defect it did not write and has no reason to
+  suspect. The marker is what turned a ten-second `grep` into the thing that caught it, and it is
+  cheap enough to be unconditional. **At Recover, grep the tree for `MUTATION` before trusting a
+  dirty working tree, and re-run the mutation yourself rather than assuming its result was
+  observed** — the invocation that applied it never got to record what failed.
 - **Build + lint** on every checkpoint. Criterion 13's command set now also includes
   `:app:validateDebugScreenshotTest` (D-001; `DoD.md` itself is immutable to the engine and was not
   edited to say so — see A-002).
@@ -115,9 +126,9 @@ can only be checked by rendering it, which is precisely the capability this repo
   future-date rule (A-006) and the load-existing-note path (A-007), so DoD criterion 10 is done**
 - ✅ T-004 — User can open and edit an existing note; Home re-sorts (depends on: T-003) — **reduced
   by A-007 to the Home-row route, the re-sort evidence and the blanked-title case**
-- T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010) — **also
-  resolves the failed-read defect T-004's review found (A-009): delete is what makes "the note you
-  opened is gone" ordinary rather than a disk fault**
+- ✅ T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010) — **also
+  resolved the failed-read defect T-004's review found (A-009), by giving `getNote` an
+  `Outcome<Note?>` return so "it is gone" and "I could not look" stop being the same `null`**
 - T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
 - T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
 - T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006: the

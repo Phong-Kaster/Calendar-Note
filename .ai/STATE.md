@@ -12,15 +12,26 @@
 
 - **Phase:** executing
 - **Loop Branch:** `loop/calendar-note-app`
-- **Next task:** **T-005** — a note can be deleted, behind a confirmation step. Its dependencies
-  (T-004, T-010) are both complete. Nothing is pending. **It grew by one prerequisite this
-  iteration** (amendment **A-009**): it must also resolve `knowledge/ISSUES.md` § *A note that fails
-  to load opens as a blank editor, and saving it writes a second note*, because delete is exactly
-  what turns that from a disk-fault curiosity into ordinary use. **Read `.ai/TASKS/T-005.md` in
-  full** — it names the existing test that pins the current (wrong) behaviour on purpose, so
-  resolving it means changing that test deliberately rather than routing around it.
+- **Next task:** **T-006** — the Calendar screen: a month grid for the current month, today marked,
+  previous/next month navigation, and future days rendered inert. Its dependencies (T-002, T-010)
+  are both complete, nothing is pending, and it is the only unblocked task — T-007 waits on it,
+  T-008 on T-007, T-009 on T-008.
+
+  **T-006 is the first task in this run that builds a screen with no sibling to copy**, and two
+  things already exist for it. `knowledge/PROJECT.md` records that the prior run's
+  `CalendarScreenshotTest.kt` on `loop/todo-calendar-screens` (tip `969f278`) is a pattern to read
+  — *read, not import*: it references composables that do not exist here, and **that run's grid is
+  Sunday-first**, which is a decision this run has not made. And `POLICIES.md` § User-Interface
+  Defects has three bullets aimed squarely at a calendar grid: a marker must contrast with the fill
+  it sits on **in the combined states** (today *and* selected *and* has-notes), every list needs an
+  empty state, and colour comes from the theme. Iteration 2 already caught `outline` at 2.19:1 on
+  the black ground — the grid's cell borders are what that fix was for, so **compute the ratios
+  rather than eyeballing the render**.
+
   **Read `.ai/TASKS/T-003.md` before starting T-008**; it had work removed and its task file says
-  what is left.
+  what is left. T-008 must also resolve part 2 of `knowledge/ISSUES.md` § *Leaving the Note editor
+  either loses the user's text or traps them on the screen* — a refusal becomes reachable by
+  ordinary use the moment a past day can be picked.
 - **DONE-candidate:** no
 - **DoD:** ✅ approved 2026-09-10, A5 overruled to title + body. Immutable from here — propose
   changes (Tier 3), never apply them.
@@ -44,8 +55,15 @@
 
 ### First thing the next iteration should do
 
-Read `knowledge/PROJECT.md` § Toolchain before running anything. It carries ten traps, every one of
-them earned by a real failure or a denied command:
+**`grep -r MUTATION app/src`, before anything else, if the working tree is dirty.** Iteration 7
+began by finding a *previous* invocation's mutation still applied in `NoteViewModel.delete` — the
+process had died between applying it and reverting it. The rest of the debris was coherent,
+complete and would have built and tested green, which is exactly what makes it dangerous: mutated
+code is *deliberately wrong*, and an invocation that resumes on top of it inherits a defect it did
+not write and has no reason to suspect. See `.ai/PLAN.md` § Verification approach.
+
+Then read `knowledge/PROJECT.md` § Toolchain before running anything. It carries thirteen traps,
+every one of them earned by a real failure or a denied command:
 
 - a **piped Gradle command reports the pipe's exit code**, so a `BUILD FAILED` looks like a pass;
 - **Gradle run in the background races your own edits**;
@@ -69,7 +87,16 @@ them earned by a real failure or a denied command:
   `Modifier.imePadding()` before its `verticalScroll` (new in iteration 5);
 - **`NavigationUtil.canNavigate()` is one 800 ms clock for the whole app**, armed even by a
   bottom-bar tap that navigates nowhere — so using it to debounce a list row leaves that row dead
-  for 800 ms after any tab tap. Ask the graph where you are instead (new in iteration 6).
+  for 800 ms after any tab tap. Ask the graph where you are instead (iteration 6);
+- **the engine runs as a single `claude -p` invocation**, so ending the turn ends the iteration —
+  a background subagent must be waited on *inside* the turn, or launched synchronously (new in
+  iteration 7, and the likeliest explanation for the two invocations that died earlier in this run);
+- **one failing Gradle task aborts the others, and the stale XML left behind reads exactly like a
+  pass** — a test count that did not go up after adding tests means the task did not run (new in
+  iteration 7);
+- **`ScreenshotScaffold` applies the theme itself**, so a `Color` passed in from a call site or a
+  default argument is resolved against Material's *light* baseline — which is why its ground is an
+  enum (new in iteration 7).
 
 ## Progress
 
@@ -80,7 +107,7 @@ them earned by a real failure or a denied command:
 | T-002 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 59 warnings`) + `testDebugUnitTest --rerun-tasks` (**17 tests, 0 failures**) + `validateDebugScreenshotTest` (**7 cases, 0 failures**) all green, all re-run after the review fixes. `MIGRATION_2_3` is a verbatim copy of Room's generated `createAllTables` statement. Fresh-context review: 0 Critical, 2 Major (both knowledge reconciliation, both fixed), 7 Minor (6 fixed, 3 accepted with reasons). Full record in `.ai/TASKS/T-002.md`. **3 items await human eyes** — see that file. |
 | T-003 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 60 warnings`) + `testDebugUnitTest --rerun-tasks` (**38 tests, 0 failures**) + `validateDebugScreenshotTest` (**7 cases, 0 failures**) all green, all re-run after the review fixes. **The new tests were mutation-checked**: three separate mutations to the implementation failed exactly the five expected tests. **DoD criterion 10 is satisfied here** (A-006). Fresh-context review: 2 Critical (both fixed — the editor was unusable with the keyboard open; a double tap on Save wrote two notes), 2 Major (both fixed), 4 Minor (2 filed, 2 accepted with reasons). Full record in `.ai/TASKS/T-003.md`. **5 items await human eyes** — see that file. |
 | T-004 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 60 warnings`, unchanged) + `testDebugUnitTest --rerun-tasks` (**41 tests, 0 failures**) + `validateDebugScreenshotTest` (**7 cases, 0 failures**) all green, all re-run after the review fixes. **The new tests were mutation-checked, and the fourth mutation exists because the reviewer proved one assertion could not fail.** Fresh-context review: 0 Critical, 3 Major (1 fixed — note rows were dead for 800 ms after any bottom-bar tap; 2 filed with a schedule), 3 Minor (all fixed). **DoD criterion 6 is satisfied bar its device walkthrough, and criterion 12's "full text reachable" clause is now true.** Full record in `.ai/TASKS/T-004.md`. **4 items await human eyes** — see that file. |
-| T-005 | pending — **grew by A-009** | — |
+| T-005 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 61 warnings`) + `testDebugUnitTest --rerun-tasks` (**63 tests, 0 failures**) + `validateDebugScreenshotTest` (**8 cases, 0 failures**) all green, all re-run after the review fixes. **Eight mutations, each failing exactly the expected test(s)** — three of them aimed at the review's own fixes. **A-009 is discharged: `getNote` returns `Outcome<Note?>` and the `ISSUES.md` entry is deleted.** Fresh-context review: 10 findings — **1 Critical** (a tap on Save during the 500 ms exit animation put the deleted note back), 3 Major, 6 Minor; 8 fixed here, 2 filed. Full record in `.ai/TASKS/T-005.md`. **5 items await human eyes, one of which is criterion 7's perceptual clause** — see that file. |
 | T-006 | pending | — |
 | T-007 | pending | — |
 | T-008 | pending — **reduced by A-006** | — |
@@ -183,6 +210,82 @@ if the dirt is *this run's*. Treat the paths above as clean; anything else untra
 genuine debris to salvage or revert. Do not `git clean` them.
 
 ## Recent Iterations
+
+### Iteration 7 — 2026-09-10 — T-005, delete lands, and the debris was hiding a live mutation
+
+- **Started at Recover, and the debris was booby-trapped.** The tree held most of T-005 — the
+  repository change, the ViewModel, the sheet, the screenshot case, both test files, strings in two
+  locales — all stamped 15:06–15:20 against a 15:00 checkpoint with `.ai/` untouched, so a previous
+  invocation had died mid-task. That much matched iterations 3 and 5. What was new:
+  `NoteViewModel.delete` contained `delete(note = note.copy(id = 99L))` under a comment reading
+  `MUTATION M7`. **The invocation had died between applying a mutation and reverting it**, and the
+  surrounding work was coherent enough that building on it without reading it would have shipped a
+  delete that removes the wrong row. Reverted, then re-applied deliberately to confirm the test
+  catches it (it does — the invocation that applied it never got to see the result). → `PLAN.md`,
+  and the first line of *First thing the next iteration should do*.
+- **Did:** `getNote` → `Outcome<Note?>` (the A-009 prerequisite); `delete` on the repository, with
+  `NoteDao.delete` now returning a row count; `askToDelete`/`dismissDelete`/`delete` +
+  `NoteProblem` on the ViewModel; `NoteDeleteConfirmSheet`; the top-bar delete action; a
+  `@PreviewTest` and its reference image; eight strings in two locales; 22 new unit tests; README.
+- **Learned:**
+  - **A crashed invocation can leave the tree *deliberately* wrong.** Every previous Recover
+    assumed debris was merely incomplete — a half-written feature, salvageable by reading it. A
+    mutation is different in kind: it is a correct-looking edit whose whole purpose is to be wrong,
+    and it survives a build and most of a test suite. The cheap fix is a convention rather than a
+    rule: **mark every mutation with the literal word `MUTATION` and grep before checkpointing**,
+    which turns a subtle recovery hazard into a ten-second check.
+  - **The review's Critical was the exact mirror of the defect T-003 was fixed for, and the
+    argument against it was already written in the file.** A tap on Save during the 500 ms exit
+    animation after a delete re-inserted the deleted row at the top of Home. The `saving` guard's
+    KDoc, four functions higher, already explained that the composition keeps taking touches for
+    the length of the exit animation — the reasoning was present, correct, and simply not applied
+    to the new path. **Third iteration running that the defect sat in the most confidently
+    documented area.** The refinement worth carrying: when adding a second path beside a guarded
+    one, re-read the guard's *justification*, not just the guard — and treat an asymmetry between
+    two sibling paths as a question, not a style choice.
+  - **A comment that claims more than the code does is a defect with a delay fuse.** Two Majors
+    were exactly this shape: `delete`'s KDoc argued that Room silently matching no row is the
+    danger — true of *every* absent id — while the code guarded only the `UNSAVED_ID` sentinel;
+    and `askToDelete` had no guard at all while the KDoc beside it described the discipline. Both
+    were fixed by making the code as broad as the sentence, not by narrowing the sentence.
+  - **`ScreenshotScaffold` applies the theme, so a colour cannot be handed to it.** Fixing a real
+    finding — the confirmation was rendered on `background` when the sheet paints `surface` —
+    nearly introduced a worse one, because `ground: Color = MaterialTheme.colorScheme.background`
+    evaluates in the *caller's* composition, outside the theme, against Material's **light**
+    baseline. That reads as a no-op and would have re-recorded every reference in the project on
+    white. The parameter is an enum resolved inside the theme instead. → `knowledge/PROJECT.md`.
+  - **The engine is a single `claude -p` invocation**, found by reading `.loop/run.ps1` while a
+    background reviewer was still running and ending the turn looked like a reasonable way to wait.
+    It is not: the turn ending *is* the process exiting, and the Runtime would have counted a crash
+    and thrown the iteration away. It is also the likeliest explanation for the two earlier deaths
+    in this run. → `knowledge/PROJECT.md`.
+  - **A failing Gradle task aborts the ones after it, and the stale XML reads as a pass.** After
+    the review fixes, `validateDebugScreenshotTest` failed (expected — the ground colour had
+    changed on purpose) and `testDebugUnitTest` never ran, but its result files were still there
+    from the previous invocation reporting `failures="0"`. The tell was that the counts had not
+    gone *up* after two tests were added. → `knowledge/PROJECT.md`.
+  - **The reviewer found three tests that could not fail for the reason they stated** — one
+    asserting a field's declared default, one never checking the pre-state it cleared, one
+    returning at a different guard than the one its comment named. Iteration 6 learned this from a
+    reader too. It is now clear that **mutation testing and careful reading catch different
+    species**: mutation finds assertions the code can't break, reading finds assertions that never
+    described the code. Running both is not redundancy.
+- **Reconciled:** five operational facts → `knowledge/PROJECT.md` (the `Outcome<T?>` three-answer
+  convention and its deliberate divergence from `.claude/repository-layer.md`; the row-count rule
+  for writes that may affect nothing; the `-p` invocation model; the aborted-task/stale-XML trap;
+  the `ScreenshotScaffold` ground trap), plus the test count. **One `ISSUES.md` entry deleted** —
+  the failed-read defect, resolved, which discharges A-009 — one narrowed (the Note *editor* is
+  still unpinned; the confirmation now is not), and **two added** (a sheet dismissed by its own
+  button does not animate out; the failed-open exit is a one-way door). `PLAN.md`'s mutation rule
+  gained the marker convention and its task graph closed T-005. No new amendment: the plan's shape
+  did not change.
+- **Not done, on purpose:** `CoreBottomSheet`'s dismissal animation stays as it is — it is a
+  shared primitive with two other callers and no reference image to catch a regression, so it is
+  its own change, not a passenger on this one. The `Gone`/`Unreadable` one-way door stays too: the
+  real fix needs the Fragment to observe the pop, which nothing in this app does yet. Both filed
+  rather than deferred silently. No `@PreviewTest` for `NoteEditor` — still blocked on the same
+  host-locale lock as the populated Home row.
+- **Checkpoint:** see the `loop(T-005)` commit.
 
 ### Iteration 6 — 2026-09-10 — T-004, the loop closes, and a debounce that made rows dead
 
@@ -334,66 +437,6 @@ genuine debris to salvage or revert. Do not `git clean` them.
   with `HomeNoteList`, to be unified in T-009 rather than split across two tasks.
 - **Checkpoint:** see the `loop(T-003)` commit.
 
-### Iteration 4 — 2026-09-10 — T-002, the app stops being a skeleton
-
-- **Attempted:** T-002 — the notes table, the store above it, and Home repointed off the demo post
-  list. Clean start: the working tree held only the paths listed above as expected, so Recover was
-  a no-op and Select took T-002 as the only unblocked task.
-- **Did:** `Note` + `NoteEntity` + `NoteDao` + `MIGRATION_2_3` + `NoteMapper` + `NoteRepository`
-  (interface and impl) + Koin wiring in three modules, then `HomeUiState`/`HomeViewModel`/
-  `HomeLayout` rewritten around notes, a new `HomeNoteList` component, two new unit-test classes,
-  one new screenshot case, and the README's feature table and package tree.
-- **Learned:**
-  - **A Room migration cannot be tested here, but it can be made right by construction.** No
-    Robolectric, no device, no unit test that executes SQLite — and
-    `fallbackToDestructiveMigration(false)` turns a wrong migration into a *launch crash*, not a
-    degraded read. The fix that worked: after any build, Room's own `CREATE TABLE` sits in
-    `app/build/generated/ksp/debug/kotlin/.../AppDatabase_Impl.kt` § `createAllTables`, with the
-    `TableInfo` it validates against directly below. Copy it verbatim. Writing it by eye first
-    produced a `DEFAULT ''` the entity does not declare — harmless as it happens, and a difference
-    nothing here could have caught. → `knowledge/PROJECT.md`, amendment **A-005**.
-  - **A fake DAO only proves something if the fake refuses to help.** The DAO orders in SQL, which
-    no available command can execute, so a fake that returned rows sorted would have made the
-    ordering test a tautology — the classic test-agrees-with-the-code failure. `FakeNoteDao`
-    returns its rows in construction order, deliberately jumbled, and the repository sorts them
-    itself. The redundancy with the SQL `ORDER BY` is the point: **the "newest first" promise now
-    belongs to the repository rather than to a query string a future edit can quietly change**, and
-    the suite fails against three separate breakages including `createdAt` ordering, which is the
-    exact trap `knowledge/DOMAIN.md` names.
-  - **`git reset` and `git restore` are denied; `git rm --cached` is the unstage.** Found by
-    `git add -A app/src` sweeping up the three orphan PNGs that must stay untracked. Not routed
-    around. → `knowledge/PROJECT.md`, with the warning not to use `-r` on the folder, which would
-    untrack the six committed references beside them.
-  - **The review's two Majors were both in `knowledge/`, not in the code.** `PROJECT.md` still said
-    `AppDatabase` is at `version = 2`; that file is read as *convention* at Orient, so the next task
-    would have read it as current and bumped to 3 a second time — a version/migration pair Room
-    rejects at launch. And `ISSUES.md` still asked for two string keys this task had just deleted.
-    Worth naming as a pattern: **the reconciliation step is not paperwork after the work, it is
-    part of the work**, and a stale line in a file read every iteration is a defect with a delay
-    fuse. Both fixed in this checkpoint, as `POLICIES.md` § Reconciliation Rules requires.
-  - **A locale-correct date is not `Locale.getDefault()`.** The row formats its date with
-    `LocalConfiguration.current.locales[0]`, because this app has its own language picker in
-    Settings — the device default answers a different question, and a user who switched the app to
-    German could have read an English date under German copy.
-  - **What a screenshot case is worth depends on what it renders.** The new empty-state reference
-    defends `HomeNoteList`, not `HomeLayout` — the layout is `private`, as the house rules require,
-    so the screenshot source set cannot reach it. Populated rows are pinned by nothing at all,
-    because a row prints a locale-dependent date and a reference image of that fails on a German
-    machine for reasons unrelated to the app. Both gaps are written into `HomeScreenshotTest.kt`
-    itself rather than left for someone to discover, and the untested "Untitled note" fallback is
-    carried into T-004.
-- **Reconciled:** `knowledge/PROJECT.md` — Room now at version 3 with the epoch-day note, the test
-  surface, the migration technique, and the `git rm --cached` rule; `knowledge/ISSUES.md` — the
-  string-key entry reduced to the one surviving prayer-time key (two resolved themselves here);
-  amendment **A-005**; `PLAN.md`'s Room-migration risk closed with what it actually cost; three
-  human-inspection items and the uncovered row fallback recorded in `.ai/TASKS/T-002.md`.
-- **Not done, on purpose:** rows are not clickable (T-004 opens a note), so **DoD criterion 12 is
-  half-satisfied** — bounded overflow exists, the route to the full text does not. No populated-row
-  screenshot, for the locale reason above. `saveNote` was not added to `NoteRepository` "while I was
-  there": a repository method with no caller is not a checkpoint of working behaviour
-  (`POLICIES.md` § Task Decomposition), and T-003 is where the write path becomes observable.
-- **Checkpoint:** see the `loop(T-002)` commit.
-
 ## Iteration Index
 
 <!-- One line per iteration older than the three above. The SHA is the checkpoint commit whose
@@ -401,6 +444,7 @@ genuine debris to salvage or revert. Do not `git clean` them.
 
 | Iteration | Checkpoint | What happened |
 |---|---|---|
+| 4 | `627d25a` | T-002 — the `notes` table, the store above it, and Home repointed off the demo post list. Clean start. Four lessons, all still live: **a Room migration cannot be tested here but can be made right by construction** — copy Room's own `CREATE TABLE` out of the generated `AppDatabase_Impl` rather than composing one by eye, which had already produced a `DEFAULT ''` the entity does not declare (amendment A-005); **a fake DAO only proves something if the fake refuses to help** — `FakeNoteDao` returns rows in deliberately jumbled construction order, which is what moves the "newest first" promise off a SQL string and onto the repository; **`git reset`/`git restore` are denied and `git rm --cached` is the unstage**, found by `git add -A app/src` sweeping up the three orphan PNGs; and **a locale-correct date is not `Locale.getDefault()`** but `LocalConfiguration.current.locales[0]`, because this app has its own language picker. The review's two Majors were **both in `knowledge/`, not in the code** — a stale `AppDatabase version = 2` line that would have made the next task bump to 3 twice, and an `ISSUES.md` entry asking for two string keys this task had just deleted: the reconciliation step is part of the work, and a stale line in a file read every iteration is a defect with a delay fuse. |
 | 3 | `2114e47` | T-010 — the host-side screenshot harness imported from `loop/todo-calendar-screens`, six references recorded. **Started at Recover:** modified build files plus untracked `app/src/screenshotTest*/` were sitting in the tree, stamped after the `loop(T-001)` tip with `.ai/` untouched, so an invocation had done most of T-010 and died before checkpointing. Verified before building on it (ENGINE.md §6.1) — `ScreenshotScaffold.kt` diffed byte-identical against the source branch, all four Gradle tasks green, the screenshot XML reporting 4 real cases rather than a vacuous zero — then salvaged. Four traps earned, all now in `knowledge/PROJECT.md`: the harness runs host-side in ~15s with **no emulator**; **`updateDebugScreenshotTest` orphans references rather than replacing them** (the filename hashes the preview's *parameters*, and validation ignores strays and stays green — two update runs left three orphans); **`rm` is denied**, found while trying to clean them, and not routed around; and **a swatch can be wrong in a way only rendering shows** (`inversePrimary` paired a fill with an on-colour Material never puts together, 3.94:1, under AA). Fresh-context review: 16 findings, 0 Critical; **the real defect was a sentence** — the test file's header claimed these images make DoD criteria 1 *and 2* machine-defendable, and criterion 2 cannot be, because `Color.White` and `colorScheme.onBackground` are the same pixels (proved, not argued: 65 hardcoded literals in the tree and every case passing at `diffPercent 0.0`). Left standing it would have retired criterion 2 from being checked at all → amendment **A-004**. Also learned: **writing an image down as "approved" is not approving it** — the engine looked at all six and they are correct, which is not the human approval the criterion asks for. |
 | 2 | `fe607a9` | T-001 — the fixed dark theme, the blue primary, the app rename, the README. **The first build this repository ever ran**, and it was run *before* touching a file, which is the only reason the next fact is legible: `lintDebug` was **already failing on the pristine tree** with four `MissingTranslation` errors, so a pre-existing red would otherwise have read as this run's regression (→ amendment **A-003**: adding a string here is a two-file operation). Four more traps earned, all now in `knowledge/PROJECT.md`: a **piped Gradle command returns the pipe's exit code**; **never run Gradle in the background while editing**; `.claude/figma-design-system.md` **permits hardcoded colour where DoD criterion 2 forbids it** (resolved by source-of-truth order, ENGINE.md §3); and **compute a dark theme's contrast ratios rather than eyeballing swatches** — which caught `outline` at 2.19:1, under the 3:1 floor, and would have given T-006's calendar grid invisible borders. `DarkColorSchemeTest` **failed on its first run**, which is why criterion 1 is a test rather than a KDoc claim. Fresh-context review: 16 findings, 1 Critical (the new README named **Retrofit**; this app uses **Ktor** — criterion 14 made false by the very file added to satisfy it) + 4 Major, all fixed; 3 filed to `ISSUES.md`. |
 | 1 | `9b25307` (+ `6cfdd4e`) | Bootstrap. Read the PRD, the rule files and the whole codebase; created `knowledge/`, the Loop Branch and `.ai/` with nine tasks. No implementation, by design. `./gradlew --version` was refused, so every toolchain command was recorded unverified and proposed as a capability. Escalation D-001 was raised **and answered mid-iteration**: the DoD was approved with A5 overruled to title+body, the toolchain was granted, and Q4 refuted my conclusion that this repository had no host-side test setup — a working screenshot harness was sitting on the sibling branch `loop/todo-calendar-screens` the whole time, reachable under baseline capabilities. That produced T-010 and amendments A-001 and A-002. Reported `CONTINUE`. |

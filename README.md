@@ -28,7 +28,7 @@ Two things at once:
 | Home screen listing every note, most-recently-edited first, with an empty state | ✅ built |
 | Create a note for today from the bottom bar's centre button | ✅ built |
 | Tap a note on Home to open it, edit it, and see it move back to the top of the list | ✅ built |
-| Delete a note, behind a confirmation step | 🚧 planned |
+| Delete a note, behind a confirmation step | ✅ built |
 | Month calendar with today marked and previous/next month navigation | 🚧 planned |
 | Tap a day to see that day's notes, and add a note to that day | 🚧 planned |
 | Future days are visibly disabled and cannot hold a note | 🚧 planned |
@@ -238,7 +238,10 @@ com/example/skeleton/
 │   │   │   └── HomeViewModel.kt
 │   │   ├── note/                           #     The note editor: one new or existing note
 │   │   │   ├── component/
+│   │   │   │   ├── NoteDeleteConfirmSheet.kt #     The question between "delete" and the note going away
 │   │   │   │   └── NoteEditor.kt           #       The scrolling title + body writing surface
+│   │   │   ├── model/                      #       Screen-local types, not domain ones
+│   │   │   │   └── NoteProblem.kt          #         Why the screen cannot go on: gone, unreadable, or would not delete
 │   │   │   ├── NoteFragment.kt             #       Owns the nav arguments; argumentsFor() builds them
 │   │   │   ├── NoteUiState.kt
 │   │   │   └── NoteViewModel.kt

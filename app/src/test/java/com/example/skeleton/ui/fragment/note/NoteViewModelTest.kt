@@ -3,6 +3,8 @@ package com.example.skeleton.ui.fragment.note
 import com.example.skeleton.common.Outcome
 import com.example.skeleton.domain.model.Note
 import com.example.skeleton.domain.repository.NoteRepository
+import com.example.skeleton.ui.fragment.note.model.NoteProblem
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -266,44 +269,344 @@ class NoteViewModelTest {
         assertEquals("Groceries, again", viewModel.uiState.value.title)
     }
 
+    // ---------- Opening a note that is not there ----------
+
     @Test
-    fun `a note that has since been deleted opens as a fresh one for the day asked for`() = runTest {
-        // `getNote` answers null for a row that is gone. Falling through to a draft is the
-        // survivable outcome; the alternative is a screen showing someone else's note or nothing
-        // at all.
-        val repository = FakeNoteRepository(stored = null)
+    fun `a note that has since been deleted does not open as a fresh one, and cannot be saved over`() =
+        runTest {
+            // **This test was reversed on purpose.** It used to assert the opposite — that a
+            // missing note fell through to a blank draft for the day asked for — and that
+            // fall-through was the defect: the user retyped the note they thought they were
+            // editing, tapped Save, and Room's `autoGenerate` filed it as a *second* row. Home
+            // then showed two notes: the original with its old text and old position, plus the
+            // retyped copy. Nothing anywhere said so.
+            //
+            // The store now says "I looked, it is not there" as its own answer, and the screen
+            // reports that and leaves.
+            val repository = FakeNoteRepository(stored = null)
+            val viewModel = NoteViewModel(noteRepository = repository)
+
+            viewModel.openNote(noteId = 7L, date = A_DAY)
+
+            assertEquals(NoteProblem.Gone, viewModel.uiState.value.problem)
+            // No delete action either: there is nothing behind this screen to delete.
+            assertFalse(viewModel.uiState.value.deletable)
+
+            viewModel.save()
+
+            // The assertion that matters. A save from here is the duplicate.
+            assertEquals(0, repository.saveCount)
+            assertNull(repository.savedNote)
+        }
+
+    @Test
+    fun `a note the store cannot read reports the failure instead of opening blank`() = runTest {
+        // Told apart from the case above deliberately. "It is gone" is a fact; "I could not look"
+        // is a failure, and answering it with an empty note is the screen inventing an answer it
+        // does not have — one whose save writes a second note beside a first that may well still
+        // exist.
+        val repository = FakeNoteRepository(stored = null, readFails = true)
         val viewModel = NoteViewModel(noteRepository = repository)
 
         viewModel.openNote(noteId = 7L, date = A_DAY)
 
-        assertEquals(A_DAY, viewModel.uiState.value.date)
-        assertEquals("", viewModel.uiState.value.title)
+        assertEquals(NoteProblem.Unreadable, viewModel.uiState.value.problem)
 
         viewModel.save()
 
-        assertEquals(Note.UNSAVED_ID, repository.savedNote!!.id)
+        assertEquals(0, repository.saveCount)
+    }
+
+    @Test
+    fun `the problem clears once it has been shown`() = runTest {
+        val viewModel = NoteViewModel(noteRepository = FakeNoteRepository(stored = null))
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+
+        // Asserted *before* consuming, because without it this test passes just as happily
+        // against an `openNote` that stopped reporting problems at all — the assertion below
+        // would then be checking that null is still null.
+        assertEquals(NoteProblem.Gone, viewModel.uiState.value.problem)
+
+        viewModel.consumeProblem()
+
+        assertNull(viewModel.uiState.value.problem)
+    }
+
+    @Test
+    fun `nothing is written or removed before a note has been opened`() = runTest {
+        // The ViewModel exists before `openNote` runs — the Fragment constructs it and then calls
+        // in from `onCreate`. Until it does there is no note here, and both write paths have to
+        // know that rather than acting on a plausible-looking empty one.
+        val repository = FakeNoteRepository()
+        val viewModel = NoteViewModel(noteRepository = repository)
+
+        viewModel.save()
+        // `askToDelete()` first, and that detail is the test. Calling `delete()` on its own
+        // returns at the confirmation guard and never reaches the "is there a note?" guard this
+        // test claims to be about — so the delete half would pass while proving nothing.
+        // `askToDelete()` is itself refused here (nothing is deletable yet), which is why
+        // `confirmingDelete` is asserted false rather than assumed.
+        viewModel.askToDelete()
+        assertFalse(viewModel.uiState.value.confirmingDelete)
+        viewModel.delete()
+
+        assertEquals(0, repository.saveCount)
+        assertEquals(0, repository.deleteCount)
+    }
+
+    // ---------- Deleting, behind a confirmation ----------
+
+    @Test
+    fun `a brand-new note offers no delete action, and cannot be asked to delete one`() = runTest {
+        // `deletable` is false by default, so asserting only that would be asserting the default
+        // — a test that passes against an `openNote` which never touches the field. The second
+        // half is what has teeth: the guard in `askToDelete()` must also hold, because the
+        // hidden control is a fact about the top bar and not about this class.
+        val repository = FakeNoteRepository()
+        val viewModel = NoteViewModel(noteRepository = repository)
+
+        viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY)
+        viewModel.askToDelete()
+
+        assertFalse(viewModel.uiState.value.deletable)
+        assertFalse(viewModel.uiState.value.confirmingDelete)
+
+        viewModel.delete()
+
+        assertEquals(0, repository.deleteCount)
+    }
+
+    @Test
+    fun `a stored note offers a delete action`() = runTest {
+        val viewModel = NoteViewModel(noteRepository = FakeNoteRepository(stored = A_STORED_NOTE))
+
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+
+        assertTrue(viewModel.uiState.value.deletable)
+    }
+
+    @Test
+    fun `asking to delete opens the confirmation and deletes nothing`() = runTest {
+        // DoD criterion 7: no single tap deletes a note. The tap that *looks* like the delete is
+        // this one, and all it does is put a question on screen.
+        val repository = FakeNoteRepository(stored = A_STORED_NOTE)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+
+        viewModel.askToDelete()
+
+        assertTrue(viewModel.uiState.value.confirmingDelete)
+        assertEquals(0, repository.deleteCount)
+        assertEquals(0, viewModel.uiState.value.deletedTrigger)
+    }
+
+    @Test
+    fun `a delete that skipped the confirmation does nothing`() = runTest {
+        // The other half of the same criterion, and the reason it is a property of this class and
+        // not of the layout: even a caller that reaches `delete()` directly cannot get past the
+        // confirmation it never opened.
+        val repository = FakeNoteRepository(stored = A_STORED_NOTE)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+
+        viewModel.delete()
+
+        assertEquals(0, repository.deleteCount)
+        assertEquals(0, viewModel.uiState.value.deletedTrigger)
+    }
+
+    @Test
+    fun `confirming removes the note the screen was showing and leaves`() = runTest {
+        val repository = FakeNoteRepository(stored = A_STORED_NOTE)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+        viewModel.askToDelete()
+
+        viewModel.delete()
+
+        // The right note, not just any note: an id dropped on the way down would delete nothing,
+        // or — worse, once a second screen reuses this — somebody else's row.
+        assertEquals(7L, repository.deletedNote!!.id)
+        assertEquals(1, repository.deleteCount)
+        assertEquals(1, viewModel.uiState.value.deletedTrigger)
+        // The question comes down with the note.
+        assertFalse(viewModel.uiState.value.confirmingDelete)
+        // And so does the delete action — there is nothing left behind this screen.
+        assertFalse(viewModel.uiState.value.deletable)
+    }
+
+    @Test
+    fun `a save after the note has been deleted does not put it back`() = runTest {
+        // **The worst thing this screen could do, and it was doing it.** The screen leaves on a
+        // successful delete, but leaving is animated: `toNote`'s `popExitAnim` runs for
+        // `config_longAnimTime` (500 ms), and a legacy View animation leaves the exiting view in
+        // the hierarchy, un-transformed for hit-testing, taking touches the whole time. Save is
+        // still on screen and still clickable in that window.
+        //
+        // Before the fix, `save()` found everything it needed: a real id, a real `createdAt`, and
+        // its own guard still open, because only `deleting` had been raised. `upsert` is
+        // `onConflict = REPLACE`, so the tap **re-inserted the deleted row** — one frame after
+        // the user was told "Note deleted", and at the top of Home, because `updatedAt` was
+        // fresh. The note the user deleted came back and looked like the newest thing they wrote.
+        val repository = FakeNoteRepository(stored = A_STORED_NOTE)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+        viewModel.askToDelete()
+        viewModel.delete()
+
+        viewModel.setTitle(value = "Groceries, again")
+        viewModel.save()
+
+        assertEquals(0, repository.saveCount)
+        assertNull(repository.savedNote)
+    }
+
+    @Test
+    fun `backing out of the confirmation deletes nothing`() = runTest {
+        val repository = FakeNoteRepository(stored = A_STORED_NOTE)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+        viewModel.askToDelete()
+
+        viewModel.dismissDelete()
+
+        assertFalse(viewModel.uiState.value.confirmingDelete)
+        assertEquals(0, repository.deleteCount)
+    }
+
+    @Test
+    fun `two taps while the first delete is still in flight delete once`() = runTest {
+        // **This test had to be rewritten before it tested anything.** Its first version called
+        // `delete()` twice in a row and passed — but not for the reason it claimed: the first call
+        // had already finished and lowered `confirmingDelete`, so the *confirmation* guard refused
+        // the second one and the in-flight guard was never reached. Disabling that guard left the
+        // test green. Mutation testing is the only reason anybody found out.
+        //
+        // This is the shape of the real race. The confirmation comes down only when the store
+        // answers, so two taps inside that window both find it still open, and only the in-flight
+        // guard stands between them and a second delete. The gate holds the store mid-call so the
+        // window can be entered on purpose.
+        val gate = CompletableDeferred<Unit>()
+        val repository = FakeNoteRepository(stored = A_STORED_NOTE, deleteGate = gate)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+        viewModel.askToDelete()
+
+        viewModel.delete()
+        // The store is suspended inside the first delete, and the sheet has not closed yet.
+        assertTrue(viewModel.uiState.value.confirmingDelete)
+        viewModel.delete()
+
+        gate.complete(Unit)
+
+        assertEquals(1, repository.deleteCount)
+        assertEquals(1, viewModel.uiState.value.deletedTrigger)
+    }
+
+    @Test
+    fun `confirming again after the sheet has closed deletes nothing more`() = runTest {
+        // A different guard from the one above, and worth its own test: the screen leaves on the
+        // first success, and leaving is animated, so the composition keeps taking touches for a few
+        // hundred milliseconds. This second tap is refused because the confirmation is no longer
+        // open — a second delete would find no row, report no problem, and announce the deletion
+        // all over again.
+        val repository = FakeNoteRepository(stored = A_STORED_NOTE)
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+        viewModel.askToDelete()
+
+        viewModel.delete()
+        viewModel.delete()
+
+        assertEquals(1, repository.deleteCount)
+        assertEquals(1, viewModel.uiState.value.deletedTrigger)
+    }
+
+    @Test
+    fun `a delete that fails says so and keeps the user on the screen`() = runTest {
+        val repository = FakeNoteRepository(
+            stored = A_STORED_NOTE,
+            deleteOutcome = Outcome.Error(message = "the disk said no"),
+        )
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+        viewModel.askToDelete()
+
+        viewModel.delete()
+
+        assertEquals(NoteProblem.DeleteFailed, viewModel.uiState.value.problem)
+        // The screen must not leave: the note is still there, and leaving would tell the user the
+        // opposite of what happened.
+        assertEquals(0, viewModel.uiState.value.deletedTrigger)
+        // And the confirmation comes down — left up under a failure message it reads as though
+        // tapping it again might work.
+        assertFalse(viewModel.uiState.value.confirmingDelete)
+    }
+
+    @Test
+    fun `delete works again after a failure`() = runTest {
+        // The counterpart of `save works again after a refusal`. A guard that stayed shut would
+        // leave the user unable to retry a delete that failed for a passing reason.
+        val repository = FakeNoteRepository(
+            stored = A_STORED_NOTE,
+            deleteOutcome = Outcome.Error(message = "the disk said no"),
+        )
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = 7L, date = A_DAY)
+
+        viewModel.askToDelete()
+        viewModel.delete()
+        viewModel.askToDelete()
+        viewModel.delete()
+
+        assertEquals(2, repository.deleteCount)
     }
 
     private companion object {
 
         /** Any ordinary day. Fixed, so nothing here depends on when the suite runs. */
         private val A_DAY: LocalDate = LocalDate.of(2026, 3, 14)
+
+        /** A note that already exists in the store, on [A_DAY], with row id 7. */
+        private val A_STORED_NOTE = Note(
+            id = 7L,
+            date = A_DAY,
+            title = "Groceries",
+            content = "Coffee, oat milk",
+            createdAt = 1_000L,
+            updatedAt = 2_000L,
+        )
     }
 }
 
 /**
- * A notes store that remembers the last note handed to it and answers with whatever it was built
- * with.
+ * A notes store that remembers what it was asked to do and answers with whatever it was built with.
  *
- * @param stored the note [getNote] returns, or null to behave like a store that has never heard of
- *   the id being asked for.
- * @param outcome what [save] reports back. Defaults to success; hand it an
- *   [Outcome.Error] to test the refusal path without needing a real calendar rule.
+ * The counters are as important as the recorded notes. Several tests below are about something
+ * **not** happening — a save that must not write a duplicate, a delete that must not run without a
+ * confirmation — and "the last note handed over is still null" is a weaker statement than "the
+ * store was never called".
+ *
+ * @param stored the note [getNote] answers with, or null to behave like a store that has never
+ *   heard of the id being asked for. Note the difference from [readFails] below: this one is a
+ *   store that answers "no such note", which is not a failure.
+ * @param outcome what [save] reports back. Defaults to success; hand it an [Outcome.Error] to test
+ *   the refusal path without needing a real calendar rule.
+ * @param readFails true to make [getNote] report that it could not read at all. That is a
+ *   different answer from [stored] being null, and the screen is required to treat it differently.
+ * @param deleteOutcome what [delete] reports back.
+ * @param deleteGate when given, [delete] records the call and then **waits** on it before
+ *   answering. That is what lets a test stand inside the moment a real delete is in flight — the
+ *   window where a second tap is still possible — instead of only before and after it. Left null,
+ *   the store answers straight away like the others.
  * @author Phong-Kaster
  */
 private class FakeNoteRepository(
     private val stored: Note? = null,
     private val outcome: Outcome<Unit> = Outcome.Success(Unit),
+    private val readFails: Boolean = false,
+    private val deleteOutcome: Outcome<Unit> = Outcome.Success(Unit),
+    private val deleteGate: CompletableDeferred<Unit>? = null,
 ) : NoteRepository {
 
     /** The last note [save] was given, exactly as it was given. */
@@ -314,13 +617,33 @@ private class FakeNoteRepository(
     var saveCount: Int = 0
         private set
 
+    /** The last note [delete] was given. */
+    var deletedNote: Note? = null
+        private set
+
+    /** How many times [delete] was called. */
+    var deleteCount: Int = 0
+        private set
+
     override val notesFlow: Flow<List<Note>> = flowOf(listOfNotNull(stored))
 
-    override suspend fun getNote(id: Long): Note? = stored?.takeIf { note -> note.id == id }
+    override suspend fun getNote(id: Long): Outcome<Note?> {
+        if (readFails) return Outcome.Error(message = "the store would not answer")
+        return Outcome.Success(stored?.takeIf { note -> note.id == id })
+    }
 
     override suspend fun save(note: Note): Outcome<Unit> {
         savedNote = note
         saveCount++
         return outcome
+    }
+
+    override suspend fun delete(note: Note): Outcome<Unit> {
+        deletedNote = note
+        // Counted *before* the wait, on purpose: the count means "the store was entered", which is
+        // the thing a second tap must not be able to do twice.
+        deleteCount++
+        deleteGate?.await()
+        return deleteOutcome
     }
 }

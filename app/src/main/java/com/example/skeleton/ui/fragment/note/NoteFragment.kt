@@ -3,16 +3,22 @@ package com.example.skeleton.ui.fragment.note
 import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -24,7 +30,9 @@ import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
 import com.example.skeleton.domain.model.Note
 import com.example.skeleton.ui.component.CoreTopBar4
+import com.example.skeleton.ui.fragment.note.component.NoteDeleteConfirmSheet
 import com.example.skeleton.ui.fragment.note.component.NoteEditor
+import com.example.skeleton.ui.fragment.note.model.NoteProblem
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.theme.customizedTextStyle
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigateUp
@@ -73,7 +81,18 @@ class NoteFragment : CoreFragment() {
             onTitleChange = { value -> viewModel.setTitle(value = value) },
             onContentChange = { value -> viewModel.setContent(value = value) },
             onSave = { viewModel.save() },
+            onDelete = { viewModel.askToDelete() },
             onBack = { safeNavigateUp() },
+        )
+
+        // Overlays are siblings of the layout call, never children of it — that is what keeps
+        // `NoteLayout` previewable with nothing but a `NoteUiState`. There is one overlay on this
+        // screen, so a single flag is enough; a second one would want the mutually-exclusive enum
+        // the house rules describe, and the `when` for it would live right here.
+        NoteDeleteConfirmSheet(
+            enable = uiState.confirmingDelete,
+            onCancel = { viewModel.dismissDelete() },
+            onConfirm = { viewModel.delete() },
         )
 
         // Leaving the screen is the Fragment's job, never the layout's — which is why the save
@@ -85,11 +104,41 @@ class NoteFragment : CoreFragment() {
             }
         }
 
+        // A delete leaves the same way a save does, and says so on the way out. Without the
+        // message the user lands back on Home and has to work out from the list whether anything
+        // happened — and if they were looking at the note they just removed, "the row is gone" is
+        // the only feedback they get.
+        LaunchedEffect(uiState.deletedTrigger) {
+            if (uiState.deletedTrigger > 0) {
+                showToast(message = getString(R.string.note_deleted))
+                safeNavigateUp()
+            }
+        }
+
         LaunchedEffect(uiState.saveFailed) {
             if (uiState.saveFailed) {
                 showToast(message = getString(R.string.we_are_sorry))
                 viewModel.consumeSaveFailed()
             }
+        }
+
+        LaunchedEffect(uiState.problem) {
+            val problem = uiState.problem ?: return@LaunchedEffect
+
+            showToast(
+                message = when (problem) {
+                    NoteProblem.Gone -> getString(R.string.this_note_is_no_longer_there)
+                    NoteProblem.Unreadable -> getString(R.string.the_note_could_not_be_opened)
+                    NoteProblem.DeleteFailed -> getString(R.string.the_note_could_not_be_deleted)
+                },
+            )
+            viewModel.consumeProblem()
+
+            // A failed delete leaves the note — and the user — exactly where they were, so the
+            // screen stays. The other two mean there is nothing on this screen to edit: staying
+            // would leave the user typing into an editor with no note behind it.
+            if (problem == NoteProblem.DeleteFailed) return@LaunchedEffect
+            safeNavigateUp()
         }
     }
 
@@ -144,10 +193,16 @@ class NoteFragment : CoreFragment() {
  * Pure UI — it renders the state it is handed and navigates nowhere, which is what lets the
  * previews at the bottom of this file draw it with made-up data and no database behind them.
  *
+ * The delete action next to it appears only for a note that has been stored. A brand-new note has
+ * nothing to delete, and a control that is visible but inert is a worse answer than one that is not
+ * there — it invites the user to work out what they did wrong.
+ *
  * @param uiState what to draw.
  * @param onTitleChange forwarded from the heading field.
  * @param onContentChange forwarded from the body field.
  * @param onSave the user asked to keep the note.
+ * @param onDelete the user asked to delete the note. It opens a confirmation and nothing else —
+ *   see `NoteViewModel.askToDelete()`.
  * @param onBack the user asked to leave without keeping it.
  * @author Phong-Kaster
  */
@@ -157,6 +212,7 @@ private fun NoteLayout(
     onTitleChange: (String) -> Unit = {},
     onContentChange: (String) -> Unit = {},
     onSave: () -> Unit = {},
+    onDelete: () -> Unit = {},
     onBack: () -> Unit = {},
 ) {
     CoreLayout(
@@ -166,6 +222,42 @@ private fun NoteLayout(
                 title = stringResource(R.string.note),
                 onBack = onBack,
                 actionContent = {
+                    if (uiState.deletable) {
+                        Text(
+                            text = stringResource(R.string.delete),
+                            style = customizedTextStyle(
+                                fontSize = 14,
+                                fontWeight = 500,
+                                color = MaterialTheme.colorScheme.error,
+                            ),
+                            // The gap to Save is the *first* modifier, so it sits outside the tap
+                            // target — 8dp of dead space between the destructive control and the
+                            // one beside it, not 4. Padding added after `clickable` would stretch
+                            // this control *toward* Save, which is the last thing a destructive
+                            // action should do.
+                            //
+                            // `defaultMinSize` sits after `clickable`, so the 48dp minimum touch
+                            // target is part of what is clickable rather than dead space around
+                            // it. 14sp text with 6dp of padding is about 31dp tall — under the
+                            // minimum, and being under it *next to Save* is how somebody deletes
+                            // a note they meant to keep. Nothing is painted here, so growing the
+                            // box costs no pixels: it only moves the ripple and the tap area out
+                            // to where a finger actually lands.
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clip(shape = RoundedCornerShape(12.dp))
+                                .clickable(
+                                    onClickLabel = stringResource(R.string.delete_this_note),
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = ripple(bounded = true),
+                                    onClick = onDelete,
+                                )
+                                .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+                                .wrapContentSize(align = Alignment.Center)
+                                .padding(horizontal = 10.dp),
+                        )
+                    }
+
                     Text(
                         text = stringResource(R.string.save),
                         style = customizedTextStyle(
@@ -213,6 +305,22 @@ private fun NoteLayoutWrittenPreview() {
                 date = LocalDate.of(2026, 3, 14),
                 title = "Groceries",
                 content = "Coffee, oat milk, the good bread from the corner shop.",
+            ),
+        )
+    }
+}
+
+/** The stored-note state, which is the only one that offers a delete action. */
+@Preview(name = "Note - stored")
+@Composable
+private fun NoteLayoutStoredPreview() {
+    MyApplicationTheme {
+        NoteLayout(
+            uiState = NoteUiState(
+                date = LocalDate.of(2026, 3, 14),
+                title = "Groceries",
+                content = "Coffee, oat milk, the good bread from the corner shop.",
+                deletable = true,
             ),
         )
     }

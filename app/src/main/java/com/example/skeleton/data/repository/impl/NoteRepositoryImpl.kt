@@ -59,16 +59,21 @@ class NoteRepositoryImpl(
         }
         .flowOn(ioDispatcher)
 
-    override suspend fun getNote(id: Long): Note? = withContext(ioDispatcher) {
+    override suspend fun getNote(id: Long): Outcome<Note?> = withContext(ioDispatcher) {
         try {
-            noteDao.getById(id = id)?.toDomain()
+            // A row that is not there is a `Success(null)`, not an error. The database answered
+            // the question; the answer was "no such note".
+            Outcome.Success(noteDao.getById(id = id)?.toDomain())
         } catch (e: CancellationException) {
             // Re-thrown, never swallowed: a cancelled read is the screen going away, not a
-            // failure, and turning it into `null` would tell the caller the note does not exist.
+            // failure, and turning it into any kind of answer would be inventing one.
             throw e
         } catch (e: Exception) {
+            // And this is an error rather than `Success(null)`, which is the distinction the whole
+            // return type exists for. "I could not look" and "I looked, it is gone" lead to
+            // different behaviour on the screen above, and a single `null` made them the same.
             Log.e(TAG, "getNote($id) failed", e)
-            null
+            Outcome.Error(message = "The note could not be read.", throwable = e)
         }
     }
 
@@ -101,6 +106,38 @@ class NoteRepositoryImpl(
         } catch (e: Exception) {
             Log.e(TAG, "save(id=${note.id}) failed", e)
             Outcome.Error(message = "The note could not be saved.", throwable = e)
+        }
+    }
+
+    override suspend fun delete(note: Note): Outcome<Unit> = withContext(ioDispatcher) {
+        // A note that was never stored has no row to remove, and Room's `@Delete` would match
+        // nothing and report success. The screen above would then tell the user their note was
+        // deleted while it sat on Home untouched — so the refusal happens here, where every
+        // caller reaches it, exactly like the future-date rule above.
+        if (note.id == Note.UNSAVED_ID) {
+            Log.w(TAG, "delete refused: the note has never been stored")
+            return@withContext Outcome.Error(message = "A note that was never saved cannot be deleted.")
+        }
+
+        try {
+            // The count is the whole point of asking. Room's `@Delete` matches on the primary key
+            // and is perfectly content to match nothing — so a note deleted a moment ago on
+            // another surface, or a stale id from a list that has not caught up, would come back
+            // here as a success and the screen would say "Note deleted" about a row that was
+            // already gone. The sentinel check above catches only *one* way of having no row;
+            // this catches all of them.
+            val removed = noteDao.delete(note = note.toEntity())
+            if (removed == 0) {
+                Log.w(TAG, "delete(id=${note.id}) matched no row")
+                return@withContext Outcome.Error(message = "There was no such note to delete.")
+            }
+
+            Outcome.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "delete(id=${note.id}) failed", e)
+            Outcome.Error(message = "The note could not be deleted.", throwable = e)
         }
     }
 

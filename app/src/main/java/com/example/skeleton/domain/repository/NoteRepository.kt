@@ -28,14 +28,29 @@ interface NoteRepository {
     val notesFlow: Flow<List<Note>>
 
     /**
-     * One note by its row id, or `null` when there is no such note.
+     * One note by its row id.
      *
-     * `null` is not an error here — asking for a note that has since been deleted is an ordinary
-     * thing for a screen to do, and it gets an ordinary answer.
+     * **There are three answers here, not two, and keeping them apart is the whole point of the
+     * return type.**
+     *
+     * - [Outcome.Success] carrying the note — here it is.
+     * - [Outcome.Success] carrying `null` — there is no such note. Not an error: asking for a note
+     *   that has since been deleted is an ordinary thing for a screen to do, and it gets an
+     *   ordinary answer.
+     * - [Outcome.Error] — the store could not be read, so whether the note exists is **unknown**.
+     *
+     * A single nullable return used to collapse the last two into one `null`, and the screen above
+     * had no choice but to guess. It guessed "start a new note", so a failed read opened a blank
+     * editor whose save wrote a *second* note beside the untouched original. That is why the two
+     * cases are separate values now: they call for different behaviour, and only the caller can
+     * decide what.
+     *
+     * [Outcome.Loading] is never returned — this is a one-shot read, not a stream.
      *
      * @param id the row id.
+     * @return the note, the absence of a note, or the failure to find out.
      */
-    suspend fun getNote(id: Long): Note?
+    suspend fun getNote(id: Long): Outcome<Note?>
 
     /**
      * Writes a note, creating it when it has no id yet and replacing it when it does.
@@ -59,4 +74,22 @@ interface NoteRepository {
      * @return whether the note was stored.
      */
     suspend fun save(note: Note): Outcome<Unit>
+
+    /**
+     * Removes a note for good. [notesFlow] emits again without it, with nobody having to ask.
+     *
+     * **A delete that removed nothing is an [Outcome.Error], not a success.** Room matches on the
+     * primary key and is perfectly content to match no row and report nothing wrong — so without
+     * this, the screen above would say "deleted" about a note that is still sitting there, or
+     * about one that went a moment ago on another surface. Two ways of having no row are refused,
+     * and they are separate on purpose: a note carrying [Note.UNSAVED_ID] was never stored at all
+     * (a caller mistake — a draft cannot be deleted), while any *other* id that matches nothing is
+     * an ordinary race with the world. Both get a refusal; neither gets a silent no-op.
+     *
+     * Returns a value rather than throwing, like [save]. [Outcome.Loading] is never returned.
+     *
+     * @param note the note to remove. Only its [Note.id] decides which row goes.
+     * @return whether the note was removed.
+     */
+    suspend fun delete(note: Note): Outcome<Unit>
 }
