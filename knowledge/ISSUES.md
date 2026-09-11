@@ -325,6 +325,13 @@
   `jvmToolchain` is pinned, or the references are documented as host-locked with the generating
   JDK/OS/AGP recorded next to them. Delete this entry when the strays are gone and one of those
   three is done.
+- **The whole `.ai/` directory can go with them.** The Cleanup Commit removed it from the branch
+  tip, so every file still in it on disk is untracked: the run's own state files plus four
+  throwaways the engine could not take back (`tree_check.py`, and `msg-head.txt` / `msg-tail.txt` /
+  `msg.txt`, which existed only to assemble the completion commit message). Nothing reads any of
+  it, and the run's full record is in `git log`. **The lesson, restated because it cost four files
+  in two iterations: in a repository where the engine cannot delete, a throwaway file is not
+  throwaway.**
 - **Full record:** the fresh-context review of T-010; find the checkpoint with
   `git log --oneline --all --grep='loop(T-010)'`.
 - **Do not:** run `updateDebugScreenshotTest` to clear a red validation. Work out *why* the pixels
@@ -413,6 +420,12 @@
   `ui/fragment/setting/SettingFragment.kt` (1).
   Re-derive the live list with:
   `grep -rE 'Color\.Black|Color\.White|Color\(0x' app/src/main/java/com/example/skeleton`
+  **That grep returns more than 43 — 73 across 12 files at final verification — and the surplus is
+  not a discrepancy to re-file.** 27 of them are `Color.kt`'s own declarations, and one each in
+  `CoreLayout.kt`, `Type.kt` and `CoreBottomSheet.kt` are inside *comments explaining that the
+  literal was removed*. The four files are the ones listed as already fixed on the next line;
+  subtract them and the 8 files above sum to exactly 43. Checked this way at final verification
+  because the obvious reading of the grep makes the entry look stale when it is not.
 - **Already fixed, do not re-file:** `ui/theme/Theme.kt`, `ui/theme/Color.kt` (the declarations
   themselves — that is the point of the file), `core/CoreLayout.kt`,
   `ui/component/CoreBottomBar.kt`, `ui/component/CoreBottomSheet.kt` (its `containerColor` default
@@ -424,7 +437,7 @@
   code **this run introduces** — so rewriting eleven unrelated pre-existing screens would be
   modifying unrelated files (ENGINE.md §14), not completing the task.
 - **The screenshot harness does not catch this, and it never will.** T-010 landed
-  `validateDebugScreenshotTest` in iteration 3 and it passes with every one of these 65 literals
+  `validateDebugScreenshotTest` in iteration 3 and it passes with every one of these 43 literals
   still in place — because `Color.White` and `colorScheme.onBackground` render the same pixels.
   DoD criterion 2 therefore has **no automated gate of any kind**: it is checked by a reader, or it
   is not checked. Say so plainly whenever criterion 2 is reported on; a green screenshot run is not
