@@ -16,6 +16,60 @@
 
 <!-- Newest first. Delete resolved entries outright rather than marking them done. -->
 
+### The bottom bar's selected-tab label truncates in German
+
+- **What is wrong:** a third tab (Calendar) halved every tab slot in `CoreBottomBar` — roughly
+  132dp to roughly 66dp on a 360dp screen, less on a 320dp one. Only the **selected** tab shows
+  its label, with `maxLines = 1, overflow = Ellipsis`. 14sp semi-bold fits the English words
+  ("Home", "Calendar", "Setting") and does not fit the German ones: `setting` is "Einstellungen"
+  and `home` is "Startseite". `values-de/` is a shipped locale here — lint rates a missing German
+  string an **error** — so this is real, not hypothetical.
+- **Where:** `ui/component/CoreBottomBar.kt`'s `BottomBarElement`, with the strings in
+  `res/values-de/strings.xml`.
+- **Why it matters:** it is the only place the bar says in words where the user is, and it
+  regressed for German speakers on every screen, not just the new one.
+- **A picture defends it now.** `CalendarScreenshotTest.BottomBarTabGermanLabel` renders the tab
+  at the real slot size under `locale = "de"` and shows "Einstell…". `BottomBarElement` was made
+  `internal` for it, because the whole-bar previews have no `NavController` — every tab there
+  comes out unselected, so the one state that can overflow was the one state no picture covered.
+  **A passing validation of that case is the defect holding still, not the defect being fixed.**
+- **Two things were already tried and are not the answer.** Shrinking the label to 11sp was done
+  and reverted: it charged every screen and every language a legibility cost to fit one English
+  word, and still did not fit "Einstellungen" — no size in the readable range does.
+  `Modifier.basicMarquee`, which `.claude/jetpack-compose-ui.md` § Text gives as the house
+  default for single-line overflow, was considered and rejected: this bar is on every screen for
+  the life of the app, so a label scrolling sideways for ever is a permanent distraction. The
+  same deviation, for the same reason, is already explained in `HomeNoteList`'s date line.
+- **What would resolve it:** a product decision — shorter German copy, no tab labels at all, or
+  two lines inside a taller bar. Re-record the reference image with it and delete this entry.
+- **Full record:** the fresh-context review of T-006 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-006)'`.
+- **Do not:** "fix" it by shrinking the font. That was the first attempt and it made things
+  worse in two languages to help none.
+
+### A calendar day is a smaller touch target than Android asks for
+
+- **What is wrong:** `CalendarDayCell` fills its column, and seven columns inside 16dp screen
+  padding with 4dp gaps gives `(360 − 32 − 24) / 7 ≈ 43.4dp` on a 360dp-wide device and
+  `≈ 37.7dp` on a 320dp one. Android's accessibility minimum is 48dp.
+- **Where:** `ui/fragment/calendar/component/CalendarDayCell.kt`, sized by
+  `CalendarMonthGrid`'s row.
+- **Why it matters:** smaller targets are missed more often, and a missed tap on a calendar looks
+  like the grid ignoring you — which is the same thing a *disabled* day does, so the two failure
+  modes are hard for a user to tell apart.
+- **Accepted deliberately, with the arithmetic.** Seven columns cannot each be 48dp on a 360dp
+  screen: `7 × 48 = 336dp` leaves 24dp for all padding and gaps combined, so reaching the minimum
+  means a grid with no margins and no gutters. The mitigations that do not cost the layout are
+  already applied — the `clickable` is on the **outer** box, so the whole square including the
+  4dp gap between the selection ring and the fill is live, rather than just the visible tile.
+- **What would resolve it:** a design decision about the grid's density, or accepting the trade
+  explicitly in the DoD. This entry exists so the number is a decision on record rather than a
+  side effect nobody measured.
+- **Full record:** the fresh-context review of T-006 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-006)'`.
+- **Do not:** shrink the inter-cell gap to buy a dp or two. It buys about 1.7dp, does not reach
+  48, and the gap is what stops two adjacent selection rings reading as one shape.
+
 ### A bottom sheet dismissed by its own button vanishes instead of animating out
 
 - **What is wrong:** `CoreBottomSheet` calls `sheetState.hide()` only on the `onDismissRequest`

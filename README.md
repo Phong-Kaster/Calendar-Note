@@ -29,9 +29,10 @@ Two things at once:
 | Create a note for today from the bottom bar's centre button | ✅ built |
 | Tap a note on Home to open it, edit it, and see it move back to the top of the list | ✅ built |
 | Delete a note, behind a confirmation step | ✅ built |
-| Month calendar with today marked and previous/next month navigation | 🚧 planned |
+| Month calendar with today marked and previous/next month navigation | ✅ built |
+| Future days on the calendar are visibly disabled and cannot be picked | ✅ built |
+| A dot on every calendar day that already has notes on it | ✅ built |
 | Tap a day to see that day's notes, and add a note to that day | 🚧 planned |
-| Future days are visibly disabled and cannot hold a note | 🚧 planned |
 
 > **Implementation status is deliberately explicit.** The theme, navigation shell, DI, database and
 > networking layers are real and building. The note feature itself is still being added, and this
@@ -201,6 +202,7 @@ com/example/skeleton/
 │   ├── enums/
 │   │   └── BottomBarDestination.kt
 │   ├── model/                              #   Models the UI and repositories agree on
+│   │   ├── CalendarMonth.kt                #     One month laid out as a Sunday-first grid of squares
 │   │   ├── Note.kt                         #     A note, plus the displayTitle fallback a row draws
 │   │   ├── Post.kt
 │   │   └── UserAction.kt
@@ -228,6 +230,16 @@ com/example/skeleton/
 │   │   ├── CoreTopBar4.kt
 │   │   └── LifecycleComposable.kt
 │   ├── fragment/                           #   One folder per screen: Fragment + UiState + ViewModel + component/
+│   │   ├── calendar/                       #     The month page: a grid, today marked, the future switched off
+│   │   │   ├── component/
+│   │   │   │   ├── CalendarDayCell.kt      #       One square, and every combination of its three markers
+│   │   │   │   ├── CalendarMonthGrid.kt    #       Weekday labels plus the squares, seven to a row
+│   │   │   │   └── CalendarMonthHeader.kt  #       Back a month, the month's name, forward a month
+│   │   │   ├── model/                      #       Screen-local types, not domain ones
+│   │   │   │   └── DayCellState.kt         #         Past / Today / Future / OutsideMonth — the tappable rule
+│   │   │   ├── CalendarFragment.kt
+│   │   │   ├── CalendarUiState.kt
+│   │   │   └── CalendarViewModel.kt
 │   │   ├── home/
 │   │   │   ├── component/
 │   │   │   │   ├── HomeNoteList.kt         #       The scrolling note list, its rows, and its empty state

@@ -52,4 +52,22 @@
     <string name="this_note_is_no_longer_there">This note is no longer there</string>
     <string name="the_note_could_not_be_opened">The note could not be opened</string>
     <string name="the_note_could_not_be_deleted">The note could not be deleted</string>
+
+    <!-- Calendar -->
+    <string name="calendar">Calendar</string>
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="select_day">Select day</string>
+    <!--
+        The seven column labels of the month grid, Sunday first. Named with a qualifier rather
+        than for the bare word — a key called "sun" reads as the star, and "mon" as nothing at
+        all. The order these appear in is the order the grid draws them.
+    -->
+    <string name="weekday_short_sun">Sun</string>
+    <string name="weekday_short_mon">Mon</string>
+    <string name="weekday_short_tue">Tue</string>
+    <string name="weekday_short_wed">Wed</string>
+    <string name="weekday_short_thu">Thu</string>
+    <string name="weekday_short_fri">Fri</string>
+    <string name="weekday_short_sat">Sat</string>
 </resources>

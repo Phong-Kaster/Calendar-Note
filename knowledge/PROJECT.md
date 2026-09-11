@@ -11,7 +11,7 @@
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 61 tests as of iteration 7. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 113 tests as of iteration 8. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
 | Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
@@ -36,6 +36,19 @@ so nothing ever tells you. Iteration 3 produced three of them in two `update` ru
 the surviving filenames against the case names** — otherwise dead images get committed and the
 folder stops being readable. Note also that the filenames contain spaces (from `@Preview(name = …)`),
 which breaks unquoted shell paths.
+
+### A `@Preview` too small for its content records the content missing, not clipped
+
+Compose lays a preview out inside `widthDp` × `heightDp` exactly. When there is not enough room,
+the children that do not fit are measured to **nothing** — the image records as if they were never
+written, with no crop mark, no overflow and no warning. Iteration 8 recorded a bottom-bar tab at
+`heightDp = 70` (the real bar height) to pin a truncating label, and got back an icon and no text
+at all: `ScreenshotScaffold` insets its content by 12dp on every side, so the tab actually had
+46dp to lay out a 24dp icon, 4dp of spacing, a 14sp line and 16dp of its own padding.
+
+**Size a preview as the component's real size *plus* the scaffold's 24dp in each direction**, and
+look at the first recorded image before trusting it. A reference that silently drops the thing it
+was taken for is worse than no reference — it passes validation for ever while defending nothing.
 
 ### The engine cannot delete files here
 

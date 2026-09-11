@@ -75,6 +75,15 @@ The layers, in increasing cost:
   toward each assertion the test claims to carry, and treat a fixture that already equals the
   expected value as the smell it is.
 
+  **Iteration 8 found the other half of the discipline: a mutation that fails *nothing extra* is
+  as informative as one that fails.** Seven mutations ran there, and three of them left tests
+  green that a careless reading would have expected to break — the boundary shift left the
+  whole-month sweep green, the spare-week bug left "always a whole number of weeks" green, the
+  midnight-offset bug left the never-zero test green. Each of those is a test declining to claim
+  something it does not check. **Predict which tests a mutation should fail before running it,
+  and treat both an unexpected pass and an unexpected failure as a finding** — the first means a
+  test is weaker than its name, the second means it is broader than its name.
+
   **Iteration 7 added the practice that makes mutating safe: mark every mutation with a comment
   containing the literal word `MUTATION`, and grep for it before checkpointing.** That iteration
   began at Recover with a *previous* invocation's mutation still applied in `NoteViewModel.delete`
@@ -94,6 +103,13 @@ The layers, in increasing cost:
   controls, the dark-and-blue theme itself. The prior run's suite names the three regressions it
   caught, all of which passed a green unit suite — write the equivalent cases rather than
   rediscovering them.
+
+  **Iteration 8 showed what the layer is actually for, and it is narrower than "looking".** Of
+  seven mutations there, exactly one was caught by a picture and by nothing else: dropping
+  `selectedDate` on its way into the grid. It failed the full-grid image and **passed every
+  day-cell image**, because those call the cell directly with `isSelected = true`. **A component
+  image cannot catch a wiring bug between components; only an image of the assembly can.** Record
+  both, and when a defect is about one thing reaching another, the assembly case is the evidence.
 
   **But a screenshot cannot see criterion 2** (amendment A-004). `Color.White` and
   `colorScheme.onBackground` render identical pixels, so "colour comes from the theme, never
@@ -129,7 +145,7 @@ can only be checked by rendering it, which is precisely the capability this repo
 - ✅ T-005 — User can delete a note behind a confirmation step (depends on: T-004, T-010) — **also
   resolved the failed-read defect T-004's review found (A-009), by giving `getNote` an
   `Outcome<Note?>` return so "it is gone" and "I could not look" stop being the same `null`**
-- T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
+- ✅ T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
 - T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
 - T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006: the
   refusal is implemented and tested; this task is the second caller reaching it, plus surfacing a

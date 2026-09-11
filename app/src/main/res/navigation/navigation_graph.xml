@@ -11,6 +11,11 @@
         android:label="Home Fragment" />
 
     <fragment
+        android:id="@+id/calendarFragment"
+        android:name="com.example.skeleton.ui.fragment.calendar.CalendarFragment"
+        android:label="Calendar Fragment" />
+
+    <fragment
         android:id="@+id/settingFragment"
         android:name="com.example.skeleton.ui.fragment.setting.SettingFragment"
         android:label="Setting Fragment" />
@@ -53,6 +58,19 @@
         app:exitAnim="@anim/exit_fade_out"
         app:launchSingleTop="true"
         app:popUpTo="@id/navigation_graph" />
+
+    <!--
+        Same shape as toSetting below: a tab swap, not a push. popUpTo the start destination so
+        moving between tabs leaves one screen on the back stack instead of a growing pile, and
+        launchSingleTop so tapping the tab you are already on does not stack a second copy.
+    -->
+    <action
+        android:id="@+id/toCalendar"
+        app:destination="@id/calendarFragment"
+        app:enterAnim="@anim/enter_fade_in"
+        app:exitAnim="@anim/exit_fade_out"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/homeFragment" />
 
     <action
         android:id="@+id/toSetting"

@@ -53,4 +53,17 @@
     <string name="this_note_is_no_longer_there">Diese Notiz ist nicht mehr vorhanden</string>
     <string name="the_note_could_not_be_opened">Die Notiz konnte nicht geöffnet werden</string>
     <string name="the_note_could_not_be_deleted">Die Notiz konnte nicht gelöscht werden</string>
+
+    <!-- Calendar -->
+    <string name="calendar">Kalender</string>
+    <string name="previous_month">Vorheriger Monat</string>
+    <string name="next_month">Nächster Monat</string>
+    <string name="select_day">Tag auswählen</string>
+    <string name="weekday_short_sun">So</string>
+    <string name="weekday_short_mon">Mo</string>
+    <string name="weekday_short_tue">Di</string>
+    <string name="weekday_short_wed">Mi</string>
+    <string name="weekday_short_thu">Do</string>
+    <string name="weekday_short_fri">Fr</string>
+    <string name="weekday_short_sat">Sa</string>
 </resources>

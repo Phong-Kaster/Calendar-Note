@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -53,9 +54,16 @@ import com.example.skeleton.ui.util.NavigationUtil
  * feature existed. Without a default, adding a third screen forces whoever adds it to decide what
  * the middle button means there.
  *
- * The answer for both current screens is the same: create a note dated today. Creating a note is
- * not a Home-only idea, so there is no reason for the button to change meaning or go grey when the
- * user happens to be in Settings.
+ * The answer for all three current screens is the same: create a note dated today. Creating a note
+ * is not a Home-only idea, so there is no reason for the button to change meaning or go grey when
+ * the user happens to be in Settings or on the Calendar.
+ *
+ * **The tabs are read from [BottomBarDestination] rather than listed here**, and the list is split
+ * down the middle so the action button keeps the true centre of the bar. With an odd number of
+ * screens one slot on the right is left empty on purpose: the alternative — dividing the width
+ * between the tabs alone — slides the app's primary action off-centre, which reads as a mistake
+ * rather than as a layout. Adding a fourth top-level screen fills that slot and needs no change
+ * here.
  *
  * @param onCreateNote the user tapped the centre action button.
  * @author Phong-Kaster
@@ -69,6 +77,11 @@ fun CoreBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    // The left half is the larger one when the count is odd, so Home always stays on the left.
+    val leftCount = (BottomBarDestination.entries.size + 1) / 2
+    val leftDestinations = BottomBarDestination.entries.take(leftCount)
+    val rightDestinations = BottomBarDestination.entries.drop(leftCount)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -78,7 +91,7 @@ fun CoreBottomBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        listOf(BottomBarDestination.Home).forEach { item ->
+        leftDestinations.forEach { item ->
             BottomBarElement(
                 enable = currentDestination?.hierarchy?.any { it.id == item.destinationId } == true,
                 drawableId = item.drawableId,
@@ -115,7 +128,14 @@ fun CoreBottomBar(
             )
         }
 
-        listOf(BottomBarDestination.Setting).forEach { item ->
+        // The empty slots that keep the action button centred. Placed *before* the remaining tabs
+        // so the outermost tab still hugs the right edge, mirroring Home on the left; put them
+        // after, and the bar has a hole at its end that reads as a missing button.
+        repeat(times = leftCount - rightDestinations.size) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        rightDestinations.forEach { item ->
             BottomBarElement(
                 enable = currentDestination?.hierarchy?.any { it.id == item.destinationId } == true,
                 drawableId = item.drawableId,
@@ -132,8 +152,25 @@ fun CoreBottomBar(
     }
 }
 
+/**
+ * One tab of the bottom bar: an icon, and a label that appears only while that tab is the one you
+ * are on.
+ *
+ * `internal` rather than `private` so a screenshot case can render it with [enable] true. The
+ * previews of the whole bar cannot: they have no `NavController`, so every tab there comes out
+ * unselected and the label is never composed at all — which meant the one state that can overflow
+ * was the one state no picture covered.
+ *
+ * @param enable true when this is the screen the user is on; decides the tint and whether the
+ *   label is drawn.
+ * @param drawableId the tab's icon.
+ * @param stringId the tab's name, used as the label and as the icon's content description.
+ * @param modifier applied to the tab; callers pass a weight so every slot is the same width.
+ * @param onClick the user tapped this tab.
+ * @author Phong-Kaster
+ */
 @Composable
-private fun BottomBarElement(
+internal fun BottomBarElement(
     enable: Boolean,
     @DrawableRes drawableId: Int,
     @StringRes stringId: Int,
@@ -168,6 +205,21 @@ private fun BottomBarElement(
         )
 
         if (enable) {
+            // Still 14sp. A third tab halved every slot — roughly 66dp on a 360dp screen — and
+            // the obvious reaction was to shrink the label to fit. That was wrong twice over: it
+            // charged every screen and every language a legibility cost to fit one English word,
+            // and it did not actually solve the case it was changed for, because no size in the
+            // readable range fits German "Einstellungen" in 66dp.
+            //
+            // The house rule (.claude/jetpack-compose-ui.md § Text) answers overflow with
+            // `basicMarquee`, and it is deliberately not used here: this bar is on every screen
+            // for the whole life of the app, so a label that scrolls sideways for ever is a
+            // permanent distraction rather than a fix. The same deviation, for the same reason,
+            // is already made and explained in HomeNoteList's date line.
+            //
+            // So the long translations ellipsize, and that is a known, recorded defect rather
+            // than a decision — see knowledge/ISSUES.md. The reference image below is what makes
+            // it visible instead of arguable.
             Text(
                 text = stringResource(stringId),
                 style = customizedTextStyle(
