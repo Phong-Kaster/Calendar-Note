@@ -128,7 +128,17 @@ The layers, in increasing cost:
   else. Every task from here states that honestly rather than pointing at a green screenshot run.
 - **Human inspection, once per image.** What remains for a person is approving each reference image
   the first time it is generated. T-009 collects those approvals rather than a full manual
-  walkthrough.
+  walkthrough. **Delivered as `.ai/HUMAN-CHECKLIST.md`** — 20 images to approve, a 15-step device
+  walkthrough for the criteria that need one, and 5 product calls a human may want back.
+
+  **Iteration 11 found the fourth layer's own failure mode, and it is the mirror of the one
+  `POLICIES.md` names.** The policy forbids quietly reducing a criterion to its machine-checkable
+  subset. The inverse is unnamed and just as bad: **claiming machine evidence that does not exist**,
+  which the checklist did for the `updatedAt` `ORDER BY` — a SQL clause no test here can reach,
+  reported as "mutation-checked" inside the section headed *what you do not need to check*. Both
+  errors end in the same place: a requirement nobody checks. **Every sentence asserting something is
+  proven must name the command that proves it**, and a "you may skip this" list is where that rule
+  binds hardest, because it is the one section a reader acts on by *not* acting.
 
 `updateDebugScreenshotTest` overwrites references. It is never the fix for a failing validation —
 that silently re-baselines the regression the test existed to catch.
@@ -186,7 +196,9 @@ there must be a test against the implementation that it constructs it.
 - ✅ T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006; also
   resolved part 2 of the `ISSUES.md` editor-exits entry, and decided that the centre bottom-bar
   button means the picked day on this screen (A-010)**
-- T-009 — README, package tree, strings audit, and the human-inspection checklist (depends on: T-005, T-008)
+- ✅ T-009 — README, package tree, strings audit, and the human-inspection checklist (depends on:
+  T-005, T-008) — **the last task. Every task in the graph is now complete**, and because T-009
+  changed only Markdown, the next invocation satisfies the DONE-Candidate rule.
 
 ## Known Risks
 

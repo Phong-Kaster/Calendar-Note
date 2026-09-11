@@ -11,9 +11,9 @@
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 129 tests as of iteration 9. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
-| Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
-| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; **138 tests across 8 classes as of iteration 11**. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
+| Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, **`0 errors, 64 warnings` as of iteration 11** (**it failed on the pristine baseline — see below**) |
+| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. **20 cases as of iteration 11.** Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
 
 Success looks like a literal `BUILD SUCCESSFUL` line. Lint additionally writes
@@ -223,6 +223,24 @@ way on four strings before this run touched anything.
 The failure message names `values/strings.xml`, i.e. the file you *did* edit, and never mentions the
 German file you didn't — so it reads like the wrong problem. **Adding a user-visible string is a
 two-file operation here.**
+
+### But lint cannot see a hardcoded string inside a `@Composable`
+
+The mirror image of the trap above, and it bites in the opposite direction: **the lint report
+contains no `HardcodedText` finding at all** — verified in iteration 11 against a run with `0 errors,
+64 warnings`. AGP's check reads `android:text` in XML layouts, and this app has no layout XML for its
+screens, so a literal in Kotlin is invisible to it. Seven of them survived the whole run that way
+(filed in `knowledge/ISSUES.md`).
+
+So lint enforces *"every string in `strings.xml` is translated"* and enforces **nothing** about
+*"every user-visible string is in `strings.xml`"*. The check that works is a grep:
+
+```
+grep -rnE 'text = "|contentDescription = "' app/src/main/java/com/example/skeleton/ui
+```
+
+Hits in `@Preview` names, preview fixture data and `TAG` constants are expected — read the list, do
+not count it.
 
 ## Architecture Conventions
 

@@ -16,6 +16,44 @@
 
 <!-- Newest first. Delete resolved entries outright rather than marking them done. -->
 
+### Seven user-visible strings are hardcoded in pre-existing skeleton screens
+
+- **What is wrong:** `CLAUDE.md` § "Add new string content in strings.xml" requires user-visible copy
+  to live in `res/values/strings.xml`. Seven literals in files the skeleton shipped with do not:
+
+  | File | Literal | Seen by |
+  |---|---|---|
+  | `ui/fragment/setting/language/SettingLanguageFragment.kt:78` | `text = "Confirm"` | **everyone** — it is a button label |
+  | `ui/component/CoreTopBar4.kt:75` | `contentDescription = "back"` | screen readers |
+  | `ui/component/CoreTopBar4.kt:148` | `contentDescription = "Done"` | screen readers |
+  | `ui/component/ratebottomsheet/RateBottomSheet.kt:219` | `contentDescription = "Lottie animation"` | screen readers |
+  | `ui/component/ratebottomsheet/RateBottomSheet.kt:274` | `text = "${stringResource(R.string.describe_your_feedback)}..."` | everyone — the hardcoded part is the trailing `...`, appended to a string that *is* localised, and the resource it appends to already ends in a `…` |
+  | `ui/component/ratebottomsheet/RateBottomSheet.kt:286` | `text = "${feedbackMessage.length}/500"` | everyone (a counter — arguably locale-neutral) |
+  | `ui/fragment/home/component/HomePermissionBottomSheet.kt:105` | `contentDescription = "Close"` | screen readers |
+
+- **Why it matters:** `"Confirm"` is the one that bites. The language picker is *the German user's
+  screen*, and the button that applies their choice is in English — the app says "Deutsch" and
+  "Confirm" in the same view. The `contentDescription` ones are invisible to a sighted user and
+  mean the app is untranslated to a screen-reader user, which is the harder failure to notice.
+- **Why it is still open:** **out of scope for DoD criterion 14**, which is scoped to *"every
+  user-visible string added by this run"*. All six are pre-existing and this run did not touch them;
+  reaching into `RateBottomSheet` to fix wording would be scope the PRD did not ask for. Found while
+  auditing criterion 14 in T-009 and filed rather than fixed, because filing is what this file is
+  for.
+- **What would resolve it:** six keys appended to `res/values/strings.xml` — named for their own
+  words, per `CLAUDE.md` — with German counterparts in `values-de/`, or lint fails
+  (`MissingTranslation` is an error here). `stringResource(...)` at each call site. The seventh
+  (`RateBottomSheet.kt:274`) needs no key at all: delete the `...`, since the resource it is
+  appended to already ends in `…` and the screen currently renders "Enter your feedback…...".
+  Roughly fifteen minutes.
+- **Do not:** assume lint catches these. **Verified in T-009: the lint report contains no
+  `HardcodedText` finding at all** — AGP's check reads `android:text` in XML layouts, and this app
+  has no layout XML for its screens, so a literal inside a `@Composable` is invisible to it. All six
+  survived a green `lintDebug` (`0 errors, 64 warnings`) for the whole run. A `grep` for
+  `text = "` / `contentDescription = "` over `ui/` is the check that actually works, and it is what
+  found them.
+- **Full record:** the T-009 checkpoint — find it with `git log --oneline --all --grep='loop(T-009)'`.
+
 ### A note with no title prints its first line twice in every list row
 
 - **What is wrong:** `Note.displayTitle` falls back to the first non-blank line of the body when
@@ -357,14 +395,16 @@
 - **Do not:** copy the `<feature>_<word>` shape when adding new strings. New copy follows the rule —
   T-002 added `no_notes_yet` and `untitled_note`, not `home_no_notes`.
 
-### 14 pre-existing UI files hardcode colour literals instead of reading the theme
+### 8 pre-existing UI files hardcode colour literals instead of reading the theme
 
-- **What is wrong:** 65 occurrences of `Color.Black`, `Color.White` or `Color(0xFF…)` across 14
-  files under `app/src/main/java/com/example/skeleton/`. `POLICIES.md` § User-Interface Defects
+- **What is wrong:** **43** occurrences of `Color.Black`, `Color.White` or `Color(0xFF…)` across
+  **8** files under `app/src/main/java/com/example/skeleton/`. `POLICIES.md` § User-Interface Defects
   rates hardcoded colour a **Critical** defect: it is right only by coincidence with whatever
   background happens to sit underneath, and it breaks silently — with the build still green — as
   soon as that background changes.
-- **Where** (as of the T-001 checkpoint, which cleared five of these files):
+- **Where** (list re-verified at T-009; the heading previously still read "14 files / 65
+  occurrences", which was the *pre*-T-001 figure and outlived the fix by nine iterations — the
+  enumeration below has been the accurate one throughout):
   `ui/component/ratebottomsheet/RateBottomSheet.kt` (14),
   `ui/fragment/home/component/HomePermissionBottomSheet.kt` (9),
   `ui/fragment/setting/language/component/LanguageItem.kt` (5), `ui/component/CoreTopBar4.kt` (5),

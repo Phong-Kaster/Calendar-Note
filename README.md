@@ -34,17 +34,24 @@ Two things at once:
 | A dot on every calendar day that already has notes on it | ✅ built |
 | Tap a day to see that day's notes under the grid, with an explicit message when it has none | ✅ built |
 | Tap one of that day's notes to open it in the editor | ✅ built |
-| Add a note dated to the day picked on the calendar (rather than to today) | 🚧 planned |
+| Add a note dated to the day picked on the calendar (rather than to today) | ✅ built |
+| Refuse — and say why — when a note would be dated in the future | ✅ built |
 
-> **Implementation status is deliberately explicit.** The theme, navigation shell, DI, database and
-> networking layers are real and building. The note feature itself is still being added, and this
-> table is updated in the same change that lands each piece — a README that claims a feature the
-> code does not have is worse than no README.
+> **Implementation status is deliberately explicit.** The note feature is complete: every row above
+> is code that exists, and this table was updated in the same change that landed each piece — a
+> README that claims a feature the code does not have is worse than no README.
+>
+> Two rows are honest about being less than finished. The **language picker** is inherited and only
+> two of its seven languages have translations. The **German bottom-bar label** truncates
+> ("Einstell…") — a known defect, filed in `knowledge/ISSUES.md` and pinned by a reference image so
+> it cannot get quietly worse.
 
 ## Business rules
 
-These are the rules the note feature is being built to, not a description of code that exists yet —
-the Features table above is the source of truth for what is actually implemented.
+Both of these are implemented and enforced where the text below says they are. Both are covered by
+JVM unit tests — with one gap worth naming: the `ORDER BY` half of the second rule is not, because
+testing a SQL clause means running SQLite, which needs an emulator this project has no setup for.
+The store's own sort is what carries that guarantee under test.
 
 - **A note can never be dated in the future.** Today is allowed, tomorrow is not. Enforced in
   `NoteRepositoryImpl.save`, below the UI, so that no caller can walk past it — a screen that
