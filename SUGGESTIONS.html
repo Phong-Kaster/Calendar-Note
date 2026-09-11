@@ -6,7 +6,7 @@
     --ink:#191D1E; --ink-2:#3D4547; --muted:#667072;
     --rule:#C6CAC4; --rule-soft:#D6D9D3;
     --accent:#0F5C63; --accent-ink:#0B4750;
-    --core:#35618E; --pack:#6B4E9C; --local:#667072; --new:#9C6206;
+    --core:#35618E; --pack:#6B4E9C; --local:#667072; --new:#9C6206; --done:#2C6547;
     --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
     --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
     --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Consolas,monospace;
@@ -16,14 +16,14 @@
     --ink:#E8EBE9; --ink-2:#BAC3C2; --muted:#8A9694;
     --rule:#2E373A; --rule-soft:#262E31;
     --accent:#4FBDC7; --accent-ink:#7FD5DC;
-    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F;
+    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --done:#63B489;
   }}
   :root[data-theme="dark"]{
     --paper:#14181A; --surface:#1B2023; --surface-2:#232A2D;
     --ink:#E8EBE9; --ink-2:#BAC3C2; --muted:#8A9694;
     --rule:#2E373A; --rule-soft:#262E31;
     --accent:#4FBDC7; --accent-ink:#7FD5DC;
-    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F;
+    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --done:#63B489;
   }
   [data-lang="en"]{display:none}
   :root[data-ui-lang="en"] [data-lang="en"]{display:revert}
@@ -61,6 +61,7 @@
   .tag.core{color:var(--core);border-color:var(--core)}
   .tag.pack{color:var(--pack);border-color:var(--pack)}
   .tag.local{color:var(--local);border-color:var(--local)}
+  .tag.done{color:var(--done);border-color:var(--done)}
   .id{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
   .ev{font-family:var(--f-mono);font-size:12.2px;line-height:1.6;background:var(--surface);border:1px solid var(--rule-soft);border-left:2px solid var(--rule);padding:10px 14px;margin:12px 0;overflow-x:auto;white-space:pre;color:var(--ink-2)}
   .ask{margin:13px 0 0;padding-left:15px;border-left:2px solid var(--accent)}
@@ -95,8 +96,12 @@
 </header>
 
 <div class="banner">
-  <p data-lang="vi"><strong>Chưa có gì được sửa.</strong> Đây là bản đề nghị để bạn đọc, không phải việc đã làm. Không một dòng code hay doctrine nào thay đổi theo các mục dưới đây cho tới khi bạn đồng ý từng mục một.</p>
-  <p data-lang="en"><strong>Nothing has been changed.</strong> This is a proposal for you to read, not work already done. No line of code or doctrine has moved because of anything below, and none will until you approve each item.</p>
+  <p data-lang="vi"><strong>Cập nhật 11-09-2026 — S-01 đến S-05 đã được người duyệt và chép sang tầng loop của Foreman</strong> (commit bên dưới). Năm mục đó giữ lại ở đây chỉ để đối chiếu, đánh dấu <em>đã giải quyết</em>; chúng sẽ được xoá khỏi hộp ở lần chạy sau, vì một hộp thư chỉ đáng đọc khi mọi thứ trong đó còn đang chờ.</p>
+  <p data-lang="en"><strong>Updated 2026-09-11 — S-01 through S-05 were approved by the human and copied into Foreman's loop tier</strong> (commit below). They are kept here for reference, marked <em>resolved</em>; the next run removes them, because a suggestion box is only worth reading while everything in it is still pending.</p>
+  <p data-lang="vi"><strong>S-06, S-07 vẫn đang chờ bạn.</strong> Chưa có gì được sửa theo hai mục đó.</p>
+  <p data-lang="en"><strong>S-06 and S-07 are still waiting on you.</strong> Nothing has been changed for either.</p>
+  <p data-lang="vi"><strong>Ngoài năm mục đã duyệt, không có gì khác được sửa.</strong> Đây là bản đề nghị để bạn đọc, không phải việc đã làm. Không một dòng code hay doctrine nào thay đổi theo các mục dưới đây cho tới khi bạn đồng ý từng mục một.</p>
+  <p data-lang="en"><strong>Beyond the five approved items, nothing has been changed.</strong> This is a proposal for you to read, not work already done. No line of code or doctrine has moved because of anything below, and none will until you approve each item.</p>
   <p data-lang="vi">Engine <em>không được phép</em> tự ghi vào sổ luật của chính nó. Nó chỉ được bỏ giấy vào hộp này. Chìa khoá vẫn trong tay bạn.</p>
   <p data-lang="en">The engine <em>may not</em> write into its own rulebook. It may only drop a note in this box. The key stays with you.</p>
 </div>
@@ -139,7 +144,7 @@
 <p class="note" data-lang="en">Eight items, each with where I think it belongs. Every one was paid for by a real failure during this run.</p>
 
 <div class="card">
-  <div class="tagrow"><span class="id">S-01</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+  <div class="tagrow"><span class="id">S-01</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
   <h3 data-lang="vi">Lệnh có ống dẫn (<code>|</code>) nói dối về thất bại</h3>
   <h3 data-lang="en">A piped command lies about failure</h3>
   <p data-lang="vi"><code>./gradlew build | tail -20</code> thoát với mã <strong>0 ngay cả khi build hỏng</strong>, vì mã thoát thuộc về <code>tail</code>. Một lần <code>BUILD FAILED</code> thật đã bị đọc nhầm thành pass.</p>
@@ -155,7 +160,7 @@ $ set -o pipefail; false | tail -1 ; echo $?
 </div>
 
 <div class="card">
-  <div class="tagrow"><span class="id">S-02</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+  <div class="tagrow"><span class="id">S-02</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
   <h3 data-lang="vi">Một task Gradle hỏng làm các task khác không chạy — và file XML cũ đọc y hệt một lần pass</h3>
   <h3 data-lang="en">One failing task aborts the others, and the stale XML reads exactly like a pass</h3>
   <p data-lang="vi">Xin bốn task trong một lệnh không có nghĩa là cả bốn cùng chạy. Ở vòng lặp 7, <code>validateDebugScreenshotTest</code> hỏng nên <code>testDebugUnitTest</code> <strong>không hề chạy</strong> — nhưng file kết quả từ lần trước vẫn nằm đó, với <code>failures="0"</code>. Đọc nó cho ra một câu khẳng định tự tin và sai.</p>
@@ -166,7 +171,7 @@ $ set -o pipefail; false | tail -1 ; echo $?
 </div>
 
 <div class="card">
-  <div class="tagrow"><span class="id">S-03</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+  <div class="tagrow"><span class="id">S-03</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
   <h3 data-lang="vi">Build xanh trên một phần không có nghĩa là cả cây mã biên dịch được</h3>
   <h3 data-lang="en">A green subset does not mean the tree compiles</h3>
   <p data-lang="vi"><code>assembleDebug</code> và <code>testDebugUnitTest</code> cùng xanh, trong khi một source set thứ tư đã hỏng — phát hiện ở vòng 5 khi thêm một tham số bắt buộc cho một composable mà hai ca screenshot đang gọi.</p>
@@ -177,7 +182,7 @@ $ set -o pipefail; false | tail -1 ; echo $?
 </div>
 
 <div class="card">
-  <div class="tagrow"><span class="id">S-04</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+  <div class="tagrow"><span class="id">S-04</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
   <h3 data-lang="vi">Subagent chạy nền phải được chờ <em>bên trong</em> lượt nói</h3>
   <h3 data-lang="en">A background subagent must be waited on <em>inside</em> the turn</h3>
   <p data-lang="vi">Runtime gọi engine bằng một lần <code>claude -p</code> duy nhất, không tương tác. <strong>Lượt nói kết thúc là tiến trình thoát.</strong> Runtime không thấy file status, đếm là một lần sập, rồi chạy lại từ checkpoint — mất sạch những gì vòng lặp chưa commit.</p>
@@ -188,7 +193,7 @@ $ set -o pipefail; false | tail -1 ; echo $?
 </div>
 
 <div class="card">
-  <div class="tagrow"><span class="id">S-05</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+  <div class="tagrow"><span class="id">S-05</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
   <h3 data-lang="vi">Git Bash bóp méo đường dẫn khi đọc file ở nhánh khác</h3>
   <h3 data-lang="en">Git Bash mangles the path when reading files from another branch</h3>
   <p data-lang="vi"><code>git show &lt;ref&gt;:&lt;path&gt;</code> chạy bình thường với <code>app/**</code>, nhưng với đường dẫn bắt đầu bằng dấu chấm thì MSYS đổi <code>ref:path</code> thành <code>ref;path</code> và báo <em>"unknown revision or path"</em> — đọc y như file không tồn tại, trong khi nó vẫn ở đó.</p>
