@@ -1,5 +1,5 @@
 {
-  "description": "Standing Capability Ledger for this repository. Written by the human on approving escalation D-001 (2026-09-10). Standing = per-repository toolchain that survives this goal and future runs. The runtime reads only the 'allow' arrays, verbatim.",
+  "description": "Standing Capability Ledger for this repository. Written by the human on approving escalation D-001 (2026-09-10), corrected 2026-09-11 to withdraw the updateDebugScreenshotTest grant. Standing = per-repository toolchain that survives this goal and future runs. The runtime reads only the 'allow' arrays, verbatim.",
   "entries": [
     {
       "intent": "Build, unit-test and lint the app so task completion can be evidenced (ENGINE.md §10). Nothing in this repository has been built by the engine yet; without this, no task can ever be marked complete. Includes the dependency resolution Gradle performs as part of these tasks.",
@@ -15,14 +15,23 @@
       ]
     },
     {
-      "intent": "Run and refresh host-side Compose Preview Screenshot Tests. Granted as part of Q4 Option B+: this repository already carries a verified screenshot harness on the branch loop/todo-calendar-screens, and these are the two Gradle tasks that drive it. Host-side (layoutlib on the JVM) - no emulator, no device, no adb.",
-      "command": "./gradlew :app:validateDebugScreenshotTest / :app:updateDebugScreenshotTest",
+      "intent": "Verify rendered UI against the recorded reference images, so acceptance criteria about appearance, contrast and layout are provable by command output instead of being narrowed away or escalated. Host-side (layoutlib on the JVM) - no emulator, no device, no adb.",
+      "command": "./gradlew :app:validateDebugScreenshotTest",
       "scope": "consumer repository, module :app",
       "lifetime": "standing (per repository, survives this goal)",
       "allow": [
-        "Bash(./gradlew :app:validateDebugScreenshotTest*)",
-        "Bash(./gradlew :app:updateDebugScreenshotTest*)"
+        "Bash(./gradlew :app:validateDebugScreenshotTest*)"
       ]
+    },
+    {
+      "_withheld": "updateDebugScreenshotTest is DELIBERATELY ABSENT from this ledger.",
+      "_why": "It overwrites the committed reference images. An engine holding it, facing a red screenshot test, has a one-command route to making the failure disappear by re-recording wrong output as correct - the same class of act as editing an approved DoD. The android-compose-visual-testing stack pack withholds it on purpose and calls the asymmetry the most important line in the pack; the 2026-09-10 D-001 approval granted it standing anyway, which is the error this entry exists to prevent recurring.",
+      "_how_to_grant": "When a baseline genuinely must move - an intentional UI change, or a new state that has no reference yet - the engine raises an Escalation Request and the human adds a GOAL-SCOPED entry to .ai/capabilities.json (not here), which expires with the run. Recording a new reference is the safe half; overwriting a currently-failing one is not, and the permission matcher cannot tell them apart, so a human sits at that grant.",
+      "intent": "placeholder - no capability is granted by this entry",
+      "command": "none",
+      "scope": "none",
+      "lifetime": "none",
+      "allow": []
     },
     {
       "intent": "Read files out of earlier commits and out of a prior run's Loop Branch. Bash(git show*) is already baseline, but on Windows/Git Bash MSYS rewrites 'ref:path' into 'ref;path' and the command fails for exactly the paths that matter (.ai/**, knowledge/**). MSYS_NO_PATHCONV=1 is the documented workaround, and the leading assignment means the baseline rule does not match it.",
