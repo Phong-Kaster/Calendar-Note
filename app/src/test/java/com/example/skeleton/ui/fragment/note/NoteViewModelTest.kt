@@ -1,6 +1,7 @@
 package com.example.skeleton.ui.fragment.note
 
 import com.example.skeleton.common.Outcome
+import com.example.skeleton.domain.model.FutureDateRefusedException
 import com.example.skeleton.domain.model.Note
 import com.example.skeleton.domain.repository.NoteRepository
 import com.example.skeleton.ui.fragment.note.model.NoteProblem
@@ -27,12 +28,16 @@ import java.time.LocalDate
  *
  * The screen's job splits in three, and only the middle one is testable here:
  *
- * 1. The **caller** decides which day to open the editor on. Today, in this task, from a
- *    `LocalDate.now()` in `HomeFragment` and another in `SettingFragment`; `NoteFragment` has a
- *    third as its fallback when the argument is missing, and `NoteUiState` a fourth as its
- *    default. Every one of them needs a running Fragment or a real clock to observe, so **none is
- *    covered by any test in this project** — "the button creates a note for today" stays a
- *    human-inspection item, and it is the weakest link in this screen's evidence.
+ * 1. The **caller** decides which day to open the editor on. From a `LocalDate.now()` in
+ *    `HomeFragment` and another in `SettingFragment`; `NoteFragment` has a third as its fallback
+ *    when the argument is missing, and `NoteUiState` a fourth as its default. Each of those needs
+ *    a running Fragment or a real clock to observe, so **none is covered by any test here** —
+ *    "the button on Home creates a note for today" stays a human-inspection item.
+ *    **The Calendar screen is the exception, and deliberately so:** its choice of day is DoD
+ *    criterion 11, so it was pushed out of the Fragment into
+ *    `CalendarViewModel.dateForNewNote()`, where `CalendarViewModelTest` holds it to picking the
+ *    *selected* day rather than today. A decision that carries a criterion does not belong
+ *    somewhere no test can reach.
  * 2. **This ViewModel carries whatever day it was given through the editing session and hands it
  *    to the store.** That is what the tests below hold it to, and it is where the interesting
  *    mistakes live: an id dropped on the way to `save`, a `createdAt` overwritten, a rotation that
@@ -191,10 +196,15 @@ class NoteViewModelTest {
     }
 
     @Test
-    fun `a refused save reports the failure and does not leave the screen`() = runTest {
-        // The screen must stay where it is. Navigating back on a refusal would drop what the user
+    fun `a save that failed reports the failure and does not leave the screen`() = runTest {
+        // The screen must stay where it is. Navigating back on a failure would drop what the user
         // wrote and tell them nothing about why.
-        val repository = FakeNoteRepository(outcome = Outcome.Error(message = "refused"))
+        //
+        // A plain error, with no tag on it: this is the disk-went-wrong path, and the assertion
+        // that it is **not** reported as a refusal is what keeps the two apart. Tagging every
+        // error as a refusal would pass the refusal tests below and would tell a user whose
+        // database is failing that their note is dated wrongly.
+        val repository = FakeNoteRepository(outcome = Outcome.Error(message = "the disk is gone"))
         val viewModel = NoteViewModel(noteRepository = repository)
         viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY)
 
@@ -202,6 +212,81 @@ class NoteViewModelTest {
 
         assertEquals(0, viewModel.uiState.value.savedTrigger)
         assertTrue(viewModel.uiState.value.saveFailed)
+        assertNull(viewModel.uiState.value.saveRefusedDate)
+    }
+
+    @Test
+    fun `a refused save is reported as a refusal, naming the day, and not as a failure`() = runTest {
+        // The whole point of telling the two apart. The screen says "please try again" for a
+        // failure, and a retry of a *refusal* can never succeed — the note is dated the same day
+        // it was a moment ago, and this editor has no date control to change it with. So the
+        // refusal has to arrive as its own event, carrying the day, and it must **not** raise
+        // `saveFailed`: the toast for that one is an instruction the user cannot act on.
+        //
+        // **The day the editor was opened on and the day the refusal names are deliberately
+        // different here**, and they would never be in the running app. That is what gives this
+        // test teeth: the ViewModel reads `refusal.date` — the day the *store* compared, which is
+        // the authority — and an implementation reaching for `_uiState.value.date` instead would
+        // pass against a fixture where the two agree. The two can only disagree if the store's
+        // clock and the screen's argument do, which is exactly the backwards-clock case this whole
+        // chain exists for, and the case where naming the wrong day would be worst.
+        val refusedDay = A_DAY.plusDays(2L)
+        val repository = FakeNoteRepository(
+            outcome = Outcome.Error(
+                message = "A note cannot be dated after $A_DAY.",
+                throwable = FutureDateRefusedException(date = refusedDay, today = A_DAY),
+            ),
+        )
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY)
+
+        viewModel.save()
+
+        assertEquals(refusedDay, viewModel.uiState.value.saveRefusedDate)
+        assertFalse(viewModel.uiState.value.saveFailed)
+        // And the user is still on the screen with their text, exactly as after a failure.
+        assertEquals(0, viewModel.uiState.value.savedTrigger)
+    }
+
+    @Test
+    fun `the refusal clears once it has been shown`() = runTest {
+        val repository = FakeNoteRepository(
+            outcome = Outcome.Error(
+                message = "refused",
+                throwable = FutureDateRefusedException(date = A_DAY.plusDays(1L), today = A_DAY),
+            ),
+        )
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY.plusDays(1L))
+        viewModel.save()
+        // Asserted *before* consuming, or this test proves nothing: the field starts null, so a
+        // `save` that never raised it at all would leave the assertion below passing.
+        assertEquals(A_DAY.plusDays(1L), viewModel.uiState.value.saveRefusedDate)
+
+        viewModel.consumeSaveRefused()
+
+        assertNull(viewModel.uiState.value.saveRefusedDate)
+    }
+
+    @Test
+    fun `save works again after a refusal`() = runTest {
+        // A refusal leaves the user on the screen with their text, so the button has to work
+        // again — the same reasoning as after a failure, and a separate test because the two now
+        // take different branches out of `save`. A guard left shut on the refusal path would
+        // strand somebody with a note they cannot store on any day.
+        val repository = FakeNoteRepository(
+            outcome = Outcome.Error(
+                message = "refused",
+                throwable = FutureDateRefusedException(date = A_DAY.plusDays(1L), today = A_DAY),
+            ),
+        )
+        val viewModel = NoteViewModel(noteRepository = repository)
+        viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY.plusDays(1L))
+
+        viewModel.save()
+        viewModel.save()
+
+        assertEquals(2, repository.saveCount)
     }
 
     @Test
@@ -222,10 +307,10 @@ class NoteViewModelTest {
     }
 
     @Test
-    fun `save works again after a refusal`() = runTest {
-        // The other half of the guard above: a refusal leaves the user sitting on the screen with
-        // their text, so a guard that stayed shut would leave them with no way to keep it.
-        val repository = FakeNoteRepository(outcome = Outcome.Error(message = "refused"))
+    fun `save works again after a failure`() = runTest {
+        // The other half of the guard above: a failed write leaves the user sitting on the screen
+        // with their text, so a guard that stayed shut would leave them with no way to keep it.
+        val repository = FakeNoteRepository(outcome = Outcome.Error(message = "the disk is gone"))
         val viewModel = NoteViewModel(noteRepository = repository)
         viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY)
 
@@ -237,7 +322,7 @@ class NoteViewModelTest {
 
     @Test
     fun `the failure clears once it has been shown`() = runTest {
-        val repository = FakeNoteRepository(outcome = Outcome.Error(message = "refused"))
+        val repository = FakeNoteRepository(outcome = Outcome.Error(message = "the disk is gone"))
         val viewModel = NoteViewModel(noteRepository = repository)
         viewModel.openNote(noteId = Note.UNSAVED_ID, date = A_DAY)
         viewModel.save()
@@ -590,8 +675,11 @@ class NoteViewModelTest {
  * @param stored the note [getNote] answers with, or null to behave like a store that has never
  *   heard of the id being asked for. Note the difference from [readFails] below: this one is a
  *   store that answers "no such note", which is not a failure.
- * @param outcome what [save] reports back. Defaults to success; hand it an [Outcome.Error] to test
- *   the refusal path without needing a real calendar rule.
+ * @param outcome what [save] reports back. Defaults to success. A plain [Outcome.Error] is a write
+ *   that went wrong; one carrying a
+ *   [com.example.skeleton.domain.model.FutureDateRefusedException] is the calendar rule refusing
+ *   the note. The screen has to say different things about those two, so the fake has to be able
+ *   to be both — and neither needs a real clock here.
  * @param readFails true to make [getNote] report that it could not read at all. That is a
  *   different answer from [stored] being null, and the screen is required to treat it differently.
  * @param deleteOutcome what [delete] reports back.

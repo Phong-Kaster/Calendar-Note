@@ -5,6 +5,7 @@ import com.example.skeleton.common.Outcome
 import com.example.skeleton.data.database.local.dao.NoteDao
 import com.example.skeleton.data.mapper.toDomain
 import com.example.skeleton.data.mapper.toEntity
+import com.example.skeleton.domain.model.FutureDateRefusedException
 import com.example.skeleton.domain.model.Note
 import com.example.skeleton.domain.repository.NoteRepository
 import kotlinx.coroutines.CancellationException
@@ -104,9 +105,18 @@ class NoteRepositoryImpl(
         // The future-date rule, from `knowledge/DOMAIN.md`. `isAfter` and not `>=` on purpose:
         // today is allowed, tomorrow is not. An off-by-one in this direction makes it impossible
         // to write a note at all, which is why the domain rule spells the boundary out.
+        //
+        // The refusal is **tagged**, not just worded. `message` is developer-facing and a screen
+        // that told a refusal from a write failure by reading it would break the moment somebody
+        // rephrased this line; [FutureDateRefusedException] is the typed channel, and it is handed
+        // over as a value rather than thrown. The difference matters above: retrying a refusal can
+        // never succeed, so a screen that offers "please try again" for one is lying.
         if (note.date.isAfter(today)) {
             Log.w(TAG, "save refused: ${note.date} is after $today")
-            return@withContext Outcome.Error(message = "A note cannot be dated after $today.")
+            return@withContext Outcome.Error(
+                message = "A note cannot be dated after $today.",
+                throwable = FutureDateRefusedException(date = note.date, today = today),
+            )
         }
 
         val now = clock.millis()

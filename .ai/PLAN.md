@@ -154,6 +154,21 @@ Look for it wherever a UiState holds "the thing selected" beside "what was loade
 plain Kotlin (domain model + repository), never inside a `@Composable`. A rule inside a composable
 can only be checked by rendering it, which is precisely the capability this repository does not have.
 
+**Iteration 10 extended that to the Fragment, which is the other untestable place.** Criterion 11's
+"a note added while day D is selected carries date D" would have lived in a `selectedDate ?:
+LocalDate.now()` inside a navigation lambda — a Fragment, so unreachable by any test here. Moved to
+`CalendarViewModel.dateForNewNote()` it is four tests, three of which catch a distinct wrong answer.
+**When a decision carries a DoD criterion, ask which class it is written in before writing it**;
+`Fragment` and `@Composable` are both "no test can see this".
+
+**A fake can express a contract without verifying it — mutate the implementation, not just the
+fake's caller (iteration 10, mutation M4).** Every `NoteViewModel` refusal test builds its own
+tagged `Outcome.Error` through the fake store, so removing the tag from the *real*
+`NoteRepositoryImpl.save` left 137 of 138 tests green while every refusal in the running app
+reverted to "something went wrong, please try again". One repository test was the only thing joining
+the two halves. Wherever a fake hands back a value the real implementation is supposed to construct,
+there must be a test against the implementation that it constructs it.
+
 ## Task Graph
 
 - ✅ T-001 — Dark-only theme with blue primary, app named "Calendar Note", README seeded (depends on: —)
@@ -168,9 +183,9 @@ can only be checked by rendering it, which is precisely the capability this repo
   `Outcome<Note?>` return so "it is gone" and "I could not look" stop being the same `null`**
 - ✅ T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
 - ✅ T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
-- T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006: the
-  refusal is implemented and tested; this task is the second caller reaching it, plus surfacing a
-  refusal distinguishably**
+- ✅ T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006; also
+  resolved part 2 of the `ISSUES.md` editor-exits entry, and decided that the centre bottom-bar
+  button means the picked day on this screen (A-010)**
 - T-009 — README, package tree, strings audit, and the human-inspection checklist (depends on: T-005, T-008)
 
 ## Known Risks

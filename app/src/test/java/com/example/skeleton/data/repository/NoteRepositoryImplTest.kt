@@ -6,6 +6,7 @@ import com.example.skeleton.data.database.local.entity.NoteEntity
 import com.example.skeleton.data.mapper.toDomain
 import com.example.skeleton.data.mapper.toEntity
 import com.example.skeleton.data.repository.impl.NoteRepositoryImpl
+import com.example.skeleton.domain.model.FutureDateRefusedException
 import com.example.skeleton.domain.model.Note
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -408,6 +410,37 @@ class NoteRepositoryImplTest {
         val outcome = repository.save(note = Note.draft(date = TODAY.minusDays(1L)))
 
         assertTrue(outcome is Outcome.Success)
+    }
+
+    @Test
+    fun `a refusal says it is the calendar rule, not a write that went wrong`() = runTest {
+        // The distinction the screen above depends on, and the reason it is carried by *type*.
+        // Both a refusal and a broken disk come back as `Outcome.Error`, and the editor has to say
+        // opposite things about them: a failed write is worth another tap, a refusal never is. A
+        // screen that told them apart by reading `message` would break the next time somebody
+        // rephrased a log line, so the tag is what is asserted here — along with the day it names,
+        // because the message the user reads is built from it.
+        val repository = NoteRepositoryImpl(noteDao = FakeNoteDao(rows = emptyList()), clock = CLOCK)
+
+        val outcome = repository.save(note = Note.draft(date = TODAY.plusDays(1L)))
+
+        val refusal = (outcome as Outcome.Error).throwable as FutureDateRefusedException
+        assertEquals(TODAY.plusDays(1L), refusal.date)
+        assertEquals(TODAY, refusal.today)
+    }
+
+    @Test
+    fun `a write the database refuses is not dressed up as a calendar refusal`() = runTest {
+        // The other half of the line above, and the half with teeth: tagging *every* error as a
+        // refusal would pass the test before this one and would tell a user whose disk is failing
+        // that their note is dated wrongly. The date here is today, so the rule has no business
+        // firing at all.
+        val repository = NoteRepositoryImpl(noteDao = BrokenNoteDao(), clock = CLOCK)
+
+        val outcome = repository.save(note = Note.draft(date = TODAY))
+
+        assertTrue(outcome is Outcome.Error)
+        assertFalse((outcome as Outcome.Error).throwable is FutureDateRefusedException)
     }
 
     @Test

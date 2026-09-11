@@ -382,6 +382,77 @@ class CalendarViewModelTest {
         assertEquals(LocalDate.of(2026, 9, 3), viewModel.uiState.value.selectedDate)
     }
 
+    // ---------- Which day a new note is filed under (DoD criterion 11) ----------
+
+    @Test
+    fun `a new note is filed under the day the user picked, not under today`() {
+        // Criterion 11, in the one place a test can reach it. The day picked is deliberately not
+        // today and not the screen's default, so the assertion cannot pass against a
+        // `dateForNewNote()` that ignores the selection and reads the clock — which is what the
+        // Fragment used to do, and what the criterion exists to forbid.
+        val viewModel = calendarViewModel()
+
+        viewModel.selectDate(date = LocalDate.of(2026, 9, 3))
+
+        assertEquals(LocalDate.of(2026, 9, 3), viewModel.dateForNewNote())
+    }
+
+    @Test
+    fun `picking another day moves where the next note goes`() {
+        // One answer could be a coincidence; two in a row cannot. A `dateForNewNote()` frozen at
+        // whatever was picked first would pass the test above and would file every later note on
+        // the wrong day.
+        val viewModel = calendarViewModel()
+
+        viewModel.selectDate(date = LocalDate.of(2026, 9, 3))
+        assertEquals(LocalDate.of(2026, 9, 3), viewModel.dateForNewNote())
+
+        viewModel.selectDate(date = LocalDate.of(2026, 9, 7))
+        assertEquals(LocalDate.of(2026, 9, 7), viewModel.dateForNewNote())
+    }
+
+    @Test
+    fun `with nothing picked the next note falls back to today, read from the clock`() {
+        // "Nothing picked" is reachable exactly one way — a backwards clock leaving the selection
+        // in the future, which `refreshToday` then drops — and the bottom bar's centre button can
+        // still be tapped in that state, so it has to mean *something*.
+        //
+        // The clock is then moved again **without** a `refreshToday`, which is what gives this
+        // test teeth: `uiState.today` is now stale, so an implementation reading the state instead
+        // of the clock answers 7 September while the honest answer is the 9th. That is the same
+        // distinction the screen cares about after a night left open.
+        val clock = MovableClock(today = TODAY)
+        val viewModel = CalendarViewModel(noteRepository = FakeNoteRepository(), clock = clock)
+
+        clock.today = LocalDate.of(2026, 9, 7)
+        viewModel.refreshToday()
+        assertEquals(null, viewModel.uiState.value.selectedDate)
+
+        clock.today = LocalDate.of(2026, 9, 9)
+
+        assertEquals(LocalDate.of(2026, 9, 9), viewModel.dateForNewNote())
+    }
+
+    @Test
+    fun `a picked day the clock has overtaken is handed over as it is, not swapped for today`() {
+        // The honest chain, and the one place it could quietly be broken. A backwards clock can
+        // leave a legitimately picked day after today, and this is reachable before `refreshToday`
+        // runs. Swapping it for today here would look like a fix and would file the note on a day
+        // the user never chose, invisibly — while re-checking the rule here would put a second
+        // copy of `knowledge/DOMAIN.md` rule 1 above the repository, which is the one place the
+        // rule says it must not live.
+        //
+        // So the day travels on exactly as picked, the store refuses it, and the editor names the
+        // day it refused. `NoteRepositoryImplTest` owns the refusal; this owns the handover.
+        val clock = MovableClock(today = TODAY)
+        val viewModel = CalendarViewModel(noteRepository = FakeNoteRepository(), clock = clock)
+        viewModel.selectDate(date = TODAY)
+
+        clock.today = TODAY.minusDays(3L)
+
+        assertEquals(TODAY, viewModel.dateForNewNote())
+    }
+
     // ---------- The has-notes markers ----------
 
     @Test

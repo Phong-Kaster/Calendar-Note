@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skeleton.common.Outcome
+import com.example.skeleton.domain.model.FutureDateRefusedException
 import com.example.skeleton.domain.model.Note
 import com.example.skeleton.domain.repository.NoteRepository
 import com.example.skeleton.ui.fragment.note.model.NoteProblem
@@ -177,13 +178,30 @@ class NoteViewModel(
                 return@launch
             }
 
-            // A refusal leaves the user on the screen with their text, so the button has to work
-            // again.
+            // Nothing was stored, so the user is still here with their text and the button has to
+            // work again. True of both branches below — a refusal and a failure alike.
             saving = false
 
-            // The store's message is developer-facing — it names the date it refused, which is
-            // useful in a log and meaningless in a toast. The screen shows its own wording.
-            Log.w(TAG, "save was refused: ${(outcome as? Outcome.Error)?.message}")
+            // **Which kind of "no" this was decides what the user is told, and the store says so
+            // by type.** A refused note is dated a day that has not arrived; nothing about
+            // tapping Save again changes that, and this screen offers no date control to change
+            // it with — so "something went wrong, please try again" would be an instruction that
+            // cannot work. A write that merely failed *is* worth another tap.
+            //
+            // The store's own `message` is developer-facing and is deliberately not shown: the
+            // screen picks its own wording, and matching on that text to decide which wording to
+            // pick would break the next time somebody rephrased a log line.
+            val refusal = (outcome as? Outcome.Error)?.throwable as? FutureDateRefusedException
+            if (refusal != null) {
+                Log.w(TAG, "save refused: ${refusal.date} is after ${refusal.today}")
+                // The day comes from the refusal rather than from `state.date`, so the message
+                // names the day the store actually compared — the two agree today, and if they
+                // ever stop, the store is the one that decided.
+                _uiState.value = _uiState.value.copy(saveRefusedDate = refusal.date)
+                return@launch
+            }
+
+            Log.w(TAG, "save failed: ${(outcome as? Outcome.Error)?.message}")
             _uiState.value = _uiState.value.copy(saveFailed = true)
         }
     }
@@ -274,6 +292,11 @@ class NoteViewModel(
     /** Clears [NoteUiState.saveFailed] once the Fragment has shown the message. */
     fun consumeSaveFailed() {
         _uiState.value = _uiState.value.copy(saveFailed = false)
+    }
+
+    /** Clears [NoteUiState.saveRefusedDate] once the Fragment has shown the message. */
+    fun consumeSaveRefused() {
+        _uiState.value = _uiState.value.copy(saveRefusedDate = null)
     }
 
     /** Clears [NoteUiState.problem] once the Fragment has shown the matching message. */

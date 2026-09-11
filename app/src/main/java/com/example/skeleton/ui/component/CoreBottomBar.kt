@@ -54,9 +54,12 @@ import com.example.skeleton.ui.util.NavigationUtil
  * feature existed. Without a default, adding a third screen forces whoever adds it to decide what
  * the middle button means there.
  *
- * The answer for all three current screens is the same: create a note dated today. Creating a note
- * is not a Home-only idea, so there is no reason for the button to change meaning or go grey when
- * the user happens to be in Settings or on the Calendar.
+ * **What it means is each screen's own decision, and two answers are in use.** Home and Settings
+ * create a note dated today. **The Calendar screen creates one dated the day the user has picked**
+ * — see `CalendarFragment`'s `onCreateNote`, which explains why that screen refuses to have two
+ * add affordances filing notes on two different days. Creating a note is not a Home-only idea, so
+ * the button never goes grey; but do not assume "today" when adding a fourth screen — read what
+ * that screen is for.
  *
  * **The tabs are read from [BottomBarDestination] rather than listed here**, and the list is split
  * down the middle so the action button keeps the true centre of the bar. With an odd number of

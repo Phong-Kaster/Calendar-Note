@@ -37,6 +37,20 @@ the surviving filenames against the case names** — otherwise dead images get c
 folder stops being readable. Note also that the filenames contain spaces (from `@Preview(name = …)`),
 which breaks unquoted shell paths.
 
+**Telling a stray from a live reference takes one command, and guessing it is how a wrong
+conclusion gets recorded** (iteration 10): the validation report *names the file it used*, so
+
+```
+grep -o '[a-f0-9]\{8\}_0\.png' \
+  app/build/reports/screenshotTest/preview/debug/com.example.skeleton.screenshot.<Class>Kt.html
+```
+
+after a green `validateDebugScreenshotTest` lists exactly the live hashes for that class. Anything
+on disk and not in that list is dead. Iteration 10's review reasoned from the *tracked vs untracked*
+split instead and concluded a live tracked image was a stray — which would have meant validation
+passing here and failing on a clean clone. It was wrong, and this command is what settled it in ten
+seconds. Run it before staging, and stage every live file it names.
+
 ### A `@Preview` too small for its content records the content missing, not clipped
 
 Compose lays a preview out inside `widthDp` × `heightDp` exactly. When there is not enough room,

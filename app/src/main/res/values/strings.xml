@@ -72,4 +72,11 @@
     <string name="weekday_short_sat">Sat</string>
     <string name="nothing_written_on_this_day_yet">Nothing written on this day yet</string>
     <string name="pick_a_day_to_see_its_notes">Pick a day to see what is on it</string>
+    <string name="add_a_note_to_this_day">Add a note to this day</string>
+    <!--
+        Shown when the store refuses a note because its day has not arrived yet. %1$s is that day,
+        written out in the app's language. It names the day on purpose: the editor has no date
+        control, so "try again" would be an instruction the user cannot act on.
+    -->
+    <string name="a_note_can_only_be_written_on_today_or_an_earlier_day">%1$s has not arrived yet — a note can only be written on today or an earlier day</string>
 </resources>

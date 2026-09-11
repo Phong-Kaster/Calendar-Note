@@ -286,10 +286,17 @@ private fun MonthGrid() {
  * to another language for a reason that has nothing to do with the app. `CalendarDayNotes` takes
  * the label already written out precisely so this case can pin one.
  *
+ * **The add action is part of this case now (T-008).** An empty day is the one where it matters
+ * most — there is nothing else on the page to tap — and the two things directly under the heading
+ * have to read as what they are: a control that writes a note, above a sentence that says there is
+ * none yet. `heightDp` grew from 180 to 260 to fit it, which orphans the 180dp rendering rather
+ * than replacing it, because the filename hashes the preview's parameters. See
+ * `knowledge/PROJECT.md`.
+ *
  * @author Phong-Kaster
  */
 @PreviewTest
-@Preview(name = "Day notes - a day with nothing on it", widthDp = 360, heightDp = 180)
+@Preview(name = "Day notes - a day with nothing on it", widthDp = 360, heightDp = 260)
 @Composable
 private fun DayNotesEmptyDay() {
     ScreenshotScaffold(
@@ -298,6 +305,38 @@ private fun DayNotesEmptyDay() {
                 dayLabel = "Thursday, 3 September 2026",
                 notes = emptyList(),
                 onOpenNote = {},
+                onAddNote = {},
+            )
+        },
+    )
+}
+
+/**
+ * **No day picked, so no way to add one — the case that proves the add action is conditional.**
+ *
+ * This is the third of the section's three states (see the note at the top of `CalendarDayNotes`)
+ * and the only one with nothing to file a note against. The two wrong answers are both invisible
+ * to every unit test in this project: an add action here would either file the note under **today**
+ * — a day the user did not pick, silently — or sit there disabled, inviting them to work out what
+ * they did wrong. What should be here is the sentence telling them to pick a day, and nothing else.
+ *
+ * A picture is the only evidence available for it. The rule is a `return@Column` inside a
+ * composable, so deleting it fails no assertion anywhere: the tests would stay green while the
+ * screen offered a control that cannot know which day it means.
+ *
+ * @author Phong-Kaster
+ */
+@PreviewTest
+@Preview(name = "Day notes - nothing picked", widthDp = 360, heightDp = 160)
+@Composable
+private fun DayNotesNothingPicked() {
+    ScreenshotScaffold(
+        content = {
+            CalendarDayNotes(
+                dayLabel = null,
+                notes = emptyList(),
+                onOpenNote = {},
+                onAddNote = {},
             )
         },
     )
@@ -331,10 +370,21 @@ private fun DayNotesEmptyDay() {
  * it: a formatter-produced date would bake the rendering machine's locale into the picture. It
  * is the German *words* being measured here, not German date formatting.
  *
+ * **T-008 gave this case a second job, and it is now the more useful one.** The add action's label
+ * is "Notiz zu diesem Tag hinzufügen" in German against "Add a note to this day" in English — 30
+ * characters beside an icon, on a row with 32dp of padding, at the narrow end of what this app
+ * supports.
+ *
+ * **It fits, on one line, with room to spare** — measured off this image rather than argued from
+ * character counts, which is the same order of operations the heading above taught. So the add
+ * label's `maxLines = 2` is insurance for a longer locale or a large font scale, exactly like the
+ * heading's, and **not** a fix for anything observed. Do not read this image as evidence that the
+ * German label needed two lines; what it shows is that neither line here wraps.
+ *
  * @author Phong-Kaster
  */
 @PreviewTest
-@Preview(name = "Day notes - longest German heading", widthDp = 312, heightDp = 200, locale = "de")
+@Preview(name = "Day notes - longest German heading", widthDp = 312, heightDp = 280, locale = "de")
 @Composable
 private fun DayNotesGermanHeading() {
     ScreenshotScaffold(
@@ -343,6 +393,7 @@ private fun DayNotesGermanHeading() {
                 dayLabel = "Donnerstag, 24. September 2026",
                 notes = emptyList(),
                 onOpenNote = {},
+                onAddNote = {},
             )
         },
     )
@@ -360,10 +411,16 @@ private fun DayNotesGermanHeading() {
  * is on the day named in the heading above it, so a date on each card would repeat that heading
  * once per note. If dates ever reappear here, `showDate` stopped being passed.
  *
+ * **The add action is above the notes, and this is the picture that judges it (T-008).** It is
+ * shaped like the two note rows below it — same radius, same border, same surface — and told apart
+ * only by its colour and its plus. Whether that reads as *an action* rather than as *a third note*
+ * is a question for a person, and it is the reason this case is worth re-approving rather than
+ * merely re-recording. Its height grew from 320 to 400 to fit the extra row.
+ *
  * @author Phong-Kaster
  */
 @PreviewTest
-@Preview(name = "Day notes - a day with notes on it", widthDp = 360, heightDp = 320)
+@Preview(name = "Day notes - a day with notes on it", widthDp = 360, heightDp = 400)
 @Composable
 private fun DayNotesWithNotes() {
     ScreenshotScaffold(
@@ -389,6 +446,7 @@ private fun DayNotesWithNotes() {
                     ),
                 ),
                 onOpenNote = {},
+                onAddNote = {},
             )
         },
     )

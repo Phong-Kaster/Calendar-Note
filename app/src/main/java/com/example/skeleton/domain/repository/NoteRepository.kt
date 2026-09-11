@@ -1,6 +1,7 @@
 package com.example.skeleton.domain.repository
 
 import com.example.skeleton.common.Outcome
+import com.example.skeleton.domain.model.FutureDateRefusedException
 import com.example.skeleton.domain.model.Note
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -90,6 +91,13 @@ interface NoteRepository {
      * Returns a value rather than throwing: [Outcome.Success] when the note is stored,
      * [Outcome.Error] when it is refused or the write fails. [Outcome.Loading] is never emitted —
      * this is a one-shot write, not a stream.
+     *
+     * **The two kinds of [Outcome.Error] are told apart by type, never by message.** A refusal
+     * carries a [FutureDateRefusedException] in `throwable`, naming the day that was refused and
+     * the day it was compared against; a write that genuinely failed carries whatever the database
+     * threw. A caller has to be able to tell them apart, because retrying a refusal can never
+     * succeed — the note is dated the same day it was a moment ago — while retrying a failed write
+     * often can. Matching on the message text would work until somebody rephrased it.
      *
      * @param note the note to store.
      * @return whether the note was stored.

@@ -36,8 +36,17 @@ import java.time.LocalDate
  * @param deletedTrigger incremented once each time a delete succeeds. Separate from
  *   [savedTrigger] because the two exits are not the same event: one leaves a note behind and the
  *   other does not, and the user is told a different thing about each.
- * @param saveFailed true when the last save was refused or failed. The Fragment shows a message
- *   and calls `consumeSaveFailed()`, which puts it back to false.
+ * @param saveFailed true when the last save **failed** — the store was willing and something went
+ *   wrong. The Fragment shows a message and calls `consumeSaveFailed()`, which puts it back to
+ *   false. A save the store *refused* does not raise this; see [saveRefusedDate].
+ * @param saveRefusedDate the day a save was refused for, or null. Non-null only when the store
+ *   declined the note because that day has not arrived yet — `knowledge/DOMAIN.md` rule 1.
+ *   **Separate from [saveFailed] because the two need opposite things said about them:** a failed
+ *   write is worth retrying, and a refusal never is, so one message inviting the user to "try
+ *   again" for both leaves them tapping Save at a note that can never be stored. The day is
+ *   carried rather than a bare flag so the message can name it — this screen has no date control,
+ *   so being told *which* day was refused is the only way the user learns what to do differently.
+ *   Cleared by `consumeSaveRefused()` once shown.
  * @param problem non-null when the screen hit one of the situations in [NoteProblem] — the note is
  *   gone, unreadable, or would not delete. The Fragment shows the matching message and calls
  *   `consumeProblem()`.
@@ -56,5 +65,6 @@ data class NoteUiState(
     val savedTrigger: Int = 0,
     val deletedTrigger: Int = 0,
     val saveFailed: Boolean = false,
+    val saveRefusedDate: LocalDate? = null,
     val problem: NoteProblem? = null,
 )

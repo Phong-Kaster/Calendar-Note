@@ -303,3 +303,41 @@
 - **Affected tasks:** T-005 gains one description bullet and one acceptance criterion.
 - **Expected impact:** T-005 grows slightly. The exposure window is one iteration, and it is
   recorded in `knowledge/ISSUES.md` so it survives even if the plan changes shape.
+
+---
+
+## A-010 — On the Calendar screen the centre bottom-bar button means the picked day, not today
+
+- **Timestamp:** 2026-09-11 (iteration 10)
+- **Tier:** 1 — a screen-level behaviour choice inside T-008's approved scope. It is logged because
+  it makes one shared component mean two different things depending on the screen hosting it, and
+  because a reader could mistake it for a contradiction of DoD assumption A11.
+- **Reason:** T-008 adds an add-note action beside the selected day's notes, dated to that day
+  (DoD criterion 11). `STATE.md` left open whether the bottom bar's centre button should change
+  meaning on the same screen and asked for the decision to be made deliberately and written down.
+  Leaving it as "today" would put two add affordances a few centimetres apart on one screen, filing
+  notes on two different days, with nothing on either one saying so — and a user who picked the 3rd,
+  tapped the larger and more obvious of the two, and got a note dated today would not discover it
+  until they went looking. That failure is invisible at the moment it happens, which is what makes
+  it worse than the alternative.
+- **Decision:** on `CalendarFragment` both routes call `CalendarViewModel.dateForNewNote()`, so the
+  two controls agree by construction. Home and Settings are unchanged: today. `CoreBottomBar`'s
+  KDoc now states that the meaning is each screen's own and points at the reason.
+- **Why this is not a DoD violation, checked before implementing:** A11's row is titled "Create-note
+  entry point **from Home** (PRD §3.1, sub-question)" — it resolves whether Home should have one at
+  all. Criterion 5 is Home-scoped in its own words ("The centre action button … opens the Note
+  screen for a new note dated today. Saving it returns to Home, where the new note is the first
+  row") and remains true. Had either been unscoped, this would have been a Tier-3 proposal rather
+  than an amendment: the engine does not get to reinterpret approved intent because it prefers a
+  different screen.
+- **Rejected:** (a) leaving the centre button as today — the two-meanings-one-screen trap above;
+  (b) hiding or disabling the centre button on this screen — `CoreBottomBar` has no such state, and
+  removing the app's primary action from one screen is a larger change than making it agree with
+  its neighbour; (c) filing under today when nothing is picked *and* nothing is drawn — rejected
+  because the centre button must always do something, so "nothing picked" falls back to today while
+  the day's own action is simply not drawn.
+- **Affected tasks:** T-008 only. T-009's human-inspection checklist gains one item — whether this
+  reading of the button is the product's.
+- **Expected impact:** one extra `@param` note on `CalendarLayout`, a rewritten paragraph in
+  `CoreBottomBar`'s KDoc, and a human-inspection row. No change to the task graph or the evidence
+  strategy.

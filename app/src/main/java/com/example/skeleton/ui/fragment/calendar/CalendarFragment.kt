@@ -37,6 +37,14 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+/**
+ * The Calendar screen: a month at a time, with the picked day's notes underneath it.
+ *
+ * Thin, like every Fragment here — it owns the ViewModel, the clock-watching and the navigation,
+ * and hands everything else to [CalendarLayout].
+ *
+ * @author Phong-Kaster
+ */
 class CalendarFragment : CoreFragment() {
     private val viewModel: CalendarViewModel by viewModel()
 
@@ -88,46 +96,61 @@ class CalendarFragment : CoreFragment() {
             onNextMonth = { viewModel.showNextMonth() },
             onSelectDay = { date -> viewModel.selectDate(date = date) },
             onOpenNote = { note ->
-                // The same route and the same guard Home uses, for the same reason: two taps
-                // inside one moment must not push two copies of the editor onto the back stack,
-                // and `safeNavigate` does not debounce — it only swallows exceptions.
-                //
-                // Asking the graph where we are, rather than `NavigationUtil.canNavigate()`:
-                // that clock is one 800 ms field shared by the whole app and `CoreBottomBar`
-                // arms it even for a tab tap that navigates nowhere, so tapping "Calendar"
-                // while already on the Calendar screen would leave every note row dead for the
-                // next 800 ms. See the same comment in `HomeFragment`.
-                val currentDestination = runCatching {
-                    findNavController().currentDestination?.id
-                }.getOrNull()
-
-                if (currentDestination == R.id.calendarFragment) {
-                    safeNavigate(
-                        destination = R.id.toNote,
-                        // The note's own day, not the picked one. They are the same day today —
-                        // the list only ever holds notes from the selected day — but the editor
-                        // falls back to this argument when the note has gone missing, and the
-                        // note's own date is the right thing to fall back to.
-                        bundle = NoteFragment.argumentsFor(date = note.date, noteId = note.id),
-                    )
-                }
+                // The note's own day, not the picked one. They are the same day today — the list
+                // only ever holds notes from the selected day — but the editor falls back to this
+                // argument when the note has gone missing, and the note's own date is the right
+                // thing to fall back to.
+                openNoteEditor(date = note.date, noteId = note.id)
+            },
+            onAddNote = {
+                // The day's own add action, beside that day's notes. DoD criterion 11: the note
+                // is dated to the **picked** day, and `dateForNewNote()` is what decides that —
+                // in the ViewModel, where a test can reach it.
+                openNoteEditor(date = viewModel.dateForNewNote())
             },
             onCreateNote = {
-                // Today, exactly as on Home and on Settings — the centre button means the same
-                // thing everywhere in the app right now. Writing a note **on the day the user
-                // picked here** is DoD criterion 11 and belongs to T-008, which adds an add-note
-                // action of its own alongside that day's notes.
-                //
-                // A fresh `LocalDate.now()` and not `uiState.today`, even though the two are
-                // normally equal and `refreshToday()` is what keeps them so. If the clock has
-                // rolled over while this screen sat untouched, the state is a day behind — and
-                // of the two ways to be inconsistent, a note filed on the wrong day is worse
-                // than a grid that has not caught up yet.
-                safeNavigate(
-                    destination = R.id.toNote,
-                    bundle = NoteFragment.argumentsFor(date = LocalDate.now()),
-                )
+                // **On this screen the centre button means the same day as the action beside the
+                // day's notes** — the picked day, not today. Elsewhere (Home, Settings) it still
+                // means today, so this is a deliberate divergence: the alternative left one screen
+                // carrying two add affordances a few centimetres apart that filed notes on two
+                // different days, with nothing on either saying so. Recorded in `.ai/TASKS/T-008.md`.
+                openNoteEditor(date = viewModel.dateForNewNote())
             },
+        )
+    }
+
+    /**
+     * Opens the Note editor, once, however many taps arrive.
+     *
+     * **All three routes off this screen go through here, and that is the point.** Two of them are
+     * a few centimetres apart — a note row and the add action above it — and `safeNavigate` does
+     * not debounce, it only swallows exceptions. `toNote` is a global action with no
+     * `launchSingleTop`, and the exiting view keeps taking touches for the length of its slide-out
+     * animation, so two taps inside that moment push **two** editors onto the back stack. For a
+     * new note that is worse than a duplicated screen: the user types into the top one, saves, and
+     * lands on a second blank editor for the same day, which looks exactly like the save having
+     * done nothing.
+     *
+     * Asking the graph where we are, rather than `NavigationUtil.canNavigate()`: that clock is one
+     * 800 ms field shared by the whole app, and `CoreBottomBar` arms it even for a tab tap that
+     * navigates nowhere — so tapping "Calendar" while already on the Calendar screen would leave
+     * every row here dead for the next 800 ms. Once we have navigated, the destination is no
+     * longer this screen and the second tap finds the door shut. See the same reasoning in
+     * `HomeFragment`.
+     *
+     * @param date the day the editor opens on.
+     * @param noteId the note to edit, or left out for a new one.
+     */
+    private fun openNoteEditor(date: LocalDate, noteId: Long = NoteFragment.NEW_NOTE_ID) {
+        val currentDestination = runCatching {
+            findNavController().currentDestination?.id
+        }.getOrNull()
+
+        if (currentDestination != R.id.calendarFragment) return
+
+        safeNavigate(
+            destination = R.id.toNote,
+            bundle = NoteFragment.argumentsFor(date = date, noteId = noteId),
         )
     }
 }
@@ -150,7 +173,10 @@ class CalendarFragment : CoreFragment() {
  * @param onNextMonth the user tapped the forward arrow.
  * @param onSelectDay the user tapped a day. Future days never reach this — they are not tappable.
  * @param onOpenNote the user tapped one of the selected day's notes.
- * @param onCreateNote the user tapped the bottom bar's centre action button.
+ * @param onAddNote the user wants a note on the picked day. Only reachable while a day *is*
+ *   picked — `CalendarDayNotes` does not draw the control otherwise.
+ * @param onCreateNote the user tapped the bottom bar's centre action button. On this screen it
+ *   means the same day as [onAddNote]; the Fragment's lambda says why.
  * @author Phong-Kaster
  */
 @Composable
@@ -160,6 +186,7 @@ private fun CalendarLayout(
     onNextMonth: () -> Unit = {},
     onSelectDay: (LocalDate) -> Unit = {},
     onOpenNote: (Note) -> Unit = {},
+    onAddNote: () -> Unit = {},
     onCreateNote: () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -217,6 +244,7 @@ private fun CalendarLayout(
                     dayLabel = uiState.selectedDate?.format(dayFormatter),
                     notes = uiState.notesForSelectedDay,
                     onOpenNote = onOpenNote,
+                    onAddNote = onAddNote,
                 )
             }
         },

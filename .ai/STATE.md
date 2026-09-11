@@ -7,42 +7,45 @@
 > only the last three iterations verbatim under *Recent Iterations*; older ones become one-line rows
 > in *Iteration Index*, and each consumed escalation becomes one line in *Escalation Index*. Both
 > rows carry the checkpoint SHA that still holds the full text: `git show <sha>:.ai/STATE.md`.
+>
+> **This file is around 50 KB and the discipline above has not been applied for several
+> iterations.** T-009 is the cheapest place to fix it: fold everything older than the last three
+> iterations into one-line index rows. A file read in full at every Orient that grows with the run
+> taxes every iteration after it.
 
 ## Current
 
 - **Phase:** executing
 - **Loop Branch:** `loop/calendar-note-app`
-- **Next task:** **T-008** — add a note to the selected day. Its dependencies (T-007, T-003) are
-  both complete and it is the only unblocked task; T-009 waits on it, and T-009 is the last.
-  **T-008 finishes DoD criterion 11**, whose first half landed in T-007.
+- **Next task:** **T-009** — README, package tree, strings audit, and the human-inspection
+  checklist. **It is the last task**, and both its dependencies (T-005, T-008) are complete, so
+  after it this run is a DONE-candidate. **Every DoD criterion now has its implementation
+  landed**; what T-009 does is (a) verify criterion 14 against the final tree, and (b) collect the
+  human-inspection items every task has been accumulating into one checklist a person can work
+  through.
 
-  **Read `.ai/TASKS/T-003.md` first.** It had work removed by amendment **A-006** and its task
-  file says what is left — the future-date refusal is already implemented and tested in
-  `NoteRepositoryImpl.save`, so T-008 is the *second caller* reaching a guard that already holds,
-  not the task that builds it. Do not rebuild it.
+  **The (I) items are the substance of T-009, and they are scattered across nine task files.**
+  Each `.ai/TASKS/T-0*.md` ends with a "human inspection needed" list — 3, 5, 3, 5, 5, 8, 5 and 5
+  items respectively. Collect them; do not re-derive them. Several are *reference images awaiting
+  first approval*, which is a different ask from a device walkthrough, and the checklist should
+  keep those two apart because the first is "look at this picture once" and the second is "install
+  the app".
 
-  **Two things T-008 must not get wrong, in order:**
+  **Then the DONE-candidate rule (ENGINE.md §2, invariant 8).** T-009 writes documentation and a
+  checklist, so the *next* invocation after it can be the one that declares completion having
+  written none of the implementation. Do not declare `DONE` in the same iteration that finishes
+  T-009.
 
-  1. **The note must be dated to the *selected* day, not today.** Criterion 11 says so
-     explicitly. The Calendar's bottom-bar centre button currently creates a note for
-     `LocalDate.now()` — see the comment in `CalendarFragment.ComposeView`, which says out loud
-     that this is T-008's to change and why it reads a fresh clock rather than `uiState.today`.
-     T-008 adds an add-note action *beside the day's notes*; whether the centre button also
-     changes meaning on this screen is a decision to make deliberately and write down.
-  2. **T-008 must resolve part 2 of `knowledge/ISSUES.md` § *Leaving the Note editor either loses
-     the user's text or traps them on the screen*.** That entry names T-008 as the point where it
-     stops being cosmetic: a refusal becomes reachable by ordinary use the moment a note can be
-     filed against a picked day, and today both a refusal and a genuine write failure surface as
-     the same `we_are_sorry` toast — which invites the user to retry something that can never
-     succeed. Give the refusal its own message naming the date.
+  **Two things T-009 should check rather than assume:**
 
-  **What T-007 left in place for it.** `CalendarUiState.selectedDate` is the day to use and is
-  already guaranteed to be today-or-earlier by two enforcement points (`selectDate` refuses a
-  later day; `refreshToday` drops one a backwards clock overtook) — but it is **nullable**, and
-  "nothing picked" is a state the screen already draws. An add action must decide what it does
-  when nothing is picked; the honest options are hiding it or disabling it, not filing the note
-  under today. `CalendarDayNotes` is where such an action belongs visually, and it takes its day
-  label as a plain `String` so it stays screenshot-portable — keep that property.
+  1. **The README package tree against the real tree.** Iteration 10 added
+     `domain/model/FutureDateRefusedException.kt` and the review caught the README not listing it
+     — criterion 14 is a per-file claim, so count the files.
+  2. **The strings audit is a two-file job.** `res/values/strings.xml` has 61 keys and
+     `res/values-de/strings.xml` has 60; the difference is `app_name`, deliberately untranslated.
+     Criterion 14 also asks that every string added by this run is named for its own words — the
+     one pre-existing key that is not is already filed in `knowledge/ISSUES.md`, so do not
+     re-report it.
 - **DONE-candidate:** no
 - **DoD:** ✅ approved 2026-09-10, A5 overruled to title + body. Immutable from here — propose
   changes (Tier 3), never apply them.
@@ -64,11 +67,16 @@
   landed in iteration 9 and is mutation-checked at both layers (store and screen). Neither rule is
   finished being *defended*: any new write path must reach the same `save`, any new *list* must
   carry the ordering, and any test that carries either rule should be mutation-checked rather than
-  trusted — per assertion, not per test (iteration 6).
+  trusted — per assertion, not per test (iteration 6). **Rule 1 gained a second caller in
+  iteration 10 and was re-verified from it**, including that the boundary is inclusive of today
+  (six tests fail if it moves) and that the refusal now travels as a *typed* value
+  (`FutureDateRefusedException` inside `Outcome.Error.throwable`) so a screen can tell "I will not
+  store this" from "I could not store this" without reading message text.
 
 ### First thing the next iteration should do
 
-**`grep -r MUTATION app/src`, before anything else, if the working tree is dirty.** Iteration 9
+**`grep -r MUTATION app/src`, before anything else, if the working tree is dirty.** Iteration 10
+ran eleven mutations and the grep is what licensed that: it came back empty before the checkpoint. Iteration 9
 started clean and the check cost ten seconds; iteration 7 started dirty and the check is the only
 reason that iteration did not build on a deliberately-wrong `NoteViewModel.delete`. Iteration 7
 began by finding a *previous* invocation's mutation still applied in `NoteViewModel.delete` — the
@@ -121,7 +129,12 @@ every one of them earned by a real failure or a denied command:
   iteration 7);
 - **`ScreenshotScaffold` applies the theme itself**, so a `Color` passed in from a call site or a
   default argument is resolved against Material's *light* baseline — which is why its ground is an
-  enum (new in iteration 7).
+  enum (new in iteration 7);
+- **a stray reference image is told from a live one by the validation report, not by the
+  tracked/untracked split** — one `grep` on
+  `app/build/reports/screenshotTest/preview/debug/…<Class>Kt.html` lists the hashes actually used.
+  Iteration 10's review reasoned from the git index instead and reported a live image as dead (new
+  in iteration 10).
 
 ## Progress
 
@@ -135,8 +148,8 @@ every one of them earned by a real failure or a denied command:
 | T-005 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 61 warnings`) + `testDebugUnitTest --rerun-tasks` (**63 tests, 0 failures**) + `validateDebugScreenshotTest` (**8 cases, 0 failures**) all green, all re-run after the review fixes. **Eight mutations, each failing exactly the expected test(s)** — three of them aimed at the review's own fixes. **A-009 is discharged: `getNote` returns `Outcome<Note?>` and the `ISSUES.md` entry is deleted.** Fresh-context review: 10 findings — **1 Critical** (a tap on Save during the 500 ms exit animation put the deleted note back), 3 Major, 6 Minor; 8 fixed here, 2 filed. Full record in `.ai/TASKS/T-005.md`. **5 items await human eyes, one of which is criterion 7's perceptual clause** — see that file. |
 | T-006 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 64 warnings`) + `testDebugUnitTest --rerun-tasks` (**113 tests, 0 failures**) + `validateDebugScreenshotTest` (**16 cases, 0 failures**) all green, all re-run after the review fixes. **Seven mutations, each failing exactly the predicted tests — and three of them correctly failing nothing extra.** M7 proves the prior run's "selection never reached the grid" defect is now machine-defended, and that only the *grid-level* image can catch it. Fresh-context review: 16 findings — **1 Critical** (DoD criterion 9 was knowingly false across midnight, and the `ISSUES.md` entry filed for it refuted its own stated blocker), 2 Major, 13 Minor; 12 fixed here, 3 filed, 1 recorded as a product call. Full record in `.ai/TASKS/T-006.md`. **8 reference images await human eyes, one of which is criterion 9's perceptual clause** — see that file. |
 | T-007 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 64 warnings`, unchanged) + `testDebugUnitTest --rerun-tasks` (**129 tests, 0 failures**) + `validateDebugScreenshotTest` (**19 cases, 0 failures**) all green, all re-run after the review fixes and after every mutation was reverted. **Nine mutations, eight matching their prediction exactly.** M8 is the one to remember: deleting the empty-state branch — the prior run's defect 3, restored — leaves **all 129 unit tests green** and fails only two pictures, so criterion 11's empty-state clause has no other evidence. Fresh-context review: 7 findings — 0 Critical, **1 Major** (the heading named one day while the rows below were another day's, in the window between the tap and the query; fixed by making the mismatch unrepresentable), 6 Minor; **all seven fixed, none filed**. One of them was fixed *and refuted*: the review's German-truncation arithmetic was wrong, and the reference image is what says so. Full record in `.ai/TASKS/T-007.md`. **5 items await human eyes, three of them new reference images** — see that file. |
-| T-008 | pending — **reduced by A-006**, and now unblocked | — |
-| T-009 | pending | — |
+| T-008 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 64 warnings`, unchanged) + `testDebugUnitTest --rerun-tasks` (**138 tests, 0 failures**) + `validateDebugScreenshotTest` (**20 cases, 0 failures**) all green, all re-run after the review fixes and after every mutation was reverted. **Eleven mutations, ten matching their prediction exactly.** Two to remember: **M4** — untagging the refusal in the real `save` leaves **137 of 138 tests green** while every refusal in the app reverts to "please try again", because every ViewModel test builds its own tagged outcome through the fake; and **M10** — drawing the add action with no day picked leaves **all 138 unit tests green** and fails only pictures. M9 shows the future-date boundary is defended six ways, not one. Fresh-context review: 12 findings — 0 Critical, 6 Major, 6 Minor; **9 fixed, 2 accepted with reasons, 1 refuted** (a live reference image reported as a stray — see § Toolchain). The Major worth knowing: the new add action could push two blank editors onto the back stack, so all three navigation routes off this screen now go through one guarded door. **DoD criterion 11 is complete and criterion 10 is re-verified from its second caller.** Full record in `.ai/TASKS/T-008.md`. **5 items await human eyes, two of them new: the refusal message itself (no test in this project reaches `NoteFragment`) and whether the centre button should mean the picked day here (A-010).** |
+| T-009 | pending — **the last task**, both dependencies now complete | — |
 
 ## Assumptions
 
@@ -241,6 +254,17 @@ measured to nothing and vanished, and the preview was re-recorded at 312 × 200 
 a different filename, so `updateDebugScreenshotTest` wrote `…_fa3cecc9_0.png` and left the first
 behind. Only `fa3cecc9` is committed. A human can delete `c2297230` with the other four.
 
+Iteration 10 added **three** new orphans, and these are the first that were *tracked* before being
+orphaned — so they needed `git rm --cached` as well as listing:
+`DayNotesEmptyDay_…_aec4ce2e_0.png`, `DayNotesGermanHeading_…_fa3cecc9_0.png`,
+`DayNotesWithNotes_…_22d24b4b_0.png`, all under `CalendarScreenshotTestKt/`. Three day-notes
+previews grew to fit T-008's add-note row (180→260, 200→280, 320→400), and a reference filename
+hashes the preview's parameters. The four live images are committed. **The eight strays are now
+listed in one place — `knowledge/ISSUES.md` § the stray entry — rather than split between there and
+here**, because a human deleting them wants one list, and because the tracked/untracked split turned
+out to be a *misleading* way to tell a stray from a reference: see the refuted review finding in
+`.ai/TASKS/T-008.md` and the one-command test in `knowledge/PROJECT.md`.
+
 Iteration 6 added **no** new orphans and left nothing uncommitted. It did leave one ignored file:
 the review subagent wrote **`build-t004-review.log`** at the repository root. It is git-ignored, so
 it never appears in `git status` and cannot be mistaken for debris, and `rm` is denied — a human can
@@ -251,6 +275,69 @@ if the dirt is *this run's*. Treat the paths above as clean; anything else untra
 genuine debris to salvage or revert. Do not `git clean` them.
 
 ## Recent Iterations
+
+### Iteration 10 — 2026-09-11 — T-008, a note on the picked day, and a refusal that says why
+
+**Did:** T-008, the last feature task. The Calendar's day section gained an add-note action dated
+to the **selected** day (DoD criterion 11), and a refused save stopped looking like a failed one.
+Eleven mutations, a fresh-context review, and all four commands green: 138 unit tests, 20
+screenshot cases, `0 errors, 64 warnings`, `assembleDebug` successful.
+
+**The three decisions, in full in `.ai/TASKS/T-008.md` § Decisions:**
+
+1. **The centre bottom-bar button now means the picked day on this screen** and today everywhere
+   else (amendment **A-010**). Two add affordances on one screen filing notes on two different days
+   is a failure nobody can see at the moment it happens. **A11 was read before implementing and it
+   is Home-scoped** — had it not been, this would have been a Tier-3 proposal, not an amendment.
+2. **A picked day the clock has overtaken is handed to the store as it is**, not swapped for
+   today. Swapping files a note on a day nobody chose; re-checking the rule in the UI puts
+   `DOMAIN.md` rule 1 in two places. So the store refuses it and the editor names the day.
+3. **The refusal is tagged by type, not by message** — a never-thrown `FutureDateRefusedException`
+   inside `Outcome.Error.throwable`. `Outcome.Success` carrying a refusal would have read better
+   against `getNote`'s existing three-answer shape, but the DoD's evidence row for criterion 10
+   says "returns an error outcome", and the DoD is immutable.
+
+**Learned, and all three are in `.ai/PLAN.md` or `knowledge/PROJECT.md` now:**
+
+- **A fake can express a contract without verifying it.** Mutation M4 removed the tag from the real
+  `NoteRepositoryImpl.save`: **137 of 138 tests stayed green** while every refusal in the running
+  app reverted to "something went wrong, please try again", because every `NoteViewModel` refusal
+  test builds its own tagged outcome through the fake. One repository test was the whole join. Where
+  a fake hands back what the implementation is supposed to construct, test that it constructs it.
+- **`Fragment` and `@Composable` are both "no test can see this".** Criterion 11's decision was
+  heading for a navigation lambda; moved to `CalendarViewModel.dateForNewNote()` it is four tests.
+  Ask which class a decision is written in *before* writing it, not after.
+- **A live reference image is identified by the validation report, not by the git index.** The
+  review reported a live tracked PNG as a stray — which would have meant criterion 13 passing here
+  and failing on a clean clone — and one `grep` of
+  `app/build/reports/screenshotTest/preview/debug/…<Class>Kt.html` refuted it in ten seconds.
+  **That is the second consecutive iteration where a confident review finding about images was
+  wrong and the tooling settled it** (iteration 9's was German truncation arithmetic).
+
+**Also:** the review's sharpest finding was a *dead assertion* in the engine's own new tests — both
+refusal tests opened the editor on the same day the refusal named, so the ViewModel's documented
+choice between the two sources had no evidence. Fixed, then verified by M11, which fails now and
+would have passed before. Eleven mutations were not enough to find it; a reader was.
+
+**Reconciled:** one operational fact → `knowledge/PROJECT.md` (the validation report names the live
+reference image, so a stray is identified in one `grep`), plus the test count. **One `ISSUES.md`
+entry halved** — the editor-exits entry lost part 2, which this task resolved, and kept part 1
+(text lost on the way out), which no criterion asks for. **One widened**: the stray-image entry now
+lists eight files rather than three, including the first three that were *tracked* before being
+orphaned. `PLAN.md` gained two rules — a fake can express a contract without verifying it, and
+`Fragment`/`@Composable` are both "no test can see this" — and its task graph closed T-008.
+Amendment **A-010** logged for the bottom-bar decision. This iteration also folded iteration 7 out
+of *Recent Iterations* into the index, which is what this file's own header asks for.
+
+**Not done, on purpose:** the add affordance is not re-checked against the real clock inside the
+component — that would put `DOMAIN.md` rule 1 above the repository, and the refusal chain exists
+precisely so it does not have to be. No `@PreviewTest` of the *whole* Calendar screen, so the
+"add action reaches the screen" wiring is still defended only at component level; iteration 8's
+lesson says an assembly image is what catches a wiring bug, and that is a T-009-sized job rather
+than a passenger here. `STATE.md` is still oversized — one iteration was folded, not the four that
+should be.
+
+**Checkpoint:** see the `loop(T-008)` commit.
 
 ### Iteration 9 — 2026-09-11 — T-007, the day's notes, and a picture that overruled the review
 
@@ -387,81 +474,13 @@ genuine debris to salvage or revert. Do not `git clean` them.
   ships and Germany starts weeks on Monday.
 - **Checkpoint:** see the `loop(T-006)` commit.
 
-### Iteration 7 — 2026-09-10 — T-005, delete lands, and the debris was hiding a live mutation
+### Iteration 7 — folded into the Iteration Index below
 
-- **Started at Recover, and the debris was booby-trapped.** The tree held most of T-005 — the
-  repository change, the ViewModel, the sheet, the screenshot case, both test files, strings in two
-  locales — all stamped 15:06–15:20 against a 15:00 checkpoint with `.ai/` untouched, so a previous
-  invocation had died mid-task. That much matched iterations 3 and 5. What was new:
-  `NoteViewModel.delete` contained `delete(note = note.copy(id = 99L))` under a comment reading
-  `MUTATION M7`. **The invocation had died between applying a mutation and reverting it**, and the
-  surrounding work was coherent enough that building on it without reading it would have shipped a
-  delete that removes the wrong row. Reverted, then re-applied deliberately to confirm the test
-  catches it (it does — the invocation that applied it never got to see the result). → `PLAN.md`,
-  and the first line of *First thing the next iteration should do*.
-- **Did:** `getNote` → `Outcome<Note?>` (the A-009 prerequisite); `delete` on the repository, with
-  `NoteDao.delete` now returning a row count; `askToDelete`/`dismissDelete`/`delete` +
-  `NoteProblem` on the ViewModel; `NoteDeleteConfirmSheet`; the top-bar delete action; a
-  `@PreviewTest` and its reference image; eight strings in two locales; 22 new unit tests; README.
-- **Learned:**
-  - **A crashed invocation can leave the tree *deliberately* wrong.** Every previous Recover
-    assumed debris was merely incomplete — a half-written feature, salvageable by reading it. A
-    mutation is different in kind: it is a correct-looking edit whose whole purpose is to be wrong,
-    and it survives a build and most of a test suite. The cheap fix is a convention rather than a
-    rule: **mark every mutation with the literal word `MUTATION` and grep before checkpointing**,
-    which turns a subtle recovery hazard into a ten-second check.
-  - **The review's Critical was the exact mirror of the defect T-003 was fixed for, and the
-    argument against it was already written in the file.** A tap on Save during the 500 ms exit
-    animation after a delete re-inserted the deleted row at the top of Home. The `saving` guard's
-    KDoc, four functions higher, already explained that the composition keeps taking touches for
-    the length of the exit animation — the reasoning was present, correct, and simply not applied
-    to the new path. **Third iteration running that the defect sat in the most confidently
-    documented area.** The refinement worth carrying: when adding a second path beside a guarded
-    one, re-read the guard's *justification*, not just the guard — and treat an asymmetry between
-    two sibling paths as a question, not a style choice.
-  - **A comment that claims more than the code does is a defect with a delay fuse.** Two Majors
-    were exactly this shape: `delete`'s KDoc argued that Room silently matching no row is the
-    danger — true of *every* absent id — while the code guarded only the `UNSAVED_ID` sentinel;
-    and `askToDelete` had no guard at all while the KDoc beside it described the discipline. Both
-    were fixed by making the code as broad as the sentence, not by narrowing the sentence.
-  - **`ScreenshotScaffold` applies the theme, so a colour cannot be handed to it.** Fixing a real
-    finding — the confirmation was rendered on `background` when the sheet paints `surface` —
-    nearly introduced a worse one, because `ground: Color = MaterialTheme.colorScheme.background`
-    evaluates in the *caller's* composition, outside the theme, against Material's **light**
-    baseline. That reads as a no-op and would have re-recorded every reference in the project on
-    white. The parameter is an enum resolved inside the theme instead. → `knowledge/PROJECT.md`.
-  - **The engine is a single `claude -p` invocation**, found by reading `.loop/run.ps1` while a
-    background reviewer was still running and ending the turn looked like a reasonable way to wait.
-    It is not: the turn ending *is* the process exiting, and the Runtime would have counted a crash
-    and thrown the iteration away. It is also the likeliest explanation for the two earlier deaths
-    in this run. → `knowledge/PROJECT.md`.
-  - **A failing Gradle task aborts the ones after it, and the stale XML reads as a pass.** After
-    the review fixes, `validateDebugScreenshotTest` failed (expected — the ground colour had
-    changed on purpose) and `testDebugUnitTest` never ran, but its result files were still there
-    from the previous invocation reporting `failures="0"`. The tell was that the counts had not
-    gone *up* after two tests were added. → `knowledge/PROJECT.md`.
-  - **The reviewer found three tests that could not fail for the reason they stated** — one
-    asserting a field's declared default, one never checking the pre-state it cleared, one
-    returning at a different guard than the one its comment named. Iteration 6 learned this from a
-    reader too. It is now clear that **mutation testing and careful reading catch different
-    species**: mutation finds assertions the code can't break, reading finds assertions that never
-    described the code. Running both is not redundancy.
-- **Reconciled:** five operational facts → `knowledge/PROJECT.md` (the `Outcome<T?>` three-answer
-  convention and its deliberate divergence from `.claude/repository-layer.md`; the row-count rule
-  for writes that may affect nothing; the `-p` invocation model; the aborted-task/stale-XML trap;
-  the `ScreenshotScaffold` ground trap), plus the test count. **One `ISSUES.md` entry deleted** —
-  the failed-read defect, resolved, which discharges A-009 — one narrowed (the Note *editor* is
-  still unpinned; the confirmation now is not), and **two added** (a sheet dismissed by its own
-  button does not animate out; the failed-open exit is a one-way door). `PLAN.md`'s mutation rule
-  gained the marker convention and its task graph closed T-005. No new amendment: the plan's shape
-  did not change.
-- **Not done, on purpose:** `CoreBottomSheet`'s dismissal animation stays as it is — it is a
-  shared primitive with two other callers and no reference image to catch a regression, so it is
-  its own change, not a passenger on this one. The `Gone`/`Unreadable` one-way door stays too: the
-  real fix needs the Fragment to observe the pop, which nothing in this app does yet. Both filed
-  rather than deferred silently. No `@PreviewTest` for `NoteEditor` — still blocked on the same
-  host-locale lock as the populated Home row.
-- **Checkpoint:** see the `loop(T-005)` commit.
+Its full entry is in the `loop(T-005)` checkpoint: `git show 124ce87:.ai/STATE.md`.
+
+<!-- Folded in iteration 10 to honour this file's own three-iterations-verbatim rule. The lessons
+     that are still live were already copied into knowledge/PROJECT.md and .ai/PLAN.md when they
+     were learned; the index row below carries the summary. -->
 
 ## Iteration Index
 
@@ -470,6 +489,7 @@ genuine debris to salvage or revert. Do not `git clean` them.
 
 | Iteration | Checkpoint | What happened |
 |---|---|---|
+| 7 | `124ce87` | T-005 — delete behind a confirmation, and `getNote` → `Outcome<Note?>` (discharging A-009). **Started at Recover on booby-trapped debris:** `NoteViewModel.delete` held `delete(note = note.copy(id = 99L))` under a comment reading `MUTATION M7` — a previous invocation had died between applying a mutation and reverting it, and the surrounding work was coherent enough that building on it would have shipped a delete that removes the wrong row. That is the origin of the `MUTATION`-marker convention and of the grep at the top of this file. Six lessons still live, all copied where they are used: **a crashed invocation can leave the tree *deliberately* wrong**; **the review's Critical was the mirror of the defect T-003 was fixed for and the argument against it was already in the file four functions higher** (a tap on Save during the 500 ms exit animation put the deleted note back) — when adding a second path beside a guarded one, re-read the guard's *justification*, not just the guard; **a comment that claims more than the code does is a defect with a delay fuse** (two Majors of exactly that shape); **`ScreenshotScaffold` applies the theme, so a `Color` parameter resolves against Material's light baseline**; **the engine is a single `claude -p` invocation**, so a background subagent must be waited on inside the turn; **a failing Gradle task aborts the ones after it and the stale XML reads as a pass** — the tell is a test count that did not go up. Also: mutation testing and careful reading catch different species of dead assertion, and running both is not redundancy. |
 | 6 | `d68d2ac` | T-004 — Home rows became clickable and the open-edit-resort loop closed. Clean start. Four lessons still live: **a shared navigation debounce is the wrong instrument for "this control must not navigate twice"** — `NavigationUtil.canNavigate()` is one process-wide 800 ms clock and `BottomBarElement` arms it even for a tab tap that goes nowhere, so using it on a list row leaves every row dead for 800 ms after any tab tap; **ask the graph where you are** (`currentDestination?.id == R.id.homeFragment`) instead, which has no dead window because `navigate` moves `currentDestination` synchronously. **One mutation per test is not enough** — a new test asserted that an edit does not re-file a note onto another day, against a fixture already dated to the clock's today, so the assertion could not fail and survived three mutations before a *reader* found it; mutate toward each assertion a test claims to carry. **Making a dead branch reachable is a change worth reviewing as one** — nothing in `getNote` was touched, and clickable rows still made a real defect live (a failed read opened a blank editor whose save *inserted* a duplicate), filed as amendment **A-009** and made a prerequisite of T-005. And **a promise written into a test file comes due**: `@Preview(locale = "en")` pins a row's *language* but not its *format*, because `ofLocalizedDate` follows the JDK's CLDR data and this project pins no toolchain. Two of the three Majors were about what the diff did to things it did not touch. |
 | 5 | `e50bcb1` | T-003 — the Note editor, `save`/`getNote` with an injected `Clock`, the bottom bar's centre button wired on every screen. **Started at Recover** on a coherent partial edit to `Note.kt`, verified before being built on. Five lessons still live: **a domain rule belongs to the task that creates its first write path, not the task that creates its first tempting caller** — the future-date rule moved from T-008 to here the moment `save` existed and accepted any date it was handed (amendment **A-006**), which is why **DoD criterion 10 was satisfied four tasks early**; the same reasoning shrank T-004 (**A-007**); **a test is not evidence until it has been made to fail**, first proved here with three mutations failing exactly 3, 1 and 1 tests; **`android.util.Log` on an error path made that path untestable** against the stub `android.jar`, fixed by `isReturnDefaultValues = true` (**A-008**) at the cost that a `Bundle`/`Intent`/`Uri` can never be unit-tested here; and **a ViewModel *is* testable on this toolchain** via `Dispatchers.setMain` + an unconfined dispatcher, which nothing had tried. Both review Criticals sat in the most confidently documented code: the editor was unusable under the keyboard (nothing in `app/src/main` handled IME insets) while `NoteEditor`'s KDoc claimed to prevent exactly that, and a double tap on Save wrote the note twice. Also: **a README can invent a domain rule**, and doing so routes around `DOMAIN.md` being human-owned. |
 | 4 | `627d25a` | T-002 — the `notes` table, the store above it, and Home repointed off the demo post list. Clean start. Four lessons, all still live: **a Room migration cannot be tested here but can be made right by construction** — copy Room's own `CREATE TABLE` out of the generated `AppDatabase_Impl` rather than composing one by eye, which had already produced a `DEFAULT ''` the entity does not declare (amendment A-005); **a fake DAO only proves something if the fake refuses to help** — `FakeNoteDao` returns rows in deliberately jumbled construction order, which is what moves the "newest first" promise off a SQL string and onto the repository; **`git reset`/`git restore` are denied and `git rm --cached` is the unstage**, found by `git add -A app/src` sweeping up the three orphan PNGs; and **a locale-correct date is not `Locale.getDefault()`** but `LocalConfiguration.current.locales[0]`, because this app has its own language picker. The review's two Majors were **both in `knowledge/`, not in the code** — a stale `AppDatabase version = 2` line that would have made the next task bump to 3 twice, and an `ISSUES.md` entry asking for two string keys this task had just deleted: the reconciliation step is part of the work, and a stale line in a file read every iteration is a defect with a delay fuse. |

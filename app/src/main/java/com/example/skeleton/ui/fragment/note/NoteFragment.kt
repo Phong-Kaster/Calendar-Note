@@ -38,6 +38,8 @@ import com.example.skeleton.ui.theme.customizedTextStyle
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigateUp
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 /**
  * The Note screen: write a new note, or edit one that already exists.
@@ -120,6 +122,34 @@ class NoteFragment : CoreFragment() {
                 showToast(message = getString(R.string.we_are_sorry))
                 viewModel.consumeSaveFailed()
             }
+        }
+
+        // A refused save is not a failure, and it gets its own sentence. "Something went wrong,
+        // please try again" — what the effect above says — is an instruction that cannot work
+        // here: the note is dated a day that has not arrived, this screen has no date control, and
+        // every retry is refused identically. So the message names the day instead, which is the
+        // one piece of information that lets the user work out what to do.
+        //
+        // The user **stays on the screen with their text**, unlike `NoteProblem.Gone` and
+        // `Unreadable` below. There is still a note here and it is still savable — on a day that
+        // exists.
+        LaunchedEffect(uiState.saveRefusedDate) {
+            val refusedDate = uiState.saveRefusedDate ?: return@LaunchedEffect
+
+            // The app's own language, not the device's — this app has a picker in Settings, and
+            // `Locale.getDefault()` answers for the phone. A localised style rather than a
+            // pattern, because word order and the position of the year differ per language.
+            val locale = resources.configuration.locales[0]
+
+            showToast(
+                message = getString(
+                    R.string.a_note_can_only_be_written_on_today_or_an_earlier_day,
+                    refusedDate.format(
+                        DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale),
+                    ),
+                ),
+            )
+            viewModel.consumeSaveRefused()
         }
 
         LaunchedEffect(uiState.problem) {

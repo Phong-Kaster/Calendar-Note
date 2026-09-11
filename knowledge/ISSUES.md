@@ -208,41 +208,38 @@
 - **Do not:** record a reference image of the editor as it stands. It would be host-locked on the
   date line, and a case that fails for the wrong reason teaches the next person to re-record.
 
-### Leaving the Note editor either loses the user's text or traps them on the screen
+### Leaving the Note editor loses the user's text
 
-- **What is wrong:** two gaps at the editor's exits, neither claimed to be handled anywhere.
-  1. **Nothing is saved on the way out.** `onBack` is wired only to the top bar's arrow, and it
-     pops without asking. The hardware/gesture back button bypasses the layout entirely, and
-     process death takes the text with it — there is no `SavedStateHandle` and no
-     `rememberSaveable`. "Typed 300 words, swiped back, lost them" is a one-gesture data loss.
-     (Rotation *is* handled — `NoteViewModel.openNote` refuses to run twice — and tested.)
-     **Since T-004 this also loses *edits*, which is worse in kind than losing a new note.** A
-     discarded new note never existed, so "I never saved it" matches what the user sees; a
-     discarded *edit* returns them to Home showing the note with its old text, its old position and
-     its `updatedAt` unmoved — a screen indistinguishable from a save that quietly did nothing.
-  2. **A refused save has no way forward.** Both a refusal and a genuine write failure surface as
-     the same `we_are_sorry` toast ("something went wrong, please try again"), and retrying a
-     *refusal* can never succeed. The editor exposes no date control, so the user cannot change the
-     thing that was refused.
-- **Why it is still open:** no DoD criterion asks for either. A discard confirmation and an autosave
-  are different product decisions with different failure modes (autosave creates empty notes), and
-  choosing one is not the engine's call. Part 2 is currently reachable only if the device clock
-  moves backwards between opening the editor and saving — T-004 re-checked this and it did *not*
-  change, because an existing note's date is always today or earlier, so re-saving it can never be
-  refused. Part 1 was re-examined in T-004 and deliberately left as it is; see that task file.
-- **What would resolve it:** for part 1, a decision — confirm-on-discard, or save-on-leave, or an
-  explicit "notes are kept only when you tap Save". For part 2, distinguish refusal from failure in
-  the outcome and give the refusal its own message naming the date.
-- **When it stops being cosmetic:** **T-008.** That task opens this same editor on a day the user
-  picked on the calendar, so a refusal becomes reachable by ordinary use rather than by a clock
-  change, and part 2 must be resolved there.
-- **Full record:** the fresh-context review of T-003, findings 5 and 6 — find the checkpoint with
-  `git log --oneline --all --grep='loop(T-003)'`.
-- **Do not:** add an autosave to make part 1 go away. A note created because somebody opened a
-  screen and left is worse than one they lost, and it breaks the "newest first" list with rows
-  nobody wrote.
+> **This entry used to have a second half — a refused save and a failed write showing the same
+> "please try again" toast. T-008 resolved that and it has been deleted from here.** A refusal now
+> travels as a `FutureDateRefusedException` inside `Outcome.Error.throwable`, reaches
+> `NoteUiState.saveRefusedDate`, and the editor names the day that was refused. What remains below
+> is only the text-loss half, which no DoD criterion asks for.
 
-### Screenshot references are exact-pixel and host-locked, and three orphaned ones are sitting in the tree
+- **What is wrong:** **nothing is saved on the way out.** `onBack` is wired only to the top bar's
+  arrow, and it pops without asking. The hardware/gesture back button bypasses the layout entirely,
+  and process death takes the text with it — there is no `SavedStateHandle` and no
+  `rememberSaveable`. "Typed 300 words, swiped back, lost them" is a one-gesture data loss.
+  (Rotation *is* handled — `NoteViewModel.openNote` refuses to run twice — and tested.)
+  **Since T-004 this also loses *edits*, which is worse in kind than losing a new note.** A
+  discarded new note never existed, so "I never saved it" matches what the user sees; a discarded
+  *edit* returns them to Home showing the note with its old text, its old position and its
+  `updatedAt` unmoved — a screen indistinguishable from a save that quietly did nothing.
+- **Why it is still open:** no DoD criterion asks for it. A discard confirmation and an autosave are
+  different product decisions with different failure modes (autosave creates empty notes), and
+  choosing one is not the engine's call. It was re-examined in T-004 and deliberately left as it
+  is; see that task file.
+- **What would resolve it:** a decision — confirm-on-discard, or save-on-leave, or an explicit
+  "notes are kept only when you tap Save".
+- **Full record:** the fresh-context review of T-003, finding 5 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-003)'`. The half that was resolved is recorded in
+  `.ai/TASKS/T-008.md`; find that checkpoint with
+  `git log --oneline --all --grep='loop(T-008)'`.
+- **Do not:** add an autosave to make this go away. A note created because somebody opened a screen
+  and left is worse than one they lost, and it breaks the "newest first" list with rows nobody
+  wrote.
+
+### Screenshot references are exact-pixel and host-locked, and eight orphaned ones are sitting in the tree
 
 - **What is wrong:** two sharp edges on the reference-image lifecycle, both found in iteration 3.
   1. **Validation is exact-pixel against images produced on one machine.** No
@@ -255,19 +252,37 @@
      thing that makes it green again is `updateDebugScreenshotTest`, which is exactly the command
      nobody is allowed to reach for. That is the trap: a criterion whose only escape hatch is
      forbidden.
-  2. **Three orphaned reference PNGs are untracked in
-     `app/src/screenshotTestDebug/reference/…/ThemeScreenshotTestKt/`:**
+  2. **Eight orphaned reference PNGs are sitting in
+     `app/src/screenshotTestDebug/reference/com/example/skeleton/screenshot/`.** They are earlier
+     renderings whose previews then changed `name`/`widthDp`/`heightDp`, which changes the filename
+     hash — the plugin writes a new file and leaves the old one. Under `ThemeScreenshotTestKt/`,
+     untracked:
      `PaletteAccents_Palette - accents_479b9379_0.png`,
-     `PaletteSurfaces_Palette - surfaces_56c32381_0.png`, and
-     `ScreenShell_Screen shell_4c69c6b2_0.png`. They are earlier renderings whose previews then
-     changed `name`/`widthDp`/`heightDp`, which changes the filename hash — the plugin writes a new
-     file and leaves the old one. They were deliberately **not** committed, so the tracked reference
-     set is exactly the six live images, but the files are still on disk.
+     `PaletteSurfaces_Palette - surfaces_56c32381_0.png`,
+     `ScreenShell_Screen shell_4c69c6b2_0.png`.
+     Under `CalendarScreenshotTestKt/`, untracked:
+     `BottomBarTabGermanLabel_Bottom bar tab - longest German label_e7c93008_0.png`,
+     `DayNotesGermanHeading_Day notes - longest German heading_c2297230_0.png`.
+     Under `CalendarScreenshotTestKt/`, **tracked** — orphaned by T-008, which grew three previews
+     to fit the new add-note row, and removed from the index with `git rm --cached` in that
+     checkpoint so the tracked set stays exactly the live images:
+     `DayNotesEmptyDay_Day notes - a day with nothing on it_aec4ce2e_0.png`,
+     `DayNotesGermanHeading_Day notes - longest German heading_fa3cecc9_0.png`,
+     `DayNotesWithNotes_Day notes - a day with notes on it_22d24b4b_0.png`.
+
+     **The live set is intact — check before assuming otherwise.** T-008's review suspected the
+     tracked `BottomBarTabGermanLabel_…_967f30ea_0.png` was itself a dead file with the live one
+     untracked, which would have meant `validateDebugScreenshotTest` passing here and failing on a
+     clean clone. It is not: the validation report names the reference it used, so
+     `grep -o '[a-f0-9]\{8\}_0\.png'
+     app/build/reports/screenshotTest/preview/debug/com.example.skeleton.screenshot.<Class>Kt.html`
+     lists the live hashes for a class in one command. That is the cheap way to tell a stray from a
+     reference, and it is how the eight above were separated from the twenty that are live.
 - **Why it is still open:** the engine cannot delete files. `rm` is denied by the permission layer
   (`POLICIES.md` rates deletion high-risk and no deletion capability has been granted), and
   ENGINE.md §13 forbids routing around a denied action. Pinning a JDK toolchain is a build-
   configuration change with its own blast radius and does not belong inside an unrelated task.
-- **What would resolve it:** a human deletes the three files listed above; and either a
+- **What would resolve it:** a human deletes the eight files listed above; and either a
   `screenshotTests { imageDifferenceThreshold = … }` block is added with a justified number, or a
   `jvmToolchain` is pinned, or the references are documented as host-locked with the generating
   JDK/OS/AGP recorded next to them. Delete this entry when the strays are gone and one of those

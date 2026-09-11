@@ -205,6 +205,7 @@ com/example/skeleton/
 │   │   └── BottomBarDestination.kt
 │   ├── model/                              #   Models the UI and repositories agree on
 │   │   ├── CalendarMonth.kt                #     One month laid out as a Sunday-first grid of squares
+│   │   ├── FutureDateRefusedException.kt   #     The no-future-dates rule saying no, carried as a value
 │   │   ├── Note.kt                         #     A note, plus the displayTitle fallback a row draws
 │   │   ├── Post.kt
 │   │   └── UserAction.kt

@@ -234,6 +234,29 @@ class CalendarViewModel(
 
         _uiState.value = _uiState.value.copy(selectedDate = date)
     }
+
+    /**
+     * The day a note started from this screen belongs to: **the day the user picked.**
+     *
+     * DoD criterion 11 — the selected day, not today. It lives in the ViewModel rather than in the
+     * Fragment's navigation lambda because a Fragment cannot be unit-tested on this toolchain, and
+     * a decision carrying a criterion should not be the one place no test can reach.
+     *
+     * Two deliberate choices, argued out in `.ai/TASKS/T-008.md`:
+     *
+     * - **A picked day is handed over as it is, even if the clock has since moved backwards and
+     *   left it in the future.** Swapping it for today would file the note on a day nobody chose,
+     *   invisibly; re-checking the rule here would put a second copy of it above the repository,
+     *   where `knowledge/DOMAIN.md` says it must not live. So the store refuses it and the editor
+     *   names the day.
+     * - **Nothing picked falls back to today, read fresh from the clock** rather than from
+     *   `uiState.today`, which can be a day behind on a screen left open across midnight. Only the
+     *   bottom bar's centre button can arrive here in that state; the action beside the day's
+     *   notes is not drawn without a day to name.
+     *
+     * @return the day to open the note editor on.
+     */
+    fun dateForNewNote(): LocalDate = _uiState.value.selectedDate ?: LocalDate.now(clock)
 }
 
 /** The shortest the Calendar screen will ever wait before looking at the clock again. */
