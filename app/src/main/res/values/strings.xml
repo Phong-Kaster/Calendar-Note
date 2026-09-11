@@ -70,4 +70,6 @@
     <string name="weekday_short_thu">Thu</string>
     <string name="weekday_short_fri">Fri</string>
     <string name="weekday_short_sat">Sat</string>
+    <string name="nothing_written_on_this_day_yet">Nothing written on this day yet</string>
+    <string name="pick_a_day_to_see_its_notes">Pick a day to see what is on it</string>
 </resources>

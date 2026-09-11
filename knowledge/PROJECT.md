@@ -11,7 +11,7 @@
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 113 tests as of iteration 8. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — iteration 2. `BUILD SUCCESSFUL`; 129 tests as of iteration 9. Read the counts from `app/build/test-results/testDebugUnitTest/TEST-*.xml` — the console prints nothing when everything passes |
 | Lint | `./gradlew :app:lintDebug` | **yes** — iteration 2. `BUILD SUCCESSFUL`, `0 errors, 56 warnings` (**it failed on the pristine baseline — see below**) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — iteration 3. `BUILD SUCCESSFUL`; ~15s. Read the count from `app/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml` |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes** — iteration 3. Writes PNGs under `app/src/screenshotTestDebug/reference/…` |
@@ -49,6 +49,14 @@ at all: `ScreenshotScaffold` insets its content by 12dp on every side, so the ta
 **Size a preview as the component's real size *plus* the scaffold's 24dp in each direction**, and
 look at the first recorded image before trusting it. A reference that silently drops the thing it
 was taken for is worse than no reference — it passes validation for ever while defending nothing.
+
+**It happened again in iteration 9**, which is why this entry is worth its length. A day-notes case
+was recorded at `heightDp = 120` to size a heading, and came back as that heading above empty
+black — the empty-state message below it had been measured to nothing. The heading was what the
+case was *for*, so everything the author was looking at was correct; the thing that vanished was
+the part they were not thinking about. **Add up the whole component's height, not the height of the
+part you care about** — and when the number is uncertain, record generously, because a preview
+that is too tall costs black pixels and a preview that is too short costs the evidence.
 
 ### The engine cannot delete files here
 

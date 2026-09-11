@@ -627,6 +627,12 @@ private class FakeNoteRepository(
 
     override val notesFlow: Flow<List<Note>> = flowOf(listOfNotNull(stored))
 
+    // The Note screen never reads a whole day — it opens one note by id — so this is here to
+    // satisfy the interface and nothing more. It still filters rather than returning everything,
+    // because a fake that lies about its contract is a trap for the next test written against it.
+    override fun notesForDateFlow(date: LocalDate): Flow<List<Note>> =
+        flowOf(listOfNotNull(stored).filter { note -> note.date == date })
+
     override suspend fun getNote(id: Long): Outcome<Note?> {
         if (readFails) return Outcome.Error(message = "the store would not answer")
         return Outcome.Success(stored?.takeIf { note -> note.id == id })

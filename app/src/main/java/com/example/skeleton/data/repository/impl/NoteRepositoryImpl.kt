@@ -59,6 +59,27 @@ class NoteRepositoryImpl(
         }
         .flowOn(ioDispatcher)
 
+    override fun notesForDateFlow(date: LocalDate): Flow<List<Note>> =
+        // `toEpochDay()` and not a formatted string: the column is a plain `Long`, and the DAO's
+        // `WHERE date = :epochDay` compares numbers. This one line is the whole of what the
+        // repository contributes to the query, which makes it the whole of what can go wrong —
+        // an off-by-one here shows yesterday's notes under today's heading, with every other
+        // test in the app still green.
+        noteDao.observeByDate(epochDay = date.toEpochDay())
+            .map { entities ->
+                entities
+                    .map { entity -> entity.toDomain() }
+                    .sortedWith(NEWEST_FIRST)
+            }
+            // Same reasoning as `notesFlow` above: a database that will not read must reach the
+            // screen as an empty day, not as an exception thrown into a collector that catches
+            // nothing.
+            .catch { throwable ->
+                Log.e(TAG, "notesForDateFlow($date) failed; showing an empty list", throwable)
+                emit(emptyList())
+            }
+            .flowOn(ioDispatcher)
+
     override suspend fun getNote(id: Long): Outcome<Note?> = withContext(ioDispatcher) {
         try {
             // A row that is not there is a `Success(null)`, not an error. The database answered

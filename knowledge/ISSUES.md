@@ -16,6 +16,38 @@
 
 <!-- Newest first. Delete resolved entries outright rather than marking them done. -->
 
+### A note with no title prints its first line twice in every list row
+
+- **What is wrong:** `Note.displayTitle` falls back to the first non-blank line of the body when
+  the title is blank, and the row then *also* draws the body underneath. For an untitled note
+  short enough to fit in one line — which is most quick notes — the user reads the same sentence
+  twice, once bold and once grey.
+- **Where:** `ui/component/NoteSummaryRow.kt` (the heading at the top, the body at the bottom),
+  reading `domain/model/Note.kt`'s `displayTitle`. Affects **both** lists: Home and the Calendar
+  screen's day section.
+- **Why it matters:** it is small, and it is on the app's two busiest surfaces. It also reads as a
+  rendering fault rather than as a choice — a duplicated line looks like a component drawing the
+  same field twice by mistake, which is very nearly what it is.
+- **Visible in a committed reference image.** `CalendarScreenshotTest.DayNotesWithNotes`'s second
+  card is exactly this case. **A passing validation of that image is the wart holding still, not
+  the wart being fixed** — and the image is worth keeping either way, because the fallback heading
+  itself is right and needs defending.
+- **Why it is still open:** the obvious fix is wrong. Suppressing the body whenever the title is
+  blank also hides lines 2–3 of a *long* untitled note, which is where the preview earns its keep;
+  dropping just the first line of the body makes the row's text start mid-thought. Which of those
+  a reader prefers is a design call, and no DoD criterion asks for any of them — criterion 4 asks
+  only that the row show "the title, or — when the title is blank — the first line of its body",
+  which it does.
+- **What would resolve it:** a decision. Either (a) when the heading came from the body, draw the
+  body starting after that first line, (b) suppress the body entirely for untitled notes and
+  accept the shorter row, or (c) leave it and say so. Re-record `DayNotesWithNotes` with whichever
+  it is and delete this entry.
+- **Full record:** the fresh-context review of T-007 — find the checkpoint with
+  `git log --oneline --all --grep='loop(T-007)'`.
+- **Do not:** fix it by making `displayTitle` return the title only. Its fallback is DoD criterion
+  4's own wording, and an untitled note would then draw the `Untitled note` placeholder over a
+  body that plainly says what the note is.
+
 ### The bottom bar's selected-tab label truncates in German
 
 - **What is wrong:** a third tab (Calendar) halved every tab slot in `CoreBottomBar` — roughly

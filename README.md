@@ -32,7 +32,9 @@ Two things at once:
 | Month calendar with today marked and previous/next month navigation | ✅ built |
 | Future days on the calendar are visibly disabled and cannot be picked | ✅ built |
 | A dot on every calendar day that already has notes on it | ✅ built |
-| Tap a day to see that day's notes, and add a note to that day | 🚧 planned |
+| Tap a day to see that day's notes under the grid, with an explicit message when it has none | ✅ built |
+| Tap one of that day's notes to open it in the editor | ✅ built |
+| Add a note dated to the day picked on the calendar (rather than to today) | 🚧 planned |
 
 > **Implementation status is deliberately explicit.** The theme, navigation shell, DI, database and
 > networking layers are real and building. The note feature itself is still being added, and this
@@ -228,11 +230,13 @@ com/example/skeleton/
 │   │   ├── CoreBottomSheet.kt
 │   │   ├── CoreTopBar.kt
 │   │   ├── CoreTopBar4.kt
-│   │   └── LifecycleComposable.kt
+│   │   ├── LifecycleComposable.kt
+│   │   └── NoteSummaryRow.kt               #     One note as a card — used by Home and by the Calendar day list
 │   ├── fragment/                           #   One folder per screen: Fragment + UiState + ViewModel + component/
 │   │   ├── calendar/                       #     The month page: a grid, today marked, the future switched off
 │   │   │   ├── component/
 │   │   │   │   ├── CalendarDayCell.kt      #       One square, and every combination of its three markers
+│   │   │   │   ├── CalendarDayNotes.kt     #       The picked day's notes, or why there are none
 │   │   │   │   ├── CalendarMonthGrid.kt    #       Weekday labels plus the squares, seven to a row
 │   │   │   │   └── CalendarMonthHeader.kt  #       Back a month, the month's name, forward a month
 │   │   │   ├── model/                      #       Screen-local types, not domain ones
@@ -242,7 +246,7 @@ com/example/skeleton/
 │   │   │   └── CalendarViewModel.kt
 │   │   ├── home/
 │   │   │   ├── component/
-│   │   │   │   ├── HomeNoteList.kt         #       The scrolling note list, its rows, and its empty state
+│   │   │   │   ├── HomeNoteList.kt         #       The scrolling note list and its empty state
 │   │   │   │   ├── HomePermissionBottomSheet.kt
 │   │   │   │   └── HomeRequestPermission.kt
 │   │   │   ├── HomeFragment.kt

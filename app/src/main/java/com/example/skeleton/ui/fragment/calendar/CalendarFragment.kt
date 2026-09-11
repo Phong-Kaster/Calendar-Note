@@ -17,11 +17,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.fragment.findNavController
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
+import com.example.skeleton.domain.model.Note
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
+import com.example.skeleton.ui.fragment.calendar.component.CalendarDayNotes
 import com.example.skeleton.ui.fragment.calendar.component.CalendarMonthGrid
 import com.example.skeleton.ui.fragment.calendar.component.CalendarMonthHeader
 import com.example.skeleton.ui.fragment.note.NoteFragment
@@ -32,6 +35,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 class CalendarFragment : CoreFragment() {
     private val viewModel: CalendarViewModel by viewModel()
@@ -83,6 +87,31 @@ class CalendarFragment : CoreFragment() {
             onPreviousMonth = { viewModel.showPreviousMonth() },
             onNextMonth = { viewModel.showNextMonth() },
             onSelectDay = { date -> viewModel.selectDate(date = date) },
+            onOpenNote = { note ->
+                // The same route and the same guard Home uses, for the same reason: two taps
+                // inside one moment must not push two copies of the editor onto the back stack,
+                // and `safeNavigate` does not debounce — it only swallows exceptions.
+                //
+                // Asking the graph where we are, rather than `NavigationUtil.canNavigate()`:
+                // that clock is one 800 ms field shared by the whole app and `CoreBottomBar`
+                // arms it even for a tab tap that navigates nowhere, so tapping "Calendar"
+                // while already on the Calendar screen would leave every note row dead for the
+                // next 800 ms. See the same comment in `HomeFragment`.
+                val currentDestination = runCatching {
+                    findNavController().currentDestination?.id
+                }.getOrNull()
+
+                if (currentDestination == R.id.calendarFragment) {
+                    safeNavigate(
+                        destination = R.id.toNote,
+                        // The note's own day, not the picked one. They are the same day today —
+                        // the list only ever holds notes from the selected day — but the editor
+                        // falls back to this argument when the note has gone missing, and the
+                        // note's own date is the right thing to fall back to.
+                        bundle = NoteFragment.argumentsFor(date = note.date, noteId = note.id),
+                    )
+                }
+            },
             onCreateNote = {
                 // Today, exactly as on Home and on Settings — the centre button means the same
                 // thing everywhere in the app right now. Writing a note **on the day the user
@@ -104,21 +133,23 @@ class CalendarFragment : CoreFragment() {
 }
 
 /**
- * The Calendar screen: one month at a time, with today marked and the future switched off.
+ * The Calendar screen: one month at a time, with today marked, the future switched off, and the
+ * picked day's notes underneath.
  *
  * Pure UI — it draws the state it is handed and navigates nowhere, which is what lets the
  * previews below render it with invented data and no database behind them.
  *
- * The month's name is turned into words **here** rather than in the ViewModel or in
- * `CalendarMonthHeader`, because it is the one thing on this screen that depends on which
- * language the app is showing. That is `LocalConfiguration`'s locale and not the device's:
- * this app has its own language picker in Settings, so `Locale.getDefault()` would answer for
- * the phone and could print an English month under German copy.
+ * Both dates are turned into words **here** rather than in the ViewModel or in the components
+ * below, because they are the only things on this screen that depend on which language the app
+ * is showing. That is `LocalConfiguration`'s locale and not the device's: this app has its own
+ * language picker in Settings, so `Locale.getDefault()` would answer for the phone and could
+ * print an English month under German copy.
  *
  * @param uiState what to draw.
  * @param onPreviousMonth the user tapped the back arrow.
  * @param onNextMonth the user tapped the forward arrow.
  * @param onSelectDay the user tapped a day. Future days never reach this — they are not tappable.
+ * @param onOpenNote the user tapped one of the selected day's notes.
  * @param onCreateNote the user tapped the bottom bar's centre action button.
  * @author Phong-Kaster
  */
@@ -128,6 +159,7 @@ private fun CalendarLayout(
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
     onSelectDay: (LocalDate) -> Unit = {},
+    onOpenNote: (Note) -> Unit = {},
     onCreateNote: () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -137,6 +169,15 @@ private fun CalendarLayout(
     // string again. It changes only when the user changes the app's language.
     val monthFormatter = remember(locale) {
         DateTimeFormatter.ofPattern("MMMM yyyy").withLocale(locale)
+    }
+
+    // The picked day written out in full — "Thursday, 10 September 2026" — and written out
+    // *here* rather than inside `CalendarDayNotes`, so that component takes a plain String and
+    // can be photographed without the rendering machine's locale getting into the picture. A
+    // localised style rather than a pattern, because word order and the position of the year
+    // are not the same in every language and a hand-written pattern only ever fits one.
+    val dayFormatter = remember(locale) {
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale)
     }
 
     CoreLayout(
@@ -149,9 +190,11 @@ private fun CalendarLayout(
                     .fillMaxSize()
                     // Six rows of squares plus a header do not fit on every phone, and a month
                     // with its last week off the bottom of the screen is a month the user cannot
-                    // reach. T-007 hangs a list of notes under this, which only makes it longer.
+                    // reach. The day's notes hang under all of it, which only makes it longer —
+                    // so the grid and the list scroll together as one page rather than the list
+                    // being given its own little window to scroll inside.
                     .verticalScroll(state = rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -169,6 +212,12 @@ private fun CalendarLayout(
                     datesWithNotes = uiState.datesWithNotes,
                     onDayClick = onSelectDay,
                 )
+
+                CalendarDayNotes(
+                    dayLabel = uiState.selectedDate?.format(dayFormatter),
+                    notes = uiState.notesForSelectedDay,
+                    onOpenNote = onOpenNote,
+                )
             }
         },
     )
@@ -183,6 +232,34 @@ private fun CalendarLayoutPreview() {
                 today = LocalDate.of(2026, 9, 10),
                 displayedMonth = YearMonth.of(2026, 9),
                 selectedDate = LocalDate.of(2026, 9, 10),
+                datesWithNotes = setOf(LocalDate.of(2026, 9, 3), LocalDate.of(2026, 9, 10)),
+                loadedDay = LocalDate.of(2026, 9, 10),
+                loadedDayNotes = listOf(
+                    Note(
+                        id = 1L,
+                        date = LocalDate.of(2026, 9, 10),
+                        title = "Groceries",
+                        content = "Coffee, oat milk, the good bread from the corner shop.",
+                        createdAt = 1_773_000_000_000L,
+                        updatedAt = 1_773_000_000_000L,
+                    ),
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(name = "Calendar - a day with nothing on it")
+@Composable
+private fun CalendarLayoutEmptyDayPreview() {
+    // The whole page in the state the prior attempt at this screen got wrong: a day is picked,
+    // it has no notes, and what sits under the grid has to say so rather than be blank.
+    MyApplicationTheme {
+        CalendarLayout(
+            uiState = CalendarUiState(
+                today = LocalDate.of(2026, 9, 10),
+                displayedMonth = YearMonth.of(2026, 9),
+                selectedDate = LocalDate.of(2026, 9, 7),
                 datesWithNotes = setOf(LocalDate.of(2026, 9, 3), LocalDate.of(2026, 9, 10)),
             ),
         )

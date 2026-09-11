@@ -66,4 +66,6 @@
     <string name="weekday_short_thu">Do</string>
     <string name="weekday_short_fri">Fr</string>
     <string name="weekday_short_sat">Sa</string>
+    <string name="nothing_written_on_this_day_yet">An diesem Tag wurde noch nichts geschrieben</string>
+    <string name="pick_a_day_to_see_its_notes">Wähle einen Tag, um zu sehen, was darauf steht</string>
 </resources>

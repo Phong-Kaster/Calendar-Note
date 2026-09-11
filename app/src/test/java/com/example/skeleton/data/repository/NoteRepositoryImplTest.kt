@@ -7,10 +7,14 @@ import com.example.skeleton.data.mapper.toDomain
 import com.example.skeleton.data.mapper.toEntity
 import com.example.skeleton.data.repository.impl.NoteRepositoryImpl
 import com.example.skeleton.domain.model.Note
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -53,6 +57,7 @@ import java.time.ZoneOffset
  *
  * @author Phong-Kaster
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class NoteRepositoryImplTest {
 
     @Test
@@ -140,6 +145,122 @@ class NoteRepositoryImplTest {
         )
 
         assertEquals(note, note.toEntity().toDomain())
+    }
+
+    // ---------- Reading one day ----------
+
+    @Test
+    fun `asking for one day returns that day's notes and nobody else's`() = runTest {
+        // The store filters, not the screen. The day either side is in the table on purpose: a
+        // `notesForDateFlow` that converted the date with an off-by-one would return one of
+        // those neighbours — and on a screen the mistake reads as a note filed under the wrong
+        // date rather than as the wrong query.
+        val dao = FakeNoteDao(
+            rows = listOf(
+                entity(id = 1L, date = TODAY.minusDays(1L).toEpochDay()),
+                entity(id = 2L, date = TODAY.toEpochDay()),
+                entity(id = 3L, date = TODAY.toEpochDay()),
+                entity(id = 4L, date = TODAY.plusDays(1L).toEpochDay()),
+            ),
+        )
+
+        val notes = NoteRepositoryImpl(noteDao = dao).notesForDateFlow(date = TODAY).first()
+
+        assertEquals(listOf(2L, 3L), notes.map { note -> note.id }.sorted())
+        // Said twice on purpose, and the second one is the assertion with teeth: the ids above
+        // would also be satisfied by a filter that let a neighbour through *and* dropped one of
+        // these two. Every note that comes out is on the day that was asked for.
+        assertTrue(notes.all { note -> note.date == TODAY })
+    }
+
+    @Test
+    fun `asking for one day asks the database for that day, rather than sifting every note`() = runTest {
+        // The assertion above cannot see the difference: `observeAll()` filtered in Kotlin and
+        // `observeByDate()` filtered in SQL return the same list, so a repository that ignored
+        // the per-day query and sifted the whole table would pass it. What separates them is
+        // which question reached the database — and on a table of any size that is the whole
+        // point of the query existing.
+        //
+        // It is also where the epoch-day conversion is checked directly rather than through its
+        // consequences: `date` is a `LocalDate` up here and a plain `Long` down there.
+        val dao = FakeNoteDao(rows = listOf(entity(id = 1L)))
+
+        NoteRepositoryImpl(noteDao = dao).notesForDateFlow(date = TODAY).first()
+
+        assertEquals(listOf(TODAY.toEpochDay()), dao.daysAskedFor)
+    }
+
+    @Test
+    fun `a day's list keeps up with a note written after it was already being read`() = runTest {
+        // The reason this returns a `Flow` at all. The Calendar screen writes notes from the
+        // very day it is displaying — the bottom bar's centre button is right there — so a day
+        // list that answered once and stopped would leave the user staring at a day that does
+        // not show what they just wrote. A stray `.first()` or `.take(1)` inside the repository
+        // would do exactly that, and every other test in this file would stay green because
+        // every other test only ever reads one emission.
+        //
+        // Every dispatcher here is the test's own, unconfined: the flow is `flowOn(ioDispatcher)`
+        // and the default is the real `Dispatchers.IO`, so without injecting one the collector
+        // would run on a background thread and this test would pass or fail on timing.
+        val dao = FakeNoteDao(rows = emptyList())
+        val repository = NoteRepositoryImpl(
+            noteDao = dao,
+            clock = CLOCK,
+            ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+        )
+
+        val emissions = mutableListOf<List<Note>>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.notesForDateFlow(date = TODAY).collect { notes -> emissions += notes }
+        }
+        repository.save(note = Note.draft(date = TODAY, title = "Groceries"))
+
+        assertEquals(
+            listOf(emptyList(), listOf("Groceries")),
+            emissions.map { notes -> notes.map { note -> note.title } },
+        )
+    }
+
+    @Test
+    fun `a day's notes come out newest first, whatever order the dao hands them over in`() = runTest {
+        // The per-day list carries the same ordering promise as `notesFlow` —
+        // `knowledge/DOMAIN.md` rule 2 says a per-day list follows `updatedAt` descending unless
+        // a criterion says otherwise, and none does. The fake deliberately does not sort, so a
+        // repository leaning on the SQL `ORDER BY` to do it would fail here.
+        val dao = FakeNoteDao(
+            rows = listOf(
+                entity(id = 1L, updatedAt = 3_000L),
+                entity(id = 2L, updatedAt = 9_000L),
+                entity(id = 3L, updatedAt = 5_000L),
+            ),
+        )
+
+        val notes = NoteRepositoryImpl(noteDao = dao).notesForDateFlow(date = TODAY).first()
+
+        assertEquals(listOf(2L, 3L, 1L), notes.map { note -> note.id })
+    }
+
+    @Test
+    fun `a day with nothing on it is an empty list, not a failure and not nothing`() = runTest {
+        // The empty list is what lets the screen draw "nothing written on this day yet". An
+        // error, or a flow that never emitted, would leave it drawing a blank space instead —
+        // which is the defect the Calendar screen's empty state exists to remove.
+        val dao = FakeNoteDao(rows = listOf(entity(id = 1L, date = TODAY.toEpochDay())))
+
+        val notes = NoteRepositoryImpl(noteDao = dao)
+            .notesForDateFlow(date = TODAY.minusDays(1L))
+            .first()
+
+        assertEquals(emptyList<Note>(), notes)
+    }
+
+    @Test
+    fun `a day the database will not read shows an empty day instead of crashing the screen`() = runTest {
+        val notes = NoteRepositoryImpl(noteDao = BrokenNoteDao(), clock = CLOCK)
+            .notesForDateFlow(date = TODAY)
+            .first()
+
+        assertEquals(emptyList<Note>(), notes)
     }
 
     // ---------- Saving: the store owns the clock ----------
@@ -469,7 +590,18 @@ class NoteRepositoryImplTest {
  * A notes table that is really just a list held in memory.
  *
  * [observeAll] returns the rows **in the order they were handed to the constructor**, on purpose.
- * A fake that sorted would be agreeing with the code under test instead of checking it.
+ * A fake that sorted would be agreeing with the code under test instead of checking it. The same
+ * goes for [observeByDate]: it filters, because that is what the real `WHERE date = :epochDay`
+ * does, but it does not sort — so a repository relying on SQL to order a day's notes fails here.
+ *
+ * [observeByDate] is **live**, derived from the same `storedRows` that [observeAll] returns, the
+ * way Room's is. A snapshot would have been easier and would have hidden a whole class of
+ * mistake: a `notesForDateFlow` that took only the first emission would freeze the Calendar's day
+ * list in the running app and pass every test here.
+ *
+ * It also records what it was asked for, in [daysAskedFor]. That is the only way to prove the
+ * repository reached for the per-day query at all rather than filtering `observeAll` itself —
+ * both produce the same list, and only one of them is the query the DAO exists to provide.
  *
  * One thing it does *not* emulate: Room's `autoGenerate`. [upsert] keeps whatever id it is given,
  * so two brand-new notes — both carrying [com.example.skeleton.domain.model.Note.UNSAVED_ID] —
@@ -483,11 +615,15 @@ private class FakeNoteDao(rows: List<NoteEntity>) : NoteDao {
 
     private val storedRows = MutableStateFlow(rows)
 
+    /** Every `epochDay` [observeByDate] has been asked for, in order. */
+    val daysAskedFor: MutableList<Long> = mutableListOf()
+
     override fun observeAll() = storedRows
 
-    override fun observeByDate(epochDay: Long) = MutableStateFlow(
-        storedRows.value.filter { row -> row.date == epochDay },
-    )
+    override fun observeByDate(epochDay: Long): Flow<List<NoteEntity>> {
+        daysAskedFor += epochDay
+        return storedRows.map { rows -> rows.filter { row -> row.date == epochDay } }
+    }
 
     override suspend fun getById(id: Long): NoteEntity? =
         storedRows.value.firstOrNull { row -> row.id == id }

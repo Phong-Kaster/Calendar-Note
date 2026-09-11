@@ -12,30 +12,37 @@
 
 - **Phase:** executing
 - **Loop Branch:** `loop/calendar-note-app`
-- **Next task:** **T-007** — selecting today or a past day on the Calendar shows that day's notes,
-  with an explicit empty state. Its dependency (T-006) is now complete and it is the only
-  unblocked task — T-008 waits on it, T-009 on T-008.
+- **Next task:** **T-008** — add a note to the selected day. Its dependencies (T-007, T-003) are
+  both complete and it is the only unblocked task; T-009 waits on it, and T-009 is the last.
+  **T-008 finishes DoD criterion 11**, whose first half landed in T-007.
 
-  **Most of what T-007 needs already exists and should be read, not rebuilt.** `selectedDate` is
-  in `CalendarUiState`, a day can already be picked, and the ViewModel already subscribes to
-  `notesFlow` — it currently keeps only the *dates* (`datesWithNotes`) because the grid draws a
-  dot, and `CalendarViewModel.collectNotes`'s KDoc says out loud that the day's actual notes are
-  a T-007 concern. Ordering comes free and must not be re-derived: `knowledge/DOMAIN.md` rule 2
-  says a per-day list follows `updatedAt` descending like Home's, and `notesFlow` already arrives
-  in that order.
+  **Read `.ai/TASKS/T-003.md` first.** It had work removed by amendment **A-006** and its task
+  file says what is left — the future-date refusal is already implemented and tested in
+  `NoteRepositoryImpl.save`, so T-008 is the *second caller* reaching a guard that already holds,
+  not the task that builds it. Do not rebuild it.
 
-  **The third defect the prior run shipped on this screen is T-007's, and it is named in
-  `.ai/TASKS/T-006.md` § Notes: a selected day with no notes rendered an unexplained blank gap.**
-  `POLICIES.md` § User-Interface Defects wants an explicit empty state; record a reference image
-  of it, because that is a defect only a picture catches. Note also that `selectedDate` is
-  nullable and **can now become null** — `refreshToday` drops a selection a backwards clock has
-  overtaken (iteration 8) — so "nothing picked" is a state the screen has to draw, not just an
-  initial value it never sees.
+  **Two things T-008 must not get wrong, in order:**
 
-  **Read `.ai/TASKS/T-003.md` before starting T-008**; it had work removed and its task file says
-  what is left. T-008 must also resolve part 2 of `knowledge/ISSUES.md` § *Leaving the Note editor
-  either loses the user's text or traps them on the screen* — a refusal becomes reachable by
-  ordinary use the moment a past day can be picked.
+  1. **The note must be dated to the *selected* day, not today.** Criterion 11 says so
+     explicitly. The Calendar's bottom-bar centre button currently creates a note for
+     `LocalDate.now()` — see the comment in `CalendarFragment.ComposeView`, which says out loud
+     that this is T-008's to change and why it reads a fresh clock rather than `uiState.today`.
+     T-008 adds an add-note action *beside the day's notes*; whether the centre button also
+     changes meaning on this screen is a decision to make deliberately and write down.
+  2. **T-008 must resolve part 2 of `knowledge/ISSUES.md` § *Leaving the Note editor either loses
+     the user's text or traps them on the screen*.** That entry names T-008 as the point where it
+     stops being cosmetic: a refusal becomes reachable by ordinary use the moment a note can be
+     filed against a picked day, and today both a refusal and a genuine write failure surface as
+     the same `we_are_sorry` toast — which invites the user to retry something that can never
+     succeed. Give the refusal its own message naming the date.
+
+  **What T-007 left in place for it.** `CalendarUiState.selectedDate` is the day to use and is
+  already guaranteed to be today-or-earlier by two enforcement points (`selectDate` refuses a
+  later day; `refreshToday` drops one a backwards clock overtook) — but it is **nullable**, and
+  "nothing picked" is a state the screen already draws. An add action must decide what it does
+  when nothing is picked; the honest options are hiding it or disabling it, not filing the note
+  under today. `CalendarDayNotes` is where such an action belongs visually, and it takes its day
+  label as a plain `String` so it stays screenshot-portable — keep that property.
 - **DONE-candidate:** no
 - **DoD:** ✅ approved 2026-09-10, A5 overruled to title + body. Immutable from here — propose
   changes (Tier 3), never apply them.
@@ -53,13 +60,17 @@
   tested** — rule 2 in iteration 4, rule 1 in iteration 5 (amendment A-006, moved forward from
   T-008 because T-003 created the first write path), and rule 2's *list* half — that an edit
   actually moves the note to the top of what Home shows — in iteration 6. **DoD criterion 10 is
-  satisfied.** Neither is finished being *defended*: any new write path must reach the same `save`,
-  and any test that carries either rule should be mutation-checked rather than trusted — per
-  assertion, not per test (iteration 6).
+  satisfied.** Rule 2's *"a per-day list on the Calendar screen follows the same ordering"* clause
+  landed in iteration 9 and is mutation-checked at both layers (store and screen). Neither rule is
+  finished being *defended*: any new write path must reach the same `save`, any new *list* must
+  carry the ordering, and any test that carries either rule should be mutation-checked rather than
+  trusted — per assertion, not per test (iteration 6).
 
 ### First thing the next iteration should do
 
-**`grep -r MUTATION app/src`, before anything else, if the working tree is dirty.** Iteration 7
+**`grep -r MUTATION app/src`, before anything else, if the working tree is dirty.** Iteration 9
+started clean and the check cost ten seconds; iteration 7 started dirty and the check is the only
+reason that iteration did not build on a deliberately-wrong `NoteViewModel.delete`. Iteration 7
 began by finding a *previous* invocation's mutation still applied in `NoteViewModel.delete` — the
 process had died between applying it and reverting it. The rest of the debris was coherent,
 complete and would have built and tested green, which is exactly what makes it dangerous: mutated
@@ -123,8 +134,8 @@ every one of them earned by a real failure or a denied command:
 | T-004 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 60 warnings`, unchanged) + `testDebugUnitTest --rerun-tasks` (**41 tests, 0 failures**) + `validateDebugScreenshotTest` (**7 cases, 0 failures**) all green, all re-run after the review fixes. **The new tests were mutation-checked, and the fourth mutation exists because the reviewer proved one assertion could not fail.** Fresh-context review: 0 Critical, 3 Major (1 fixed — note rows were dead for 800 ms after any bottom-bar tap; 2 filed with a schedule), 3 Minor (all fixed). **DoD criterion 6 is satisfied bar its device walkthrough, and criterion 12's "full text reachable" clause is now true.** Full record in `.ai/TASKS/T-004.md`. **4 items await human eyes** — see that file. |
 | T-005 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 61 warnings`) + `testDebugUnitTest --rerun-tasks` (**63 tests, 0 failures**) + `validateDebugScreenshotTest` (**8 cases, 0 failures**) all green, all re-run after the review fixes. **Eight mutations, each failing exactly the expected test(s)** — three of them aimed at the review's own fixes. **A-009 is discharged: `getNote` returns `Outcome<Note?>` and the `ISSUES.md` entry is deleted.** Fresh-context review: 10 findings — **1 Critical** (a tap on Save during the 500 ms exit animation put the deleted note back), 3 Major, 6 Minor; 8 fixed here, 2 filed. Full record in `.ai/TASKS/T-005.md`. **5 items await human eyes, one of which is criterion 7's perceptual clause** — see that file. |
 | T-006 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 64 warnings`) + `testDebugUnitTest --rerun-tasks` (**113 tests, 0 failures**) + `validateDebugScreenshotTest` (**16 cases, 0 failures**) all green, all re-run after the review fixes. **Seven mutations, each failing exactly the predicted tests — and three of them correctly failing nothing extra.** M7 proves the prior run's "selection never reached the grid" defect is now machine-defended, and that only the *grid-level* image can catch it. Fresh-context review: 16 findings — **1 Critical** (DoD criterion 9 was knowingly false across midnight, and the `ISSUES.md` entry filed for it refuted its own stated blocker), 2 Major, 13 Minor; 12 fixed here, 3 filed, 1 recorded as a product call. Full record in `.ai/TASKS/T-006.md`. **8 reference images await human eyes, one of which is criterion 9's perceptual clause** — see that file. |
-| T-007 | pending | — |
-| T-008 | pending — **reduced by A-006** | — |
+| T-007 | ✅ **complete** | `assembleDebug` + `lintDebug` (`0 errors, 64 warnings`, unchanged) + `testDebugUnitTest --rerun-tasks` (**129 tests, 0 failures**) + `validateDebugScreenshotTest` (**19 cases, 0 failures**) all green, all re-run after the review fixes and after every mutation was reverted. **Nine mutations, eight matching their prediction exactly.** M8 is the one to remember: deleting the empty-state branch — the prior run's defect 3, restored — leaves **all 129 unit tests green** and fails only two pictures, so criterion 11's empty-state clause has no other evidence. Fresh-context review: 7 findings — 0 Critical, **1 Major** (the heading named one day while the rows below were another day's, in the window between the tap and the query; fixed by making the mismatch unrepresentable), 6 Minor; **all seven fixed, none filed**. One of them was fixed *and refuted*: the review's German-truncation arithmetic was wrong, and the reference image is what says so. Full record in `.ai/TASKS/T-007.md`. **5 items await human eyes, three of them new reference images** — see that file. |
+| T-008 | pending — **reduced by A-006**, and now unblocked | — |
 | T-009 | pending | — |
 
 ## Assumptions
@@ -223,6 +234,13 @@ there. Only `967f30ea` is committed. `e7c93008` is untracked because `rm` is den
 listed here rather than in `ISSUES.md` because it is debris of this iteration, not a defect in the
 app. A human can delete it with the other three.
 
+Iteration 9 added **one** new orphan, the same trap on the other axis:
+`CalendarScreenshotTestKt/DayNotesGermanHeading_…_c2297230_0.png`. The German day-notes case was
+first recorded at 312 × 120 to size the heading, the empty-state message underneath it was
+measured to nothing and vanished, and the preview was re-recorded at 312 × 200 — which hashes to
+a different filename, so `updateDebugScreenshotTest` wrote `…_fa3cecc9_0.png` and left the first
+behind. Only `fa3cecc9` is committed. A human can delete `c2297230` with the other four.
+
 Iteration 6 added **no** new orphans and left nothing uncommitted. It did leave one ignored file:
 the review subagent wrote **`build-t004-review.log`** at the repository root. It is git-ignored, so
 it never appears in `git status` and cannot be mistaken for debris, and `rm` is denied — a human can
@@ -233,6 +251,70 @@ if the dirt is *this run's*. Treat the paths above as clean; anything else untra
 genuine debris to salvage or revert. Do not `git clean` them.
 
 ## Recent Iterations
+
+### Iteration 9 — 2026-09-11 — T-007, the day's notes, and a picture that overruled the review
+
+- **Clean start, and the first one in four iterations.** The working tree held only the paths
+  listed above as expected, `grep -r MUTATION app/src` came back empty, and Select took T-007 as
+  the only unblocked task. Recover was a no-op.
+- **Did:** `NoteRepository.notesForDateFlow(date)` over the `observeByDate` query T-002 left
+  waiting; `CalendarUiState.loadedDay` / `loadedDayNotes` with a derived `notesForSelectedDay`;
+  `collectNotesForSelectedDay()` (`flatMapLatest` over the distinct selection);
+  `CalendarDayNotes`; `NoteSummaryRow` extracted out of `HomeNoteList` and shared; the row-tap
+  route with Home's destination guard; two strings in two locales; 16 unit tests; three reference
+  images; README. Then the review's seven findings, then nine mutations.
+- **Learned:**
+  - **Record the picture before accepting a review's arithmetic about what fits.** The review
+    argued the day heading would truncate in German, with the character count and the font size
+    to back it, and recommended wrapping. Rendering it at 288dp — a 320dp screen, the narrowest
+    this app supports — showed the German date fitting on one line with room to spare. The wrap
+    stayed as insurance and the *stated reason* was struck from the KDoc. This is iteration 8's
+    lesson inverted: there every contrast number was right and the threshold cited was wrong;
+    here the arithmetic itself was wrong. **"Does it fit", "does it contrast", "is it legible"
+    are questions this repository answers in fifteen seconds, and a confident paragraph is not
+    an answer.** → `PLAN.md`.
+  - **Two state fields written by two different events are one field, or they are a bug.** The
+    review's only Major: a tap sets `selectedDate` at once while the store's answer arrives a
+    query later, so the screen had a window where the heading named one day and the rows below
+    were another day's. Every test passed, because a synchronous fake on an unconfined dispatcher
+    closes the window — the race is unreachable in the suite and perfectly reachable on a device.
+    The fix that generalises is not "gate the write" but **store the answer with the question it
+    answers** and derive what the screen reads, which makes the mismatch unrepresentable rather
+    than unlikely. → `PLAN.md`.
+  - **The empty state is defended by a picture and by nothing else, and a mutation proved it.**
+    Deleting the empty-state branch — restoring the prior run's third defect exactly — left all
+    **129 unit tests green** and failed only two reference images. Criterion 11's empty-state
+    clause has no other evidence, which means re-baselining those two images with
+    `updateDebugScreenshotTest` would silently retire it. Written into `.ai/TASKS/T-007.md` where
+    the next reader of that criterion will find it.
+  - **A fake that filters the way the code filters proves nothing about *which query ran*.** The
+    review showed that `notesForDateFlow` could have sifted `observeAll()` in Kotlin and passed
+    every new test, because both routes return the same list — the acceptance criterion names the
+    per-day query and nothing checked that it was used. Fixed by making the fake *record* what it
+    was asked for. M3 confirms one test now catches it and no other does. The iteration-4 rule
+    was "a fake only proves something if it refuses to help"; the refinement is that **a fake can
+    also be asked to testify** about what it was called with.
+  - **The undersized-preview trap fired again, on the axis nobody was watching.** The German case
+    was recorded at 120dp to size a *heading*, and the heading came out perfect — while the
+    empty-state message below it was measured to nothing and vanished. Everything the author was
+    looking at was right; the casualty was the part they were not thinking about. Add up the
+    whole component, not the part the case is for. → `knowledge/PROJECT.md`, as a second entry
+    under the trap iteration 8 earned.
+- **Reconciled:** one operational fact → `knowledge/PROJECT.md` (the undersized-preview trap
+  recurring on the other axis) plus the test count refreshed; **one new `knowledge/ISSUES.md`
+  entry** (an untitled note prints its first line twice — pre-existing since T-002, now visible in
+  a committed reference image, and a design call rather than a bug to fix inside this task); two
+  rules added to `PLAN.md` and T-007 closed in its task graph. No amendment: the plan's shape did
+  not change, and T-008 is still the task the plan said it was.
+- **Not done, on purpose:** no `SELECT DISTINCT date` query for the has-notes markers, though the
+  review is right that `notesFlow` reads every note to build a set of days — the KDoc that
+  overclaimed was corrected instead, and the query is named as a thing to do when a table large
+  enough to notice exists. The untitled-note duplication is filed rather than fixed: suppressing
+  the body would also hide lines 2–3 of a *long* untitled note, and which reads better is not the
+  engine's call. The day section is a plain `Column` rather than a `LazyColumn`, because the task
+  asks for the whole page to scroll as one and a lazy list inside a `verticalScroll` throws at
+  measure time; the trade is written into the component's KDoc.
+- **Checkpoint:** see the `loop(T-007)` commit.
 
 ### Iteration 8 — 2026-09-11 — T-006, the calendar, and a review that died with its process
 
@@ -381,69 +463,6 @@ genuine debris to salvage or revert. Do not `git clean` them.
   host-locale lock as the populated Home row.
 - **Checkpoint:** see the `loop(T-005)` commit.
 
-### Iteration 6 — 2026-09-10 — T-004, the loop closes, and a debounce that made rows dead
-
-- **Clean start.** The working tree held only the paths listed above as expected, so Recover was a
-  no-op and Select took T-004 as the only unblocked task.
-- **Did:** `HomeNoteList` gained a required `onOpenNote` and its private `NoteRow` became clickable
-  (clip → border → background → clickable → padding, with an `open_note` label and a bounded
-  ripple); `HomeFragment` routes a row tap through the existing `toNote` action with
-  `argumentsFor(date = note.date, noteId = note.id)`; one string in two locales; three new unit
-  tests; the README feature table split so "open and edit" is marked built and delete is not.
-  Nothing in the editor, the ViewModel or the store needed writing — A-007 had already moved it all
-  into T-003, and this iteration confirmed that rather than rebuilding it.
-- **Learned:**
-  - **A shared navigation debounce is the wrong instrument for "this control must not navigate
-    twice", and the review caught it.** `NavigationUtil.canNavigate()` looked like the obvious reuse
-    — `CoreBottomBar`'s centre button uses it, the comment justifying it was already written, and it
-    is *correct* for the button it was written for. But it is one process-wide `lastNavTime`, and
-    `BottomBarElement` arms it before checking whether the tab tap goes anywhere, so tapping "Home"
-    while already on Home would have left every note row showing a ripple and doing nothing for the
-    next 800 ms. The row existed precisely so taps would stop being ignored. **Asking the graph
-    where you are** (`currentDestination?.id == R.id.homeFragment`) has no dead window: `navigate`
-    moves `currentDestination` synchronously, so the second tap of a double tap is refused and a
-    deliberate tap a moment later is not. → `knowledge/PROJECT.md`.
-  - **One mutation per test is not enough — a test can fail for one reason while another of its
-    assertions is dead.** The new reordering test asserted that an edit does not re-file a note onto
-    another day, against a fixture the helper had already dated to the clock's today. It could not
-    fail, and it survived three implementation mutations before a *reader* found it. The fix was one
-    line in the fixture; the lesson is to mutate toward each assertion a test claims to carry, and
-    to treat a fixture that already equals the expected value as the smell it is. This refines
-    iteration 5's rule rather than replacing it. → `PLAN.md`.
-  - **Making a dead branch reachable is a change worth reviewing as one.** Nothing in
-    `getNote`/`openNote` was touched this iteration, and the diff still made a real defect live:
-    until Home rows became clickable, every caller left `noteId` at its default, so `getNote` had no
-    in-app caller and the "note not found → start a new note" fall-through was unreachable code.
-    Now a failed read opens a blank-but-correctly-dated editor whose save **inserts**, leaving two
-    notes for that day. Filed and made a prerequisite of T-005 (amendment **A-009**) rather than
-    fixed here: the clean fix changes `getNote`'s return type and overturns a deliberate, tested,
-    documented T-003 decision, from inside a task scoped to "the route in".
-  - **A promise written into a test file is a promise that comes due.** `HomeScreenshotTest.kt`
-    said the row's `Untitled note` fallback "arrives with the rows, when they become clickable".
-    The rows became clickable here; the fallback did not arrive, for the same locale reason as
-    before — and `@Preview(locale = "en")` turns out to pin the row's *language* but not its
-    *format*, because `ofLocalizedDate` follows the JDK's CLDR data and this project pins no
-    toolchain. The sentence is now the honest version. Better to write "still unpinned, and here is
-    what it would cost" than to name a task and let it come and go.
-  - **Two of the three Majors were about what the diff did to things it did not touch** — the
-    shared debounce, and the reachability of a dead branch. Both twice removed from the lines
-    changed. The confident-comment pattern from iteration 5 held again in a new shape: the debounce
-    comment was confident *and* copied from a place where it was true.
-- **Reconciled:** one operational fact → `knowledge/PROJECT.md` (the `canNavigate()` clock, with
-  why `launchSingleTop` is not the alternative here) and the test count refreshed; one new
-  `knowledge/ISSUES.md` entry (the failed-read insert) and the editor-exits entry amended, because
-  losing an *edit* is worse in kind than losing a new note — Home then looks exactly like a save
-  that did nothing; amendment **A-009**; `PLAN.md`'s mutation rule sharpened and its task graph
-  updated; T-005 given the prerequisite and a new acceptance criterion; T-004 closed with its
-  evidence, its review and its four human-inspection items.
-- **Not done, on purpose:** the back-affordance decision stays as it is — a discard confirmation and
-  an autosave are different products with different failure modes and no criterion asks for either,
-  so choosing is the human's call; the reasoning is written into `.ai/TASKS/T-004.md` as that task
-  required, and the `ISSUES.md` entry now covers the edit case. No populated-row reference image
-  (the CLDR lock above). `NoteDao.upsert`'s discarded return id stays discarded — this task never
-  needed the ViewModel to adopt a note it just created.
-- **Checkpoint:** see the `loop(T-004)` commit.
-
 ## Iteration Index
 
 <!-- One line per iteration older than the three above. The SHA is the checkpoint commit whose
@@ -451,6 +470,7 @@ genuine debris to salvage or revert. Do not `git clean` them.
 
 | Iteration | Checkpoint | What happened |
 |---|---|---|
+| 6 | `d68d2ac` | T-004 — Home rows became clickable and the open-edit-resort loop closed. Clean start. Four lessons still live: **a shared navigation debounce is the wrong instrument for "this control must not navigate twice"** — `NavigationUtil.canNavigate()` is one process-wide 800 ms clock and `BottomBarElement` arms it even for a tab tap that goes nowhere, so using it on a list row leaves every row dead for 800 ms after any tab tap; **ask the graph where you are** (`currentDestination?.id == R.id.homeFragment`) instead, which has no dead window because `navigate` moves `currentDestination` synchronously. **One mutation per test is not enough** — a new test asserted that an edit does not re-file a note onto another day, against a fixture already dated to the clock's today, so the assertion could not fail and survived three mutations before a *reader* found it; mutate toward each assertion a test claims to carry. **Making a dead branch reachable is a change worth reviewing as one** — nothing in `getNote` was touched, and clickable rows still made a real defect live (a failed read opened a blank editor whose save *inserted* a duplicate), filed as amendment **A-009** and made a prerequisite of T-005. And **a promise written into a test file comes due**: `@Preview(locale = "en")` pins a row's *language* but not its *format*, because `ofLocalizedDate` follows the JDK's CLDR data and this project pins no toolchain. Two of the three Majors were about what the diff did to things it did not touch. |
 | 5 | `e50bcb1` | T-003 — the Note editor, `save`/`getNote` with an injected `Clock`, the bottom bar's centre button wired on every screen. **Started at Recover** on a coherent partial edit to `Note.kt`, verified before being built on. Five lessons still live: **a domain rule belongs to the task that creates its first write path, not the task that creates its first tempting caller** — the future-date rule moved from T-008 to here the moment `save` existed and accepted any date it was handed (amendment **A-006**), which is why **DoD criterion 10 was satisfied four tasks early**; the same reasoning shrank T-004 (**A-007**); **a test is not evidence until it has been made to fail**, first proved here with three mutations failing exactly 3, 1 and 1 tests; **`android.util.Log` on an error path made that path untestable** against the stub `android.jar`, fixed by `isReturnDefaultValues = true` (**A-008**) at the cost that a `Bundle`/`Intent`/`Uri` can never be unit-tested here; and **a ViewModel *is* testable on this toolchain** via `Dispatchers.setMain` + an unconfined dispatcher, which nothing had tried. Both review Criticals sat in the most confidently documented code: the editor was unusable under the keyboard (nothing in `app/src/main` handled IME insets) while `NoteEditor`'s KDoc claimed to prevent exactly that, and a double tap on Save wrote the note twice. Also: **a README can invent a domain rule**, and doing so routes around `DOMAIN.md` being human-owned. |
 | 4 | `627d25a` | T-002 — the `notes` table, the store above it, and Home repointed off the demo post list. Clean start. Four lessons, all still live: **a Room migration cannot be tested here but can be made right by construction** — copy Room's own `CREATE TABLE` out of the generated `AppDatabase_Impl` rather than composing one by eye, which had already produced a `DEFAULT ''` the entity does not declare (amendment A-005); **a fake DAO only proves something if the fake refuses to help** — `FakeNoteDao` returns rows in deliberately jumbled construction order, which is what moves the "newest first" promise off a SQL string and onto the repository; **`git reset`/`git restore` are denied and `git rm --cached` is the unstage**, found by `git add -A app/src` sweeping up the three orphan PNGs; and **a locale-correct date is not `Locale.getDefault()`** but `LocalConfiguration.current.locales[0]`, because this app has its own language picker. The review's two Majors were **both in `knowledge/`, not in the code** — a stale `AppDatabase version = 2` line that would have made the next task bump to 3 twice, and an `ISSUES.md` entry asking for two string keys this task had just deleted: the reconciliation step is part of the work, and a stale line in a file read every iteration is a defect with a delay fuse. |
 | 3 | `2114e47` | T-010 — the host-side screenshot harness imported from `loop/todo-calendar-screens`, six references recorded. **Started at Recover:** modified build files plus untracked `app/src/screenshotTest*/` were sitting in the tree, stamped after the `loop(T-001)` tip with `.ai/` untouched, so an invocation had done most of T-010 and died before checkpointing. Verified before building on it (ENGINE.md §6.1) — `ScreenshotScaffold.kt` diffed byte-identical against the source branch, all four Gradle tasks green, the screenshot XML reporting 4 real cases rather than a vacuous zero — then salvaged. Four traps earned, all now in `knowledge/PROJECT.md`: the harness runs host-side in ~15s with **no emulator**; **`updateDebugScreenshotTest` orphans references rather than replacing them** (the filename hashes the preview's *parameters*, and validation ignores strays and stays green — two update runs left three orphans); **`rm` is denied**, found while trying to clean them, and not routed around; and **a swatch can be wrong in a way only rendering shows** (`inversePrimary` paired a fill with an on-colour Material never puts together, 3.94:1, under AA). Fresh-context review: 16 findings, 0 Critical; **the real defect was a sentence** — the test file's header claimed these images make DoD criteria 1 *and 2* machine-defendable, and criterion 2 cannot be, because `Color.White` and `colorScheme.onBackground` are the same pixels (proved, not argued: 65 hardcoded literals in the tree and every case passing at `diffPercent 0.0`). Left standing it would have retired criterion 2 from being checked at all → amendment **A-004**. Also learned: **writing an image down as "approved" is not approving it** — the engine looked at all six and they are correct, which is not the human approval the criterion asks for. |

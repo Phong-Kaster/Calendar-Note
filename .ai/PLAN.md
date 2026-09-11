@@ -111,6 +111,16 @@ The layers, in increasing cost:
   image cannot catch a wiring bug between components; only an image of the assembly can.** Record
   both, and when a defect is about one thing reaching another, the assembly case is the evidence.
 
+  **Iteration 9 found the layer's sharpest use yet, and it points the other way: record the
+  picture before accepting a review's arithmetic about what fits.** A finding there argued the
+  Calendar's day heading would truncate in German at 288–328dp, gave the character count and the
+  font size, and recommended a wrap. Rendering it at 288dp showed the German date fitting on one
+  line with room to spare. The change was kept as insurance and the *stated reason* was struck
+  from the KDoc. This is the mirror of iteration 8's lesson, where every contrast number was
+  honest and the threshold cited was wrong: **"does it fit", "does it contrast", "is it legible"
+  are questions arithmetic can be confidently wrong about, and this repository can answer them in
+  fifteen seconds.** Do that before writing the justification, not after.
+
   **But a screenshot cannot see criterion 2** (amendment A-004). `Color.White` and
   `colorScheme.onBackground` render identical pixels, so "colour comes from the theme, never
   hardcoded" gets **no** help from this layer — the six cases pass today with 65 hardcoded literals
@@ -129,6 +139,17 @@ appended to `res/values/strings.xml` alone turns criterion 13 red. Every task th
 copy appends the German equivalent to `res/values-de/strings.xml` in the same checkpoint. This was
 found by lint failing on the untouched baseline, not inferred.
 
+**Two state fields written by two different events need to be stored as a pair, not as two
+fields.** Iteration 9's only Major: a tap set `selectedDate` immediately while the store's answer
+for that day arrived a query later, so there was a window in which the screen's heading named one
+day and the rows below it were another day's — the app showing notes filed under a date they are
+not on. Every test passed, because a synchronous fake on an unconfined dispatcher closes the
+window. The fix that generalises is not "gate the write" but **make the bad pairing
+unrepresentable**: store the answer together with the question it answers (`loadedDay` +
+`loadedDayNotes`) and expose a derived `val` that hands it over only while the two agree. This is
+`.claude/viewmodel-layer.md`'s derived-property pattern doing real work rather than saving a line.
+Look for it wherever a UiState holds "the thing selected" beside "what was loaded for it".
+
 **Pure logic goes somewhere testable.** The date-state mapping and the ordering rule are put in
 plain Kotlin (domain model + repository), never inside a `@Composable`. A rule inside a composable
 can only be checked by rendering it, which is precisely the capability this repository does not have.
@@ -146,7 +167,7 @@ can only be checked by rendering it, which is precisely the capability this repo
   resolved the failed-read defect T-004's review found (A-009), by giving `getNote` an
   `Outcome<Note?>` return so "it is gone" and "I could not look" stop being the same `null`**
 - ✅ T-006 — Calendar screen: month grid, today marked, month navigation, future days inert (depends on: T-002, T-010)
-- T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
+- ✅ T-007 — Selecting today or a past day shows that day's notes, with an empty state (depends on: T-006)
 - T-008 — Add a note to the selected day (depends on: T-007, T-003) — **reduced by A-006: the
   refusal is implemented and tested; this task is the second caller reaching it, plus surfacing a
   refusal distinguishably**

@@ -3,6 +3,7 @@ package com.example.skeleton.domain.repository
 import com.example.skeleton.common.Outcome
 import com.example.skeleton.domain.model.Note
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 /**
  * The app's store of notes.
@@ -26,6 +27,26 @@ interface NoteRepository {
      * screen that happens to display it.
      */
     val notesFlow: Flow<List<Note>>
+
+    /**
+     * The notes written on one day, most recently touched first.
+     *
+     * A live stream like [notesFlow], and filtered by the store rather than by the screen. That
+     * placement is the point: a screen that collected every note and filtered the list itself
+     * would be carrying the whole notebook across the app to read one page of it, and — worse —
+     * would own a rule the store is supposed to own. Ask for a day, get that day.
+     *
+     * Ordered by `updatedAt` descending, exactly like [notesFlow]. `knowledge/DOMAIN.md` says a
+     * per-day list follows the same ordering as any other list of notes unless a criterion says
+     * otherwise, and none does.
+     *
+     * A day with nothing on it emits an **empty list**, not an error and not nothing at all. The
+     * screen above has to be able to tell "this day is empty" from "the answer has not arrived",
+     * because those two look identical if the second one is drawn as a blank space.
+     *
+     * @param date the day to read.
+     */
+    fun notesForDateFlow(date: LocalDate): Flow<List<Note>>
 
     /**
      * One note by its row id.

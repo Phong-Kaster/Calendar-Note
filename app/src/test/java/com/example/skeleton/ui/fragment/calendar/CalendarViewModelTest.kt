@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -444,6 +446,191 @@ class CalendarViewModelTest {
         assertEquals(emptySet<LocalDate>(), viewModel.uiState.value.datesWithNotes)
     }
 
+    @Test
+    fun `picking a day does not put a marker on it`() {
+        // The markers say "something is written here". A dot that appeared merely because the
+        // user looked at a day would be a claim they cannot check without opening it — and the
+        // tempting shortcut that produces it is folding the selection into `datesWithNotes`
+        // somewhere, which every other test in this section would survive.
+        val viewModel = calendarViewModel()
+
+        viewModel.selectDate(date = LocalDate.of(2026, 9, 3))
+
+        assertEquals(emptySet<LocalDate>(), viewModel.uiState.value.datesWithNotes)
+    }
+
+    // ---------- The picked day's notes ----------
+
+    @Test
+    fun `the screen opens showing today's notes`() {
+        // Today is picked from the start, so the list under the grid must already be today's —
+        // not empty until the user taps something.
+        val repository = FakeNoteRepository(
+            initialNotes = listOf(
+                noteOn(date = TODAY, id = 1L),
+                noteOn(date = LocalDate.of(2026, 9, 3), id = 2L),
+            ),
+        )
+
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = fixedClockAt(TODAY))
+
+        assertEquals(listOf(1L), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+    }
+
+    @Test
+    fun `picking a day shows that day's notes and not another day's`() {
+        // The day either side is in the store on purpose. A list that ignored the selection, or
+        // that asked for the wrong day, would show one of those — and on screen the mistake
+        // looks like a note filed under the wrong date rather than like the wrong query.
+        val repository = FakeNoteRepository(
+            initialNotes = listOf(
+                noteOn(date = LocalDate.of(2026, 9, 2), id = 1L),
+                noteOn(date = LocalDate.of(2026, 9, 3), id = 2L),
+                noteOn(date = LocalDate.of(2026, 9, 3), id = 3L),
+                noteOn(date = LocalDate.of(2026, 9, 4), id = 4L),
+            ),
+        )
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = fixedClockAt(TODAY))
+
+        viewModel.selectDate(date = LocalDate.of(2026, 9, 3))
+
+        assertEquals(
+            listOf(2L, 3L),
+            viewModel.uiState.value.notesForSelectedDay.map { note -> note.id }.sorted(),
+        )
+    }
+
+    @Test
+    fun `picking a day with nothing on it empties the list rather than keeping the last day's`() {
+        // The failure this rules out is the nastiest one available here: the previous day's
+        // notes staying on screen under a heading naming the new day. A test that only asserted
+        // the list is empty on a fresh screen would never see it, because the list starts empty.
+        val repository = FakeNoteRepository(
+            initialNotes = listOf(noteOn(date = LocalDate.of(2026, 9, 3), id = 2L)),
+        )
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = fixedClockAt(TODAY))
+        viewModel.selectDate(date = LocalDate.of(2026, 9, 3))
+        assertEquals(1, viewModel.uiState.value.notesForSelectedDay.size)
+
+        viewModel.selectDate(date = LocalDate.of(2026, 9, 4))
+
+        assertEquals(emptyList<Long>(), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+    }
+
+    @Test
+    fun `a note written on the picked day while the screen is open joins the list`() {
+        // The subscription, not a one-shot read. Writing a note is what the bottom bar does from
+        // this very screen, so a list that only loaded once would leave the user looking at a
+        // day that does not show what they just wrote.
+        val repository = FakeNoteRepository()
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = fixedClockAt(TODAY))
+        assertEquals(emptyList<Long>(), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+
+        repository.emit(notes = listOf(noteOn(date = TODAY, id = 7L)))
+
+        assertEquals(listOf(7L), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+    }
+
+    @Test
+    fun `a note written on some other day does not join the list`() {
+        // The other half of the line above, and the one with teeth: a subscription that
+        // re-emitted every note on every write would pass the test before this one.
+        val repository = FakeNoteRepository()
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = fixedClockAt(TODAY))
+
+        repository.emit(notes = listOf(noteOn(date = LocalDate.of(2026, 9, 3), id = 7L)))
+
+        assertEquals(emptyList<Long>(), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+    }
+
+    @Test
+    fun `a clock that goes backwards takes the day's notes away with the selection it dropped`() {
+        // `refreshToday` drops a selection the clock has overtaken, so `selectedDate` becomes
+        // null — and the list has to follow. Left behind, it would be a list of notes under a
+        // grid with nothing selected and a section header that no longer has a day to name.
+        val clock = MovableClock(today = TODAY)
+        val repository = FakeNoteRepository(initialNotes = listOf(noteOn(date = TODAY, id = 1L)))
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = clock)
+        assertEquals(listOf(1L), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+
+        clock.today = TODAY.minusDays(3L)
+        viewModel.refreshToday()
+
+        assertEquals(null, viewModel.uiState.value.selectedDate)
+        assertEquals(emptyList<Long>(), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+    }
+
+    @Test
+    fun `a day's notes come out most recently touched first`() {
+        // `knowledge/DOMAIN.md` rule 2: a per-day list follows `updatedAt` descending like every
+        // other list of notes. The store promises that ordering and this screen must pass it
+        // through untouched — the mistake it rules out is a `sortedBy { it.id }` or a
+        // `.reversed()` slipped in on the way to the UI state, which nothing else here would
+        // notice because every other day-list assertion holds one note or ignores order.
+        val repository = FakeNoteRepository(
+            initialNotes = listOf(
+                noteOn(date = TODAY, id = 1L, updatedAt = 1_000L),
+                noteOn(date = TODAY, id = 2L, updatedAt = 9_000L),
+                noteOn(date = TODAY, id = 3L, updatedAt = 5_000L),
+            ),
+        )
+
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = fixedClockAt(TODAY))
+
+        assertEquals(
+            listOf(2L, 3L, 1L),
+            viewModel.uiState.value.notesForSelectedDay.map { note -> note.id },
+        )
+    }
+
+    @Test
+    fun `the list never belongs to a day other than the one picked`() {
+        // The window this rules out is real and short: a tap moves `selectedDate` at once,
+        // while the store's answer for the new day arrives a query later. Storing the list
+        // alone would leave a moment where the heading names one day and the rows below are
+        // the previous day's — the app showing notes filed under a date they are not on.
+        //
+        // Simulated by handing the state a *stale* pair directly, which is the one thing a
+        // synchronous fake cannot produce on its own: the fake answers inline, so on this
+        // dispatcher the real race never opens. The state has to refuse the mismatch by
+        // construction, not by winning a race.
+        val stale = CalendarUiState(
+            today = TODAY,
+            selectedDate = LocalDate.of(2026, 9, 3),
+            loadedDay = TODAY,
+            loadedDayNotes = listOf(noteOn(date = TODAY, id = 1L)),
+        )
+
+        assertEquals(emptyList<Note>(), stale.notesForSelectedDay)
+        // And the same pair, once the answer catches up with the question.
+        assertEquals(
+            listOf(1L),
+            stale.copy(selectedDate = TODAY).notesForSelectedDay.map { note -> note.id },
+        )
+    }
+
+    @Test
+    fun `paging to another month neither empties the day list nor re-reads it`() {
+        // Paging changes what the grid draws, not what is picked, so the list below must not
+        // flicker or empty.
+        //
+        // The second assertion is the one with teeth, and it is why the fake counts its
+        // readers: the collector watches `selectedDate` specifically, and dropping that down to
+        // watching the whole state would tear the day's subscription down and rebuild it on
+        // *every* state change — a month page, a marker arriving, the list it just wrote
+        // itself. The visible result would still be correct here, which is exactly why the
+        // first assertion alone cannot see it.
+        val repository = FakeNoteRepository(initialNotes = listOf(noteOn(date = TODAY, id = 1L)))
+        val viewModel = CalendarViewModel(noteRepository = repository, clock = fixedClockAt(TODAY))
+        assertEquals(1, repository.dayReaders)
+
+        viewModel.showPreviousMonth()
+        viewModel.showNextMonth()
+
+        assertEquals(listOf(1L), viewModel.uiState.value.notesForSelectedDay.map { it.id })
+        assertEquals(1, repository.dayReaders)
+    }
+
     // ---------- Helpers ----------
 
     /** A view model on an empty store, with the clock fixed at [TODAY]. */
@@ -488,14 +675,20 @@ class CalendarViewModelTest {
                 today.atStartOfDay(ZoneOffset.UTC).toInstant()
         }
 
-        /** A stored note on [date]. Only its date is ever read by this screen. */
-        private fun noteOn(date: LocalDate, id: Long = 1L): Note = Note(
+        /**
+         * A stored note on [date].
+         *
+         * [updatedAt] is a parameter rather than a constant because the day list carries an
+         * ordering promise — `knowledge/DOMAIN.md` rule 2 — and a set of fixtures that all
+         * share one timestamp cannot hold anything to it.
+         */
+        private fun noteOn(date: LocalDate, id: Long = 1L, updatedAt: Long = 2_000L): Note = Note(
             id = id,
             date = date,
             title = "Groceries",
             content = "Coffee, oat milk",
             createdAt = 1_000L,
-            updatedAt = 2_000L,
+            updatedAt = updatedAt,
         )
     }
 }
@@ -507,6 +700,12 @@ class CalendarViewModelTest {
  * Calendar screen's markers are a *subscription*, so at least one test has to be able to push a
  * second list at it after the ViewModel has already been built.
  *
+ * [notesForDateFlow] is derived from the same state rather than being a second store, so a note
+ * pushed in through [emit] reaches both the markers and the picked day's list — which is what the
+ * real store does, and what makes "a note written while the screen is open shows up" a question
+ * worth asking here. It also sorts, because the real store promises an order and a fake that
+ * handed back an arbitrary one would make the screen's pass-through untestable.
+ *
  * @param initialNotes the list the store starts out holding.
  * @author Phong-Kaster
  */
@@ -516,7 +715,25 @@ private class FakeNoteRepository(
 
     private val storedNotes = MutableStateFlow(initialNotes)
 
+    /**
+     * How many times somebody has begun reading a day.
+     *
+     * Counted because re-subscribing is invisible in the result: a collector that tore the
+     * day's flow down and rebuilt it on every unrelated state change would still show the right
+     * notes, and only this number says it happened.
+     */
+    var dayReaders: Int = 0
+        private set
+
     override val notesFlow: Flow<List<Note>> = storedNotes
+
+    override fun notesForDateFlow(date: LocalDate): Flow<List<Note>> = storedNotes
+        .map { notes ->
+            notes
+                .filter { note -> note.date == date }
+                .sortedWith(compareByDescending(Note::updatedAt).thenByDescending(Note::id))
+        }
+        .onStart { dayReaders++ }
 
     /** Replaces what the store holds, as a write elsewhere in the app would. */
     fun emit(notes: List<Note>) {

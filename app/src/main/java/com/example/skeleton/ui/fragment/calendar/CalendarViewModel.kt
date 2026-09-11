@@ -3,11 +3,17 @@ package com.example.skeleton.ui.fragment.calendar
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skeleton.domain.model.Note
 import com.example.skeleton.domain.repository.NoteRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.Duration
@@ -45,14 +51,26 @@ class CalendarViewModel(
 
     init {
         collectNotes()
+        collectNotesForSelectedDay()
     }
 
     /**
      * Subscribes to the store and keeps the "this day has notes" markers current.
      *
-     * Only the days are kept, not the notes themselves: the grid draws a dot, and holding every
-     * note in memory to decide whether to draw a dot would be carrying the whole notebook to
-     * answer a yes/no question. The day's actual notes are read when a day is selected (T-007).
+     * Only the days are *kept*, not the notes themselves — the grid draws a dot, and there is no
+     * reason to hold a whole notebook in memory to answer a yes/no question per square. Be
+     * precise about what that does and does not save, though: `notesFlow` is backed by
+     * `SELECT *`, so every note is still read and mapped on every write anywhere in the app, and
+     * only the retention is avoided. Making that sentence fully true would mean a
+     * `SELECT DISTINCT date` query of its own, which is a change to make when a table large
+     * enough to notice exists — not before.
+     *
+     * The day's actual notes come from [collectNotesForSelectedDay], which asks the store for
+     * one day rather than filtering this list.
+     *
+     * **These markers come from the store and never from the selection.** Picking a day must not
+     * put a dot on it — the dot means "something is written here", and a dot that appears merely
+     * because you looked at a day is a lie the user cannot check without opening it.
      */
     private fun collectNotes() {
         viewModelScope.launch {
@@ -61,6 +79,52 @@ class CalendarViewModel(
                     datesWithNotes = notes.map { note -> note.date }.toSet(),
                 )
             }
+        }
+    }
+
+    /**
+     * Keeps the list under the grid showing whatever is written on the day that is picked.
+     *
+     * **Two subscriptions in one, and the nesting is the interesting part.** The outer one
+     * watches the *selection*; every time it changes, [flatMapLatest] throws away the previous
+     * day's subscription and opens one on the new day. So the list follows the user's taps, and
+     * it also follows the store — a note written, edited or deleted on the picked day updates
+     * this list with nobody having to ask, exactly as the markers above do.
+     *
+     * `distinctUntilChanged` is what stops it re-subscribing for nothing: this collector writes
+     * back into `_uiState`, so without it every unrelated state change — a month page, a new
+     * marker, the list it just wrote itself — would tear the day's subscription down and build it
+     * again. It cannot loop, because the field it writes is not the field it watches.
+     *
+     * **Nothing picked is its own case, and it is reachable.** `selectedDate` starts as today,
+     * but `refreshToday` drops a selection that a backwards clock has left in the future. An
+     * empty list is the right answer there; what must not happen is the *previous* day's notes
+     * staying on screen under a grid with nothing selected.
+     *
+     * **The day is written down beside its notes, and that is what keeps the screen honest.**
+     * The tap moves `selectedDate` immediately; the store's answer for the new day arrives a
+     * query later. Storing only the list would leave a window where the heading names one day
+     * and the rows below belong to another — so the list is stored with the day it is an answer
+     * about, and `CalendarUiState.notesForSelectedDay` hands it to the screen only while the two
+     * still agree.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun collectNotesForSelectedDay() {
+        viewModelScope.launch {
+            _uiState
+                .map { state -> state.selectedDate }
+                .distinctUntilChanged()
+                .flatMapLatest { date ->
+                    if (date == null) flowOf<Pair<LocalDate?, List<Note>>>(null to emptyList())
+                    else noteRepository.notesForDateFlow(date = date)
+                        .map { notes -> date to notes }
+                }
+                .collectLatest { (date, notes) ->
+                    _uiState.value = _uiState.value.copy(
+                        loadedDay = date,
+                        loadedDayNotes = notes,
+                    )
+                }
         }
     }
 
