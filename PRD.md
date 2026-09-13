@@ -123,3 +123,11 @@ specified and should be decided separately.
 labeled assumptions and open questions. Anything not marked as stated or
 inferred above was not part of the original description and should be
 treated as undecided.*
+
+---
+
+## Addendum — Alarms feature (appended requirement, verbatim)
+
+i need you continue on this branch with new screen named alarms where display all alarms the app have, i need a floating aciton button which
+  open a new screen allow i can write my message, set time to fire alarm. For instance, on 12h everyday, the app will fire a notification with
+  my message with highest prioriy, i need notification appears as popup notification to attract my focus on

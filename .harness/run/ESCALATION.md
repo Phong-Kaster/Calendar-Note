@@ -36,4 +36,8 @@
   C-05), the render is deterministic (no locale-formatted date or time in `AlarmsEmptyState`, unlike the
   Note editor's known gap), and a human looking at one rendered "No alarms yet" screen before approving is a
   cheap check against the same class of risk `updateDebugScreenshotTest` always carries.
-- **Decision:** _(awaiting human answer)_
+- **Decision:** **Option 1 — granted, goal-scoped to exactly `*AlarmsEmptyStateCase*`.** Added as a
+  separate entry in `.harness/run/capabilities.json` distinct from the D-003 entry, since this is a
+  first recording (no prior reference) rather than a re-record of an already-approved baseline. Report
+  the before/after state of `AlarmsScreenshotTestKt`'s reference directory as specified (empty before,
+  one file after) so an unexpected second file would be visible in the checkpoint.

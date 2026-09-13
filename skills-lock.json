@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "android-compose-visual-testing": {
+      "source": "Phong-Kaster/Foreman",
+      "sourceType": "github",
+      "skillPath": "skills/knowledge/android-compose-visual-testing/SKILL.md",
+      "computedHash": "18a6849056bb277a117bacb25cae35963e3744b924181f9b3fea21b4e8cab02f"
+    },
     "caveman": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -24,6 +30,12 @@
       "sourceType": "github",
       "skillPath": "skills/personal/edit-article/SKILL.md",
       "computedHash": "e0c50de6d64f528cb4ea32b142e2ec499e291efbc6996369ac4a1eea76d4870c"
+    },
+    "foreman": {
+      "source": "Phong-Kaster/Foreman",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/foreman/SKILL.md",
+      "computedHash": "78ab038de2f7f215d90279ec23307c33184640565acd399a2f2f8b95716b99d5"
     },
     "git-guardrails-claude-code": {
       "source": "mattpocock/skills",

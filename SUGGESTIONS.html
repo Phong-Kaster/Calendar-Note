@@ -236,6 +236,20 @@ $ set -o pipefail; false | tail -1 ; echo $?
     <p data-lang="en">A suggestion box is only trustworthy if it also says what should <em>not</em> move. If every entry argued for promotion, the box would be noise.</p></div>
 </div>
 
+<div class="card">
+  <div class="tagrow"><span class="id">S-09</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+  <h3 data-lang="vi">"Hết hạn mức phiên" bị đọc như hạn mức tài khoản — vòng lặp ngủ hàng giờ trong khi khởi động lại phiên là đủ</h3>
+  <h3 data-lang="en">A "session limit" warning is read as the account-wide quota — the loop slept for hours when a fresh session would have cleared it in seconds</h3>
+  <p data-lang="vi">Lúc 21:01 và lại lúc 08:35, <code>run.ps1</code> nhận một sự kiện <em>"You've hit your session limit"</em> từ CLI và tính giờ ngủ theo <code>resetsAt</code> của sự kiện đó — gán nhãn cửa sổ <code>five_hour</code>, dù phần trăm đọc được chỉ 31%. Bảng sử dụng thật của tài khoản lúc đó cho thấy cửa sổ 5 giờ mới dùng 34% (còn 66%), cách xa ngưỡng 90%. Khi tiến trình đang ngủ bị dừng và khởi động lại — tức một tiến trình <code>claude -p</code> mới, một <strong>phiên</strong> mới — lệnh gọi kế tiếp được chấp nhận ngay, không hề bị từ chối.</p>
+  <p data-lang="en">At 21:01, and again at 08:35, <code>run.ps1</code> received a <em>"You've hit your session limit"</em> event from the CLI and computed its sleep target from that event's <code>resetsAt</code> — labelling it the <code>five_hour</code> window, even though the read percentage was only 31%. The account's real usage panel at that moment showed the five-hour window at just 34% used (66% remaining), nowhere near the 90% ceiling. When the sleeping process was killed and restarted — a fresh <code>claude -p</code> process, a new <strong>session</strong> — the very next call was accepted immediately, with no rejection at all.</p>
+  <div class="ev">08:35  Quota window 'five_hour' at 31% -&gt; treated as &gt;=90%, wait target 13:20:30
+10:06  Human's own usage panel: session 34% used / 66% remaining
+10:09  Process killed, relaunched as a fresh session -&gt; accepted at once, no rejection</div>
+  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
+    <p data-lang="vi">Đây là cách vòng lặp diễn giải tín hiệu hạn mức của chính CLI, không phải chuyện riêng của repo này — ai chạy Foreman cũng vấp cùng một bẫy. "Hết hạn mức phiên" có vẻ là giới hạn theo <strong>phiên</strong>, không phải theo tài khoản, và một tiến trình mới xoá sạch nó; nhưng script lại đọc nó như một cửa sổ hạn mức tài khoản và ngủ hàng giờ chờ một mốc thời gian không liên quan. Cùng một lỗi khiến trợ lý (không phải engine của vòng lặp) khẳng định với người dùng rằng "không có cách nào bỏ qua" trước khi thử — tin vào một cờ cảnh báo còn sót lại thay vì thử một phiên mới trước.</p>
+    <p data-lang="en">This is about how the loop reads the CLI's own quota signal, not something specific to this repository — anyone running Foreman hits the same trap. "Session limit" appears to be a per-<strong>session</strong> ceiling, not an account-wide one, and a fresh process clears it — but the script read it as an account quota window and slept for hours against an unrelated reset time. The same error led the assistant (not the loop engine) to tell the human "there's no bypass available" before testing it — trusting a leftover warning flag instead of trying a fresh session first.</p></div>
+</div>
+
 <h2 data-lang="vi">Bạn cần làm gì</h2>
 <h2 data-lang="en">What you do</h2>
 <div class="scroll"><table>

@@ -9,6 +9,15 @@
       "allow": [
         "Bash(./gradlew :app:updateDebugScreenshotTest*)"
       ]
+    },
+    {
+      "intent": "D-004 (2026-09-13): record the reference image for one brand-new screenshot case, AlarmsScreenshotTestKt.AlarmsEmptyStateCase, which has no prior reference at all - not an intentional-change re-record like the entry above, a first recording. Scoped to this one test name and expiring with the run. The engine must report the before/after state of AlarmsScreenshotTestKt's reference directory (empty before, one file after) so an unexpected second file is visible in the checkpoint.",
+      "command": "./gradlew :app:updateDebugScreenshotTest --tests \"*AlarmsEmptyStateCase*\"",
+      "scope": "consumer repository, module :app, references for AlarmsScreenshotTestKt.AlarmsEmptyStateCase only",
+      "lifetime": "goal",
+      "allow": [
+        "Bash(./gradlew :app:updateDebugScreenshotTest --tests \"*AlarmsEmptyStateCase*\"*)"
+      ]
     }
   ]
 }
