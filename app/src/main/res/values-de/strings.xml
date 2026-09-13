@@ -70,4 +70,8 @@
     <string name="pick_a_day_to_see_its_notes">Wähle einen Tag, um zu sehen, was darauf steht</string>
     <string name="add_a_note_to_this_day">Notiz zu diesem Tag hinzufügen</string>
     <string name="a_note_can_only_be_written_on_today_or_an_earlier_day">%1$s liegt noch in der Zukunft — eine Notiz kann nur für heute oder einen früheren Tag geschrieben werden</string>
+
+    <!-- Alarms -->
+    <string name="alarms">Wecker</string>
+    <string name="no_alarms_yet">Noch keine Wecker</string>
 </resources>

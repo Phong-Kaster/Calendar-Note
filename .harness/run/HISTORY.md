@@ -6,6 +6,60 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 3 — 2026-09-13 — Phase 1 (A-001) implemented; one screenshot grant queued (D-004)
+
+- **Phase:** 1 — A-001.
+- **Recover (§6.1):** working tree was clean except for the pre-existing, expected-dirty files
+  (`PRD.md`, `skills-lock.json`, `.claude/`, `.agents/skills/`, `.harness/loop/`, `SUGGESTIONS.html`) —
+  none of it run debris. New finding: `gradle.properties` was also already dirty, carrying
+  `org.gradle.java.home` pinned to this machine's JDK — not present in iteration 2's checkpoint, not
+  written by any task, evidently added by a human between iterations. `./gradlew --version` succeeded on
+  first try this iteration, resolving the environment block iteration 2 reported as `FAILED`.
+- **Orient (§6.3):** read `RESUME.md`; re-confirmed the toolchain per its instruction; selected Phase 1
+  (A-001), the only executable task.
+- **Dispatched:** one Worker (Capable tier) for A-001, scoped to its five Declared File Scope files. Wrote
+  `AlarmsFragment.kt`, `AlarmsUiState.kt`, `AlarmsViewModel.kt`, `component/AlarmsEmptyState.kt`,
+  `ic_bottom_alarm.xml` — all within scope, confirmed via `git status`. Reported two new string keys
+  (`alarms`, `no_alarms_yet`) for the Iteration to add.
+- **Iteration wiring (§6.6):** `BottomBarDestination.kt` (new `Alarms` entry), `navigation_graph.xml`
+  (`alarmsFragment` + `toAlarms`), `ViewModelModule.kt` (`AlarmsViewModel` bound), both `strings.xml`
+  (the two reported keys, English + German), `CoreBottomBar.kt` (hide the centre "+" on Alarms, per
+  AS-5), `README.md` (package tree + feature table).
+- **Build/Test (§6.7):** first combined run surfaced the predicted risk (`PLAN.md` risk 1): the fourth
+  tab broke `ThemeScreenshotTestKt/BottomBar*` and `BottomBarSystemNight*`. Re-recorded both under the
+  already-consumed D-003 grant via `--tests "*BottomBar*"`; confirmed via `git status` that only those
+  two reference PNGs changed, no orphans. Second finding: `lintDebug` failed on an unrelated
+  `PropertyEscape` error in `gradle.properties` (the human-added JDK path, unescaped) — fixed directly per
+  §6.7 (a failure naming a file in nobody's Declared File Scope is the Iteration's to fix; charged against
+  no task's attempts). Third combined run: `BUILD SUCCESSFUL` — assemble, 138 unit tests (0 failures),
+  lint (0 errors, 64 warnings), and 20/20 existing screenshot cases including the two re-records.
+- **Fresh-Context Review (§6.8):** two findings, both fixed this iteration (see `AMENDMENTS.md` A-5, A-6):
+  the acceptance-required `@PreviewTest` case was missing entirely (added `AlarmsScreenshotTest.kt`,
+  rendering `AlarmsEmptyState` directly — same pattern as `HomeScreenshotTest`/`HomeNoteList`, so it needs
+  no `NavController` and cannot misreport AS-5's hidden-button state as a side effect); and AS-5's
+  hide-the-"+"-button check was a hardcoded destination-id comparison inside `CoreBottomBar` rather than a
+  property on the destination itself (moved to `BottomBarDestination.hidesCreateButton`). No Constraint
+  (C-01 … C-12) violation found. Two minor/non-blocking notes not acted on: `AlarmsUiState.isEmpty` has no
+  `else` branch yet (by design — the class's own KDoc names this as what A-002 replaces), and previews of
+  the whole screen cannot show the true hidden-button state without a `NavController` (a pre-existing,
+  systemic preview limitation, not new to this task).
+- **Fourth combined run:** the new `AlarmsEmptyStateCase` screenshot case has no reference image yet →
+  `ScreenshotImageNotFoundException`. Everything else stayed green (assemble, 138 tests, lint, and the
+  other 20 pre-existing screenshot cases).
+- **Reconciled:** the missing `@PreviewTest` case → Tier-1 amendment, fixed directly (A-5), plus a
+  `PLAN.md` correction (Phase 1's row now lists `AlarmsScreenshotTest.kt` as Iteration-owned, matching
+  every later phase's row). The fragile hide-button check → Tier-1 amendment, fixed directly (A-6). The
+  `gradle.properties` `PropertyEscape` failure → fixed directly per §6.7, no attempt charged, flagged (not
+  escalated) as a portability concern in `knowledge/PROJECT.md` and `ISSUES.md` since the engine cannot
+  write outside its repository working directory to relocate it. The new screenshot case's missing
+  reference → **queued decision D-004** (goal-scoped grant, narrower than and separate from D-003, since
+  a brand-new case is explicitly the other trigger `PROJECT.md`'s own `updateDebugScreenshotTest` note
+  names for an Escalation Request). A-001 marked blocked by decision rather than complete; no attempt
+  charged against it — the Worker succeeded on its first try.
+- **Outcome:** real progress checkpointed (A-001 fully implemented, reviewed, and evidenced except for
+  one screenshot reference), but A-001 cannot be marked complete and nothing downstream is selectable
+  until D-004 is answered → `ESCALATE`.
+
 ### Iteration 2 — 2026-09-13 — decisions consumed; execution found broken (no JDK)
 
 - **Phase:** none — §6.2 consumed all three queued decisions before any Phase could be selected; §6.3

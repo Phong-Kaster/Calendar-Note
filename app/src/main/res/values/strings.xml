@@ -79,4 +79,8 @@
         control, so "try again" would be an instruction the user cannot act on.
     -->
     <string name="a_note_can_only_be_written_on_today_or_an_earlier_day">%1$s has not arrived yet — a note can only be written on today or an earlier day</string>
+
+    <!-- Alarms -->
+    <string name="alarms">Alarms</string>
+    <string name="no_alarms_yet">No alarms yet</string>
 </resources>

@@ -6,61 +6,70 @@
 >
 > Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-13 — branch `loop/calendar-note-app` — iteration 2_
+_Last updated: 2026-09-13 — branch `loop/calendar-note-app` — iteration 3_
 
-**Read this first: the run is planned and approved, but cannot build in this environment.** All three
-decisions are answered and consumed. Every task is `pending` with nothing blocking it on decision grounds.
-But `./gradlew --version` fails here with `JAVA_HOME is not set and no 'java' command could be found in
-your PATH`, so no task can be attempted, evidenced, or completed until a JDK is available. This is an
-environment defect, not a question — see below.
+**Read this first: the environment now builds. A-001 is implemented and almost entirely evidenced —
+one new screenshot reference needs your approval (D-004) before it can be marked complete.** Everything
+else in Phase 1 is green: `assembleDebug`, all 138 unit tests, `lintDebug` (0 errors), and 21 of 21
+*existing* screenshot cases. No task is abandoned. No task failed an attempt.
 
 ## Abandoned tasks
 
-None. No task has been attempted.
+None.
 
 ## Unreachable tasks
 
-None.
-
-## Blocking environment defect
-
-**No JDK is reachable from this shell.** `./gradlew --version` fails:
-`ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.`
-`gradle.properties` sets no `org.gradle.java.home` as a fallback. The D-001 capability grant itself is
-correctly installed — `.harness/knowledge/capabilities.json` carries the standing gradlew/lint/screenshot
-blocks — this is the environment underneath the grant, not a permission gap. **Fix:** install a JDK
-(17 or whatever this Android Gradle Plugin version requires) and either put it on `PATH`, set
-`JAVA_HOME`, or add `org.gradle.java.home=<path>` to `gradle.properties`. Once `./gradlew --version`
-succeeds, the run resumes at Phase 1 (A-001) with no further input needed.
+None. A-002 … A-007 are simply not yet selectable: each depends on A-001 (directly or transitively),
+which cannot be marked complete until D-004 is answered.
 
 ## Decisions awaiting an answer
 
-**None.** All three were answered 2026-09-13 and consumed in iteration 2 — full exchanges are archived in
-`.harness/run/HISTORY.md` § Archived Decisions: D-001 as written (DoD approved, AS-4 kept, all three
-capability blocks granted), D-002 option 1 (fourth bottom-bar tab, centre "+" hidden on Alarms, dedicated
-FAB), D-003 granted goal-scoped and narrow.
+**D-004 — a goal-scoped grant to record one brand-new screenshot reference.** Full text in
+`.harness/run/ESCALATION.md`. Short version: `AlarmsScreenshotTest.kt` is a new file this iteration added
+(a `@PreviewTest` case A-001's own acceptance criteria required but the plan's Phase 1 row omitted — see
+`AMENDMENTS.md` A-5) and it has no reference image yet. Recording one needs
+`./gradlew :app:updateDebugScreenshotTest --tests "*AlarmsEmptyStateCase*"`, which is not covered by the
+existing D-003 grant (that one is scoped by name to the two `BottomBar*` cases only). Blocks A-001's
+completion only.
+
+D-001, D-002, D-003 were answered 2026-09-13 and consumed in iteration 2 — archived in
+`.harness/run/HISTORY.md` § Archived Decisions.
 
 ## Capability ledgers — installed and verified
 
-Both were written by the human at the end of iteration 1 and checked by the engine:
+- `.harness/knowledge/capabilities.json` — the three D-001 standing blocks, unchanged since iteration 2.
+- `.harness/run/capabilities.json` — the D-003 goal-scoped block, already consumed against the two
+  `BottomBar*` references this iteration. D-004, once answered, adds a second goal-scoped entry here.
 
-- `.harness/knowledge/capabilities.json` — the three D-001 blocks at `"lifetime": "permanent"`
-  (build/compile/test/lint, `validateDebugScreenshotTest`, and the `MSYS_NO_PATHCONV=1` git-show
-  workaround), plus the placeholder entry that records why `updateDebugScreenshotTest` is **not** there.
-- `.harness/run/capabilities.json` — the single D-003 block at `"lifetime": "goal"`, so it expires when
-  `.harness/run/` is removed at completion.
+## Review findings — fixed this iteration
 
-The two are not swapped, which is the one thing worth stating plainly because nothing downstream checks it:
-a `goal` grant written into the standing ledger would be permanent in fact while calling itself temporary.
-`updateDebugScreenshotTest` was granted standing once before, on 2026-09-10, and withdrawn the next day —
-that is the mistake this split exists to prevent repeating.
+The Fresh-Context Review (§6.8) on A-001's diff found two issues, both corrected before this checkpoint:
 
-**The permissions are installed and correct. The environment underneath them is not** — see Blocking
-environment defect above.
+- **Missing acceptance evidence:** A-001 required a new `@PreviewTest` pinning the empty state; none
+  existed. Fixed — `AlarmsScreenshotTest.kt` added (AMENDMENTS.md A-5); its reference image is what D-004
+  is waiting on.
+- **AS-5's hide-the-"+"-button check lived in the wrong file:** a hardcoded destination-id comparison
+  inside `CoreBottomBar` rather than a property on `BottomBarDestination` itself, which would silently stop
+  working the day Alarms is reached through a different back-stack hierarchy (e.g. the notification-tap
+  route in criterion 23). Fixed — `BottomBarDestination.hidesCreateButton` (AMENDMENTS.md A-6).
+
+No Constraint (C-01 … C-12) violation was found. Both fixes are already in this iteration's checkpoint.
+
+## Flagged, not fixed — a personal path is now committed in `gradle.properties`
+
+Between iteration 2 (no JDK reachable at all) and iteration 3 (this iteration), `gradle.properties` picked
+up `org.gradle.java.home=<this machine's Android Studio JBR path>` in the tracked working tree — not
+written by any task. Iteration 3 only escaped its drive-letter colon, which `lintDebug` was rating a
+`PropertyEscape` **error** unrelated to anything in this feature. The engine cannot relocate this to a
+user-level, untracked `~/.gradle/gradle.properties` (its working directory is sandboxed to the
+repository), so a personal absolute path stays committed for now. Low stakes today — this is a
+single-developer skeleton with no CI — but worth moving out of the tracked file at your convenience. Full
+note in `.harness/knowledge/PROJECT.md` § Environmental Facts.
 
 ## `human` criteria still unsigned
 
-All 17. No implementation exists yet, so none of them could be looked at:
+All 17 — unchanged from iteration 2; A-001 adds no `human`-signable surface of its own beyond criteria 8
+and 10, and neither is ready to show a person until the D-004 grant lands and the full Phase is complete.
 
 | # | What a person has to check |
 |---|---|
@@ -81,45 +90,23 @@ All 17. No implementation exists yet, so none of them could be looked at:
 | 32 | Alarms still fire after the phone is **rebooted** |
 | 35 | The two new screens look like they belong to this app |
 
-The exact instructions for each are in `.harness/run/DoD.md` § Verification Evidence Required. Criteria 22
-and 32 need a real phone and real waiting; there is no shortcut and no command here that can stand in for
-them.
-
-## Review findings not fixed
-
-None — no diff has been reviewed.
-
 ## Inherited defects (predate this run)
 
 These were found by the previous run on this branch and are recorded, not fixed.
 
-- **43 hardcoded colour literals survive in the tree.** `Color.White`, `Color.Black` and `Color(0x…)` in
-  existing sources. Nothing mechanical catches them: AGP lint reports no colour finding at all because it
-  reads `android:text` in layout XML and this app has no layout XML for its screens, and a screenshot test
-  cannot distinguish a literal from a theme lookup because they render identical pixels. This is why C-01
-  exists and why DoD criterion 33 is a grep. **New files must not add to the count**; the existing 43 are
-  out of this run's scope.
-- **Eight orphaned screenshot reference images** sit in `app/src/screenshotTestDebug/reference/`. A
-  reference filename ends in a hash of the preview's *parameters*, so changing a `@Preview`'s `name`,
-  `widthDp` or `heightDp` writes a new file and leaves the old one behind. Validation ignores strays and
-  stays green, so nothing ever reports them.
-- **German bottom-bar labels truncate.** "Einstellungen" already ellipsizes at three tabs. D-002's fourth
-  tab makes every slot narrower and makes this worse. Recorded rather than fixed because it predates the
-  feature — but the new tab's label should be chosen short in *both* languages, and that instruction is in
-  A-001's task file.
-- **`.claude/figma-design-system.md` § 4(b) contradicts C-01**, telling a reader to do the opposite about
-  colour literals. It is a human-owned rule file; the engine reads it and never edits it. Overridden in
-  `PROJECT.md` and filed here as a rule-file defect for you to resolve.
+- **43 hardcoded colour literals survive in the tree**, none added by this run. See C-01.
+- **Eight orphaned screenshot reference images** in `app/src/screenshotTestDebug/reference/`, none added
+  by this run.
+- **German bottom-bar labels truncate** ("Einstellungen" already ellipsizes at three tabs; the new fourth
+  tab makes every slot narrower). A-001 chose short labels in both languages ("Alarms"/"Wecker") so it does
+  not make this worse, but the underlying truncation defect predates this feature and is not fixed by it.
+- **`.claude/figma-design-system.md` § 4(b) contradicts C-01** — a human-owned rule file the engine reads
+  but never edits. Overridden in `PROJECT.md`; still worth your correcting at the source.
 
 ## Assumptions recorded
 
 - **The bootstrap that produced `DoD.md`, `PLAN.md`, `A-001` and `A-002` was interrupted before writing any
-  run scaffolding**, and iteration 1 salvaged that debris rather than reverting it. The four documents were
-  internally consistent and cross-referenced the same constraint and decision ids; reverting would have
-  discarded the whole analysis fan-out to re-derive the same result. If you disagree, the cheap fix is to
-  delete `.harness/run/` and re-run, which re-enters Bootstrap from scratch.
+  run scaffolding**, and iteration 1 salvaged that debris rather than reverting it — see `STATE.md`.
 - **`PRD.md` is left modified and uncommitted in the working tree.** It holds your Alarms addendum. It is
-  your intent file, not the engine's to stage, so it is deliberately not in the checkpoint.
-- **AS-1 … AS-11** — eleven readings of ambiguities in the three-sentence addendum — live in
-  `.harness/run/DoD.md` § Assumptions, each with the criteria it affects and what it costs to reverse. They
-  are not duplicated here because approving D-001 approves them, and two copies would drift.
+  your intent file, not the engine's to stage.
+- **AS-1 … AS-11** live in `.harness/run/DoD.md` § Assumptions, not duplicated here.

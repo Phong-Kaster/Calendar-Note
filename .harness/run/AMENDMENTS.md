@@ -6,6 +6,39 @@
 
 <!-- Newest first. -->
 
+### A-5 — Phase 1 gains `AlarmsScreenshotTest.kt` as an Iteration-owned file (Tier 1)
+
+- **Iteration:** 3
+- **Date:** 2026-09-13
+- **What changed:** `PLAN.md`'s Phase 1 row omitted `AlarmsScreenshotTest.kt`, even though A-001's own
+  Acceptance section requires *"a new `@PreviewTest` case pinning the empty state, sized per C-05"* and
+  every later phase's row already lists that file as Iteration-owned. A Fresh-Context Review (§6.8) caught
+  the gap: no such test existed, the screenshot case count was unchanged from the previous run, and nothing
+  pins `AlarmsEmptyState`'s rendering against a later regression. Added `AlarmsScreenshotTest.kt` to Phase
+  1's row and wrote the file this iteration, rendering `AlarmsEmptyState` directly (the same pattern
+  `HomeScreenshotTest.kt` uses for `HomeNoteList`) rather than the whole screen, so the case needs no
+  `NavController` and does not accidentally photograph `CoreBottomBar`'s AS-5 special case as a side effect.
+- **Why:** ENGINE.md §6.8 requires the Fresh-Context Review to check the diff against the task's own
+  acceptance criteria; the reviewer found this omission before it left the run silently uncovered. A-001
+  cannot honestly be evidenced as done without it.
+- **Conditions met:** PRD, DoD and architecture unchanged; the task's own written acceptance criteria did
+  not change, only the Iteration's bookkeeping of which file satisfies them.
+
+### A-6 — `hidesCreateButton` moved onto `BottomBarDestination` (Tier 1)
+
+- **Iteration:** 3
+- **Date:** 2026-09-13
+- **What changed:** The Fresh-Context Review flagged that hiding the centre "+" via a hardcoded
+  `it.id == BottomBarDestination.Alarms.destinationId` check inside `CoreBottomBar` put AS-5's decision in
+  the wrong file: a screen reachable through a different hierarchy (a future deep link, for instance) would
+  silently fail to hide the button, with no compiler error and no test. Replaced with a
+  `hidesCreateButton: Boolean = false` field on `BottomBarDestination` itself, resolved once against
+  whichever entry matches `currentDestination.hierarchy`, so the decision travels with the destination that
+  owns it rather than living as a special case one file away.
+- **Why:** Same review pass as A-5; a correctness improvement inside files already Iteration-owned for
+  this Phase, not a change to any task's scope, dependency, or the DoD.
+- **Conditions met:** PRD, DoD and architecture unchanged; no task's Declared File Scope changed.
+
 ### A-4 — D-003 consumed: goal-scoped `updateDebugScreenshotTest` grant applied (Tier 2)
 
 - **Iteration:** 2

@@ -21,6 +21,11 @@
         android:label="Setting Fragment" />
 
     <fragment
+        android:id="@+id/alarmsFragment"
+        android:name="com.example.skeleton.ui.fragment.alarms.AlarmsFragment"
+        android:label="Alarms Fragment" />
+
+    <fragment
         android:id="@+id/settingLanguageFragment"
         android:name="com.example.skeleton.ui.fragment.setting.language.SettingLanguageFragment"
         android:label="Setting Language Fragment" />
@@ -75,6 +80,15 @@
     <action
         android:id="@+id/toSetting"
         app:destination="@id/settingFragment"
+        app:enterAnim="@anim/enter_fade_in"
+        app:exitAnim="@anim/exit_fade_out"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/homeFragment" />
+
+    <!-- Same shape as toCalendar/toSetting above: a tab swap, not a push. -->
+    <action
+        android:id="@+id/toAlarms"
+        app:destination="@id/alarmsFragment"
         app:enterAnim="@anim/enter_fade_in"
         app:exitAnim="@anim/exit_fade_out"
         app:launchSingleTop="true"

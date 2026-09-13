@@ -315,6 +315,16 @@ confirmed against the code that exists.
 ## Environmental Facts
 
 - **Platform:** Windows 11, PowerShell primary shell, Gradle wrapper, Gradle 9.1.0.
+- **`gradle.properties` now pins `org.gradle.java.home`** to this machine's Android Studio JBR
+  (`C:/Users/phong/AppData/Local/Programs/Android Studio/jbr`), added to the tracked working tree by a
+  human between iteration 2 (which found no JDK reachable at all) and iteration 3 (which found
+  `./gradlew --version` already working) — not by any task or Worker. Iteration 3 only escaped the drive
+  letter's colon (`C\:/...`), because AGP's `lintDebug` rates an unescaped one a `PropertyEscape` **error**,
+  which was failing DoD criterion 2 for a reason unrelated to any feature in this run. **Flagged, not
+  fixed:** a personal absolute path is now committed in a file every future run reads; the conventional fix
+  is a user-level, untracked `~/.gradle/gradle.properties` instead, but the engine's working directory is
+  sandboxed to the repository and cannot write there. Left for a human to relocate at convenience — this
+  single-developer skeleton has no CI to break in the meantime.
 - **Android SDK** path comes from git-ignored `local.properties`; a fresh clone will not build without it.
 - `compileSdk 36`, `targetSdk 36`, `minSdk 24`, `jvmTarget 11`.
 - **No CI configuration exists.** No lint baseline, no ktlint, no detekt — "lint" means AGP lint.

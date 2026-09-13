@@ -1,0 +1,38 @@
+<!--
+  The Alarms tab icon: an alarm clock — a round body, two hands, two bells on top and two feet.
+
+  Built to match ic_bottom_calendar.xml exactly in weight and finish: 25dp, a 25x25 viewport, 1px
+  round-capped strokes and no fill, so the four tabs look like one set rather than three drawings
+  and a guest.
+
+  The strokeColor here is only what the Android Studio preview shows. At runtime every tab is drawn
+  through Icon(tint = ...), which repaints the whole glyph — so changing this hex changes nothing a
+  user can see, exactly as with the calendar icon.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="25dp"
+    android:height="25dp"
+    android:viewportWidth="25"
+    android:viewportHeight="25">
+  <path
+      android:strokeWidth="1"
+      android:pathData="M12.5,7A7,7 0,1,0 12.5,21A7,7 0,1,0 12.5,7Z"
+      android:strokeLineJoin="round"
+      android:fillColor="#00000000"
+      android:strokeColor="#8C8C8C"
+      android:strokeLineCap="round"/>
+  <path
+      android:strokeWidth="1"
+      android:pathData="M12.5,14V10M12.5,14L15,16"
+      android:strokeLineJoin="round"
+      android:fillColor="#00000000"
+      android:strokeColor="#8C8C8C"
+      android:strokeLineCap="round"/>
+  <path
+      android:strokeWidth="1"
+      android:pathData="M7.5,9L5,6.5M17.5,9L20,6.5M7.5,19L5.5,21M17.5,19L19.5,21"
+      android:strokeLineJoin="round"
+      android:fillColor="#00000000"
+      android:strokeColor="#8C8C8C"
+      android:strokeLineCap="round"/>
+</vector>

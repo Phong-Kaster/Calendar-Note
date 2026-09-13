@@ -53,7 +53,7 @@ Iteration-owned rather than a task.
 
 | Phase | Tasks | Shared files the Iteration wires itself |
 |---|---|---|
-| 1 | A-001 | `navigation_graph.xml` (`alarmsFragment` + `toAlarms`), `BottomBarDestination.kt`, `ViewModelModule.kt`, both `strings.xml`, `CoreBottomBar.kt` (hide the centre "+" on Alarms, per AS-5), `README.md`, and the **re-record of the two `ThemeScreenshotTestKt/BottomBar*` references** |
+| 1 | A-001 | `navigation_graph.xml` (`alarmsFragment` + `toAlarms`), `BottomBarDestination.kt`, `ViewModelModule.kt`, both `strings.xml`, `CoreBottomBar.kt` (hide the centre "+" on Alarms, per AS-5), `README.md`, `AlarmsScreenshotTest.kt` (new — the `@PreviewTest` case A-001's acceptance requires, omitted from this row by the original plan; see AMENDMENTS.md A-5), and the **re-record of the two `ThemeScreenshotTestKt/BottomBar*` references** |
 | 2 | A-002 | `navigation_graph.xml` (editor destination + arguments), `AppDatabase.kt`, `Migration.kt`, `DatabaseModule.kt`, `RepositoryModule.kt`, `ViewModelModule.kt`, both `strings.xml`, `AlarmsScreenshotTest.kt`, `README.md` |
 | 3 | A-003 | both `strings.xml`, `AlarmsScreenshotTest.kt` |
 | 4 | A-004 | `AndroidManifest.xml` (`<receiver>`, `MainActivity` launchMode), `RepositoryModule.kt` or a new `SchedulerModule.kt` + `AppModule.kt`, `MainApplication.kt` (channel creation), both `strings.xml`, `README.md` |

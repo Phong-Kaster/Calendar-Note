@@ -36,15 +36,18 @@ Two things at once:
 | Tap one of that day's notes to open it in the editor | ✅ built |
 | Add a note dated to the day picked on the calendar (rather than to today) | ✅ built |
 | Refuse — and say why — when a note would be dated in the future | ✅ built |
+| Alarms as a fourth bottom-bar tab, opening on an explicit empty state | ⚠️ partial — screen only, nothing can be saved yet |
 
 > **Implementation status is deliberately explicit.** The note feature is complete: every row above
 > is code that exists, and this table was updated in the same change that landed each piece — a
 > README that claims a feature the code does not have is worse than no README.
 >
-> Two rows are honest about being less than finished. The **language picker** is inherited and only
+> Three rows are honest about being less than finished. The **language picker** is inherited and only
 > two of its seven languages have translations. The **German bottom-bar label** truncates
 > ("Einstell…") — a known defect, filed in `knowledge/ISSUES.md` and pinned by a reference image so
-> it cannot get quietly worse.
+> it cannot get quietly worse. **Alarms** is a run in progress: this is the fourth tab and its empty
+> state, with no `Alarm` model, no store and no floating action button yet — those land in the tasks
+> that follow.
 
 ## Business rules
 
@@ -209,7 +212,7 @@ com/example/skeleton/
 │           └── UserActionRepositoryImpl.kt
 ├── domain/                                 # What the app is about, in plain Kotlin. Android-free by rule.
 │   ├── enums/
-│   │   └── BottomBarDestination.kt
+│   │   └── BottomBarDestination.kt         #   Home, Calendar, Setting, Alarms — declaration order is tab order
 │   ├── model/                              #   Models the UI and repositories agree on
 │   │   ├── CalendarMonth.kt                #     One month laid out as a Sunday-first grid of squares
 │   │   ├── FutureDateRefusedException.kt   #     The no-future-dates rule saying no, carried as a value
@@ -241,6 +244,12 @@ com/example/skeleton/
 │   │   ├── LifecycleComposable.kt
 │   │   └── NoteSummaryRow.kt               #     One note as a card — used by Home and by the Calendar day list
 │   ├── fragment/                           #   One folder per screen: Fragment + UiState + ViewModel + component/
+│   │   ├── alarms/                         #     The fourth tab. Nothing is stored yet — the screen exists and says so
+│   │   │   ├── component/
+│   │   │   │   └── AlarmsEmptyState.kt     #       "No alarms yet", centred in the content area
+│   │   │   ├── AlarmsFragment.kt
+│   │   │   ├── AlarmsUiState.kt
+│   │   │   └── AlarmsViewModel.kt
 │   │   ├── calendar/                       #     The month page: a grid, today marked, the future switched off
 │   │   │   ├── component/
 │   │   │   │   ├── CalendarDayCell.kt      #       One square, and every combination of its three markers
