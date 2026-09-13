@@ -34,23 +34,29 @@ section.
 
 ## Decisions awaiting an answer
 
-Fill the `## Decision` section of each entry in `.harness/run/ESCALATION.md`, then re-run.
+**None.** All three were answered and approved on 2026-09-13, shortly after this iteration's checkpoint —
+D-001 as written (DoD approved, AS-4 kept, all three capability blocks granted), D-002 option 1 (fourth
+bottom-bar tab, centre "+" hidden on Alarms, dedicated FAB), D-003 granted goal-scoped and narrow.
+Iteration 2 consumes them at §6.2.
 
-| # | Question | Blocks |
-|---|---|---|
-| D-001 | Approve the Definition of Done, and re-install the toolchain capabilities the engine no longer holds | A-001 … A-007 — the whole run |
-| D-002 | Is Alarms the fourth bottom-bar tab, and what does the centre "+" mean there? (AS-5) | A-001, A-002, A-006 |
-| D-003 | Grant a goal-scoped `updateDebugScreenshotTest` to re-record the two bottom-bar references? | A-001's completion only |
+## One thing still needs a human, and it is not a decision
 
-**D-001 is the run's only truly blocking gate.** It carries two separable things: your approval of the 36
-acceptance criteria (and of the `machine`/`human` split, and of assumptions AS-1…AS-11), and a capability
-grant without which no task can ever be evidenced as complete.
+**The capability grants are approved in writing but not installed.** Neither
+`.harness/knowledge/capabilities.json` nor `.harness/run/capabilities.json` exists on disk. The runtime
+compiles the engine's permissions from those two files, and the engine may never write a ledger itself
+(ENGINE.md §12) — that separation is the whole point of the ledger, so this is not something the next
+iteration can route around.
 
-**One item in D-001 cannot be deferred cheaply.** AS-4 adds a per-alarm on/off switch the addendum never
-asked for. It costs a schema column that ships in A-002's single hand-written migration. Adding it later
-costs a *second* hand-written migration, which is the most dangerous operation available in this repository
-(C-03: nothing here can execute SQLite, and a wrong migration is a launch crash for every existing install).
-Keep it or cut it now.
+Until someone creates them, `./gradlew` stays denied and **no task can be evidenced as complete**, exactly
+as before the approval. The content to write is in `.harness/run/ESCALATION.md`: the three approved JSON
+blocks under D-001 go into `.harness/knowledge/capabilities.json`, and the single block under D-003 goes
+into `.harness/run/capabilities.json`. Each block's `target_ledger` field names its destination, and the
+two must not be swapped — a `goal` grant written into the standing ledger is permanent in fact while
+calling itself temporary, and nothing downstream cross-checks it.
+
+`updateDebugScreenshotTest` belongs in the **run** ledger only, so that it expires with the run. It was
+granted standing once before, on 2026-09-10, and withdrawn the next day; that is the mistake this split
+exists to prevent repeating.
 
 ## `human` criteria still unsigned
 

@@ -15,7 +15,7 @@
 
 ## D-001 — Approve the Definition of Done, and re-install the toolchain capabilities
 
-- **Status:** pending
+- **Status:** decided
 - **Type:** DoD approval + Capability grant
 - **Iteration:** 1
 - **Timestamp:** 2026-09-13
@@ -121,13 +121,20 @@ of it is D-003.
 
 ### Decision
 
-<!-- HUMAN WRITES HERE: the decision AND its rationale. The rationale becomes part of the audit trail. -->
+**Approved as written — Option 1, with the capability proposal approved as written.** Keep AS-4 (the
+per-alarm on/off switch): it's cheap to include now in the single A-002 migration and expensive to add
+later via a second hand-written migration (C-03), and a daily alarm with no way to silence it short of
+deletion gets worse the longer it's ignored. Grant all three proposed capability blocks (gradlew
+assemble/compile/test/lint, validateDebugScreenshotTest, and the MSYS_NO_PATHCONV git-show/ls-tree
+workaround) to `.harness/knowledge/capabilities.json` as specified. `updateDebugScreenshotTest` stays
+withheld from the standing ledger, per the 2026-09-11 withdrawal — it is granted separately and narrowly
+in D-003 only.
 
 ---
 
 ## D-002 — Where does the Alarms screen live, and what does the bottom bar's centre "+" do there?
 
-- **Status:** pending
+- **Status:** decided
 - **Type:** Tier 2 (plan/architecture)
 - **Iteration:** 1
 - **Timestamp:** 2026-09-13
@@ -181,13 +188,17 @@ None.
 
 ### Decision
 
-<!-- HUMAN WRITES HERE: the decision AND its rationale. The rationale becomes part of the audit trail. -->
+**Option 1 — fourth tab; centre "+" hidden on Alarms; a dedicated FAB creates the alarm.** This is the
+only reading that honors the addendum's explicit ask for a floating action button without putting two
+"create" controls on one screen. Accept the consequences: `CoreBottomBar` needs the small change to hide
+the centre button on the Alarms screen, and the two bottom-bar reference images need re-recording — see
+D-003.
 
 ---
 
 ## D-003 — A goal-scoped grant to re-record the two bottom-bar reference images
 
-- **Status:** pending
+- **Status:** decided
 - **Type:** Capability grant
 - **Iteration:** 1
 - **Timestamp:** 2026-09-13
@@ -260,4 +271,9 @@ so a re-record producing anything else is visibly not this.
 
 ### Decision
 
-<!-- HUMAN WRITES HERE: the decision AND its rationale. The rationale becomes part of the audit trail. -->
+**Grant it, goal-scoped — Option 1.** The mismatch is predicted before any code is written and the two
+filenames are named in advance, so a re-record producing anything else is visibly not this and would be
+caught by the required before/after hash report. Re-record only `BottomBar_*` and `BottomBarSystemNight_*`;
+report the live-hash list both before and after so any unexpected third file is visible in the checkpoint.
+This grant expires with the run per its `"lifetime": "goal"` and lives only in `.harness/run/capabilities.json` —
+it must not be copied into the standing `.harness/knowledge/capabilities.json` ledger.
