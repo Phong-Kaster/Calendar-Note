@@ -5,23 +5,24 @@
 
 ## Current
 
-- **Stage:** escalated
+- **Stage:** executing
   <!-- "Stage" is the run's lifecycle position. A "Phase" is a group of tasks. Do not conflate them. -->
 - **Loop Branch:** loop/calendar-note-app
-- **Next Phase:** Phase 1 — A-001 (unselectable: blocked by D-001, D-002)
+- **Next Phase:** Phase 1 — A-001 (decisions cleared; unselectable only because the build toolchain is
+  broken in this environment — see Iteration 2 in `HISTORY.md`)
 - **DONE-candidate:** no
 
 ## Progress
 
 | Task | Status | Declared File Scope | Evidence |
 |---|---|---|---|
-| A-001 | blocked (D-001, D-002; D-003 for completion) | `ui/fragment/alarms/**`, `res/drawable/ic_bottom_alarm.xml` | – |
-| A-002 | blocked (D-001, D-002) | `domain/model/Alarm*`, `domain/repository/AlarmRepository.kt`, alarm files under `data/**`, `ui/fragment/alarm_editor/**`, `ui/fragment/alarms/component/AlarmRow.kt`, own tests | – |
-| A-003 | blocked (D-001) | the alarm/alarms/data files A-002 creates, plus `AlarmDeleteConfirmSheet.kt` and tests | – |
-| A-004 | blocked (D-001) | `domain/scheduler/`, `data/scheduler/`, `data/receiver/AlarmReceiver.kt`, `data/notification/`, `res/drawable/ic_notification_alarm.xml`, `AlarmRepositoryImpl.kt`, own tests | – |
-| A-005 | blocked (D-001) | `data/receiver/BootReceiver.kt`, `AlarmScheduler.kt`, `AlarmManagerAlarmScheduler.kt`, own test | – |
-| A-006 | blocked (D-001, D-002) | `ui/fragment/alarms/component/AlarmsPermissionNotice.kt` plus the alarms screen trio and its test | – |
-| A-007 | blocked (D-001) | `.harness/knowledge/PROJECT.md` | – |
+| A-001 | pending | `ui/fragment/alarms/**`, `res/drawable/ic_bottom_alarm.xml` | – |
+| A-002 | pending | `domain/model/Alarm*`, `domain/repository/AlarmRepository.kt`, alarm files under `data/**`, `ui/fragment/alarm_editor/**`, `ui/fragment/alarms/component/AlarmRow.kt`, own tests | – |
+| A-003 | pending | the alarm/alarms/data files A-002 creates, plus `AlarmDeleteConfirmSheet.kt` and tests | – |
+| A-004 | pending | `domain/scheduler/`, `data/scheduler/`, `data/receiver/AlarmReceiver.kt`, `data/notification/`, `res/drawable/ic_notification_alarm.xml`, `AlarmRepositoryImpl.kt`, own tests | – |
+| A-005 | pending | `data/receiver/BootReceiver.kt`, `AlarmScheduler.kt`, `AlarmManagerAlarmScheduler.kt`, own test | – |
+| A-006 | pending | `ui/fragment/alarms/component/AlarmsPermissionNotice.kt` plus the alarms screen trio and its test | – |
+| A-007 | pending | `.harness/knowledge/PROJECT.md` | – |
 
 ## Assumptions
 
@@ -40,6 +41,12 @@
 - `PRD.md` is modified in the working tree — the human's Alarms addendum. It is **left uncommitted on
   purpose**: it is the human's intent file and not the engine's to stage. A future iteration seeing it dirty
   in §6.1 should not read it as a crashed run.
+- **Iteration 2 found the build toolchain non-functional in this environment**: `./gradlew --version`
+  fails with `JAVA_HOME is not set and no 'java' command could be found in your PATH`, and
+  `gradle.properties` sets no `org.gradle.java.home`. The capability grant from D-001 is installed and
+  correct — this is the environment underneath it, not the permission. A future iteration should re-run
+  `./gradlew --version` first; if it still fails, this is `FAILED` again, not a new queued decision (the
+  question was already answered in iteration 1's `RESUME.md`).
 
 ## Human sign-offs
 

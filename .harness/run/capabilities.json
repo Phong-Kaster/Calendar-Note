@@ -1,0 +1,14 @@
+{
+  "description": "Goal-scoped Capability Ledger for this run only. Written by the human on approving escalation D-003 (2026-09-13). Expires automatically when .harness/run/ is removed at completion - must never be copied into the standing ledger at .harness/knowledge/capabilities.json.",
+  "entries": [
+    {
+      "intent": "Re-record the two ThemeScreenshotTest bottom-bar references after the Alarms tab changes the bar's layout - an intentional UI change invalidating a correct baseline. Scoped to this goal and expiring with it. The engine must re-record only BottomBar_* and BottomBarSystemNight_*, and must report the live-hash list before and after so a stray or an unexpected third case is visible in the checkpoint.",
+      "command": "./gradlew :app:updateDebugScreenshotTest",
+      "scope": "consumer repository, module :app, references for ThemeScreenshotTest only",
+      "lifetime": "goal",
+      "allow": [
+        "Bash(./gradlew :app:updateDebugScreenshotTest*)"
+      ]
+    }
+  ]
+}

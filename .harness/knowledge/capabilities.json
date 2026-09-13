@@ -1,0 +1,47 @@
+{
+  "description": "Standing Capability Ledger for this repository. Re-installed by the human on approving escalation D-001 (2026-09-13) after the runtime moved to .harness/knowledge/. Migrated verbatim from the prior ledger at knowledge/capabilities.json (approved 2026-09-10, corrected 2026-09-11 to withdraw the updateDebugScreenshotTest grant). Standing = per-repository toolchain that survives this goal and future runs. The runtime reads only the 'allow' arrays, verbatim.",
+  "entries": [
+    {
+      "intent": "Build, unit-test and lint the app so task completion can be evidenced (ENGINE.md §6.7, §6.10). The engine currently holds no build capability in this repository; without this, no task can ever be marked complete. Includes the dependency resolution Gradle performs as part of these tasks.",
+      "command": "./gradlew <task> (assemble / compile / unit test / lint only)",
+      "scope": "consumer repository, module :app",
+      "lifetime": "permanent",
+      "allow": [
+        "Bash(./gradlew --version)",
+        "Bash(./gradlew :app:assembleDebug*)",
+        "Bash(./gradlew :app:compileDebugKotlin*)",
+        "Bash(./gradlew :app:testDebugUnitTest*)",
+        "Bash(./gradlew :app:lintDebug*)"
+      ]
+    },
+    {
+      "intent": "Verify rendered UI against the recorded reference images, so acceptance criteria about appearance, contrast and layout are provable by command output instead of being narrowed away. Host-side (layoutlib on the JVM) - no emulator, no device, no adb. Read-only with respect to the references: it compares, it never overwrites.",
+      "command": "./gradlew :app:validateDebugScreenshotTest",
+      "scope": "consumer repository, module :app",
+      "lifetime": "permanent",
+      "allow": [
+        "Bash(./gradlew :app:validateDebugScreenshotTest*)"
+      ]
+    },
+    {
+      "_withheld": "updateDebugScreenshotTest is DELIBERATELY ABSENT from this ledger.",
+      "_why": "It overwrites the committed reference images. An engine holding it, facing a red screenshot test, has a one-command route to making the failure disappear by re-recording wrong output as correct - the same class of act as editing an approved DoD. Granted standing on 2026-09-10, withdrawn on 2026-09-11; not re-granted here.",
+      "_how_to_grant": "When a baseline genuinely must move - an intentional UI change, or a new state that has no reference yet - the engine raises an Escalation Request and the human adds a GOAL-SCOPED entry to .harness/run/capabilities.json (not here), which expires with the run.",
+      "intent": "placeholder - no capability is granted by this entry",
+      "command": "none",
+      "scope": "none",
+      "lifetime": "none",
+      "allow": []
+    },
+    {
+      "intent": "Read files out of earlier commits and out of a prior run's Loop Branch. Bash(git show*) is already baseline, but on Windows/Git Bash MSYS rewrites 'ref:path' into 'ref;path' and the command fails for exactly the paths that matter (.harness/**, knowledge/**), with an error that reads as if the file is missing. MSYS_NO_PATHCONV=1 is the documented workaround, and the leading assignment means the baseline rule does not match it.",
+      "command": "MSYS_NO_PATHCONV=1 git show <ref>:<path>",
+      "scope": "consumer repository, read-only",
+      "lifetime": "permanent",
+      "allow": [
+        "Bash(MSYS_NO_PATHCONV=1 git show*)",
+        "Bash(MSYS_NO_PATHCONV=1 git ls-tree*)"
+      ]
+    }
+  ]
+}

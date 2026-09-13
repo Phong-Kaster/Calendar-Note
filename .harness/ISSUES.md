@@ -6,12 +6,13 @@
 >
 > Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-13 — branch `loop/calendar-note-app` — iteration 1_
+_Last updated: 2026-09-13 — branch `loop/calendar-note-app` — iteration 2_
 
-**Read this first: the run has not started.** The Alarms feature is fully planned — a Definition of Done,
-an execution plan and seven task files — and **not one line of it has been written**, because the engine
-cannot build, test or lint anything in this repository and three decisions are waiting for you. Everything
-below is either a question for you or a defect inherited from before this run.
+**Read this first: the run is planned and approved, but cannot build in this environment.** All three
+decisions are answered and consumed. Every task is `pending` with nothing blocking it on decision grounds.
+But `./gradlew --version` fails here with `JAVA_HOME is not set and no 'java' command could be found in
+your PATH`, so no task can be attempted, evidenced, or completed until a JDK is available. This is an
+environment defect, not a question — see below.
 
 ## Abandoned tasks
 
@@ -19,25 +20,25 @@ None. No task has been attempted.
 
 ## Unreachable tasks
 
-None by abandonment. All seven tasks are **blocked**, which is different and reversible — see the next
-section.
+None.
 
-| Task | Blocked by |
-|---|---|
-| A-001 | D-001, D-002 (and D-003 for completion) |
-| A-002 | D-001, D-002 |
-| A-003 | D-001 |
-| A-004 | D-001 |
-| A-005 | D-001 |
-| A-006 | D-001, D-002 |
-| A-007 | D-001 |
+## Blocking environment defect
+
+**No JDK is reachable from this shell.** `./gradlew --version` fails:
+`ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.`
+`gradle.properties` sets no `org.gradle.java.home` as a fallback. The D-001 capability grant itself is
+correctly installed — `.harness/knowledge/capabilities.json` carries the standing gradlew/lint/screenshot
+blocks — this is the environment underneath the grant, not a permission gap. **Fix:** install a JDK
+(17 or whatever this Android Gradle Plugin version requires) and either put it on `PATH`, set
+`JAVA_HOME`, or add `org.gradle.java.home=<path>` to `gradle.properties`. Once `./gradlew --version`
+succeeds, the run resumes at Phase 1 (A-001) with no further input needed.
 
 ## Decisions awaiting an answer
 
-**None.** All three were answered and approved on 2026-09-13, shortly after this iteration's checkpoint —
-D-001 as written (DoD approved, AS-4 kept, all three capability blocks granted), D-002 option 1 (fourth
-bottom-bar tab, centre "+" hidden on Alarms, dedicated FAB), D-003 granted goal-scoped and narrow.
-Iteration 2 consumes them at §6.2.
+**None.** All three were answered 2026-09-13 and consumed in iteration 2 — full exchanges are archived in
+`.harness/run/HISTORY.md` § Archived Decisions: D-001 as written (DoD approved, AS-4 kept, all three
+capability blocks granted), D-002 option 1 (fourth bottom-bar tab, centre "+" hidden on Alarms, dedicated
+FAB), D-003 granted goal-scoped and narrow.
 
 ## Capability ledgers — installed and verified
 
@@ -54,9 +55,8 @@ a `goal` grant written into the standing ledger would be permanent in fact while
 `updateDebugScreenshotTest` was granted standing once before, on 2026-09-10, and withdrawn the next day —
 that is the mistake this split exists to prevent repeating.
 
-Iteration 1 could not use any of it: the runtime compiles permissions at invocation start and these files
-landed after it. **Iteration 2 is the first that can build anything**, and therefore the first that can mark
-a task complete.
+**The permissions are installed and correct. The environment underneath them is not** — see Blocking
+environment defect above.
 
 ## `human` criteria still unsigned
 
