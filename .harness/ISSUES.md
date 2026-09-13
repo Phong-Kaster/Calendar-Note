@@ -39,24 +39,24 @@ D-001 as written (DoD approved, AS-4 kept, all three capability blocks granted),
 bottom-bar tab, centre "+" hidden on Alarms, dedicated FAB), D-003 granted goal-scoped and narrow.
 Iteration 2 consumes them at §6.2.
 
-## One thing still needs a human, and it is not a decision
+## Capability ledgers — installed and verified
 
-**The capability grants are approved in writing but not installed.** Neither
-`.harness/knowledge/capabilities.json` nor `.harness/run/capabilities.json` exists on disk. The runtime
-compiles the engine's permissions from those two files, and the engine may never write a ledger itself
-(ENGINE.md §12) — that separation is the whole point of the ledger, so this is not something the next
-iteration can route around.
+Both were written by the human at the end of iteration 1 and checked by the engine:
 
-Until someone creates them, `./gradlew` stays denied and **no task can be evidenced as complete**, exactly
-as before the approval. The content to write is in `.harness/run/ESCALATION.md`: the three approved JSON
-blocks under D-001 go into `.harness/knowledge/capabilities.json`, and the single block under D-003 goes
-into `.harness/run/capabilities.json`. Each block's `target_ledger` field names its destination, and the
-two must not be swapped — a `goal` grant written into the standing ledger is permanent in fact while
-calling itself temporary, and nothing downstream cross-checks it.
+- `.harness/knowledge/capabilities.json` — the three D-001 blocks at `"lifetime": "permanent"`
+  (build/compile/test/lint, `validateDebugScreenshotTest`, and the `MSYS_NO_PATHCONV=1` git-show
+  workaround), plus the placeholder entry that records why `updateDebugScreenshotTest` is **not** there.
+- `.harness/run/capabilities.json` — the single D-003 block at `"lifetime": "goal"`, so it expires when
+  `.harness/run/` is removed at completion.
 
-`updateDebugScreenshotTest` belongs in the **run** ledger only, so that it expires with the run. It was
-granted standing once before, on 2026-09-10, and withdrawn the next day; that is the mistake this split
-exists to prevent repeating.
+The two are not swapped, which is the one thing worth stating plainly because nothing downstream checks it:
+a `goal` grant written into the standing ledger would be permanent in fact while calling itself temporary.
+`updateDebugScreenshotTest` was granted standing once before, on 2026-09-10, and withdrawn the next day —
+that is the mistake this split exists to prevent repeating.
+
+Iteration 1 could not use any of it: the runtime compiles permissions at invocation start and these files
+landed after it. **Iteration 2 is the first that can build anything**, and therefore the first that can mark
+a task complete.
 
 ## `human` criteria still unsigned
 

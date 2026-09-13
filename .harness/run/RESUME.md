@@ -21,12 +21,15 @@
   - D-003 → **granted, goal-scoped.** Re-record **only** `BottomBar_*` and `BottomBarSystemNight_*`, and
     report the live-hash list **before and after** so an unexpected third file is visible in the checkpoint.
     Must not be copied into the standing ledger.
-- **⚠ The grants are approved but NOT INSTALLED.** Neither `.harness/knowledge/capabilities.json` nor
-  `.harness/run/capabilities.json` exists on disk. The runtime compiles permissions from those files, and
-  the engine may never write a ledger (§12). **Until a human creates them, `./gradlew` stays denied and no
-  task can be evidenced**, regardless of the approval text above. Iteration 2 must test this before
-  selecting work rather than assuming the approval took effect — and if still denied, that is a `FAILED`
-  (execution broken), not a queued decision: the question has been answered.
+- **Both ledgers are now installed** (`.harness/knowledge/capabilities.json`,
+  `.harness/run/capabilities.json`), written by the human at the end of iteration 1 and verified by the
+  engine: the three standing blocks are `permanent` in the knowledge ledger, `updateDebugScreenshotTest` is
+  `goal` in the run ledger **only**, and the knowledge ledger keeps its withheld-entry placeholder recording
+  the 2026-09-11 withdrawal. The two are not swapped.
+  Iteration 1 could not *use* them — the runtime compiles permissions at invocation start and these files
+  landed after it. **Iteration 2 is the first that can build.** Confirm with `./gradlew --version` before
+  selecting work; if Gradle is still denied then, that is `FAILED` (execution broken), not a queued
+  decision — the question has been answered and the ledger is on disk.
 - **Abandoned:** none
 - **Unreachable:** none
 - **Verified commands:** build: `./gradlew :app:assembleDebug` | test: `./gradlew :app:testDebugUnitTest` |
