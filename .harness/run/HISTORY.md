@@ -6,6 +6,39 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 8 — 2026-09-14 — D-007 consumed; A-006 and A-007 completed; run's last task closed, DONE-candidate
+
+- **Recovery:** working tree was clean on entry apart from the human's filled-in `## Decision` on D-007 in
+  `ESCALATION.md` — expected, not debris (§6.1 treats a human answer between iterations as normal input).
+- **Decisions consumed:** D-007 — option 1, granted, goal-scoped to one invocation of
+  `updateDebugScreenshotTest --tests "*AlarmsPermissionNoticeCase*"`. Ran it once; before/after state of
+  `AlarmsScreenshotTestKt`'s reference directory reported in `ESCALATION.md` (two files → three, only the
+  new case's file appeared). Re-verified `assembleDebug` + `testDebugUnitTest` + `lintDebug` +
+  `validateDebugScreenshotTest` together: `BUILD SUCCESSFUL`, 251 tests / 0 failures, lint 0 errors / 72
+  warnings, 23/23 screenshot cases. A-006 marked complete (`AMENDMENTS.md` A-15).
+- **Phase executed:** Phase 6 (A-007, single task) — the only task left in the run. Dispatched one Worker,
+  scope `.harness/knowledge/PROJECT.md` only; verified against `git status` (no scope violation). The
+  Worker reconciled every stale claim in the file against the tree (notification/alarm infrastructure,
+  the four-tab bottom bar, the toolchain numbers, the capability ledger note) and added two new
+  Constraints — **C-16** (an Activity's launch `Intent` replays on every recreation) and **C-17**
+  (revoking the exact-alarm permission cancels pending alarms; granting it back arms nothing without an
+  explicit re-arm).
+- **Fresh-Context Review:** one MAJOR (C-06's new sentence claimed the `AlarmScheduler` seam was "the only
+  part of the alarms feature any test can see", contradicting the 85 tests that exist over
+  `AlarmRepositoryImpl`/`AlarmsViewModel`/`AlarmEditorViewModel` and contradicting C-17's own citation of
+  `AlarmsViewModelTest` nine lines later) and one MINOR (`AlarmNotifier` exposes five constants, not four
+  — a stale KDoc comment in the source file itself said "four"). Both fixed by the Iteration this
+  checkpoint (`AMENDMENTS.md` A-16). A-007 marked complete.
+- **Also fixed:** the `AlarmsPermissionNoticeCase` reference PNG D-007 recorded was untracked in git —
+  staged in this checkpoint's commit so a fresh clone gets all 23 references.
+- **Result:** all seven tasks (A-001 … A-007) are complete. Nothing abandoned, nothing deferred, no queued
+  decision outstanding. `STATE.md` set `DONE-candidate: yes`. All sixteen `human` DoD criteria remain
+  unsigned — a Human Verification Request is owed before this run can report `DONE`; that is the next
+  (Verifier) invocation's job per §11, not this one's, since this iteration wrote implementation
+  (dispatched a Worker and made review-driven fixes) and the DONE-candidate rule requires a clean
+  invocation to certify.
+- **Report:** `CONTINUE`.
+
 ### Iteration 7 — 2026-09-14 — Phase 5 (A-005, A-006) dispatched and reviewed; A-005 completed; A-006 code-complete, blocked on D-007
 
 - **Phase:** 5 — A-005 and A-006, dispatched as two parallel Workers with disjoint Declared File Scopes

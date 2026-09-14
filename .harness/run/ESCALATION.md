@@ -33,7 +33,20 @@
   (one component, two conditions both failing, the tallest the banner ever gets), the render has no
   locale-formatted date or time so it is not host-dependent, and a human looking at one rendered banner
   before approving is the same cheap check the three prior grants already relied on.
-- **Decision:**
+- **Decision:** **Option 1 — granted, goal-scoped to exactly one invocation of
+  `./gradlew :app:updateDebugScreenshotTest --tests "*AlarmsPermissionNoticeCase*"`.** Single-use, not a
+  standing permission: run it once to record `AlarmsPermissionNoticeCase`'s reference image, report the
+  before/after state of `AlarmsScreenshotTestKt`'s reference directory as specified, and then remove this
+  entry from `.harness/run/capabilities.json` (or let it expire with the run) — do not reuse it for any
+  other test name or any later re-record of this same case without a fresh Decision.
+- **Applied (iteration 8).** Ran exactly `./gradlew :app:updateDebugScreenshotTest --tests
+  "*AlarmsPermissionNoticeCase*"` once. Before: `AlarmsScreenshotTestKt`'s reference directory held two
+  files (`AlarmDeleteConfirmationCase_...png`, `AlarmsEmptyStateCase_...png`), no `AlarmsPermissionNoticeCase`
+  entry. After: a third file,
+  `AlarmsPermissionNoticeCase_Alarms - permission notice_a2b5ee82_0.png`, appeared — no other case's file
+  changed. Re-verified `assembleDebug` + `testDebugUnitTest` + `lintDebug` + `validateDebugScreenshotTest`
+  together: `BUILD SUCCESSFUL`, 251 tests / 0 failures, lint 0 errors / 72 warnings, 23/23 screenshot cases
+  green. A-006 marked complete; A-007 becomes selectable.
 
 
 

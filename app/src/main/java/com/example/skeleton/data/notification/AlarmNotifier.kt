@@ -43,7 +43,7 @@ import com.example.skeleton.domain.model.Alarm
  *
  * Neither path can be checked by a test here — `NotificationChannel` and `Notification` are stubs on
  * this toolchain whose getters answer `0` — so what *is* checked, in `AlarmNotifierConstantsTest`,
- * are the four constants below. That is why they are constants and not values typed inline.
+ * are the five constants below. That is why they are constants and not values typed inline.
  *
  * @param context used to read strings, build the tap target and reach the notification service.
  *   The application context is the right one to hand over — a notification outlives any screen.

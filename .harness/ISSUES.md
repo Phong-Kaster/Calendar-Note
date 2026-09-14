@@ -11,25 +11,18 @@ None. No task has failed an attempt in this run.
 
 ## Unreachable tasks
 
-**A-007** — depends on A-005 (complete) **and** A-006 (code-complete, blocked on D-007). Stays
-unreachable until D-007 is answered and A-006 is marked complete.
+None. All seven tasks (A-001 … A-007) are complete.
 
 ## Queued decisions awaiting an answer
 
-**D-007** — a goal-scoped `updateDebugScreenshotTest` grant for exactly `AlarmsPermissionNoticeCase`
-(A-006's permission-notice banner, its first `@PreviewTest` reference, never before recorded). Same
-shape as D-003, D-004 and D-006, all previously granted and spent. Blocks A-006's completion (its
-acceptance requires screenshots green) and, transitively, A-007's selectability. Blocks nothing else —
-everything else in this run is either complete or already unreachable for an unrelated reason. See
-`ESCALATION.md` for the full context and options.
+None. D-001 through D-007 are all consumed — see `AMENDMENTS.md` for the full trail.
 
 ## `human` criteria still unsigned
 
-All of them. No person has looked at the running app in this run — the engine cannot, and says so
-rather than certifying what it cannot see.
-
-Sixteen are **ready to be shown to someone now**, since A-001 through A-005 are all complete with
-green machine evidence:
+**All sixteen of them.** No person has looked at the running app in this run — the engine cannot, and
+says so rather than certifying what it cannot see. This is now the **only** thing standing between this
+run and `DONE`: every task is complete, every `machine` criterion is green, nothing is abandoned or
+deferred.
 
 - **3, 4** — upgrade over a v3 install does not crash.
 - **8** — the Alarms tab is findable and it is obvious which screen you are on.
@@ -38,22 +31,27 @@ green machine evidence:
 - **11** — a long alarm message has defined overflow.
 - **13, 16** — the floating button is visible and opens the editor; the editor stays usable with the
   keyboard up.
+- **18** — an alarm survives the app being force-stopped and reopened.
+- **22** — the alarm actually fires at the time set, with the user's message, as a popup over whatever
+  is on screen, and repeats the next day unattended.
+- **23** — tapping the notification opens the app on the Alarms screen and dismisses the notification,
+  without launching a second copy of the app.
 - **25** — tapping an alarm in the list opens it with its message and time already filled in.
 - **28** — the delete control is findable and the confirming button is unmistakably different from the
   safe one.
 - **30** — the enabled switch reads correctly at a glance and its state marker contrasts with its
   background.
-- **22** — the alarm actually fires at the time set, with the user's message, as a popup over whatever
-  is on screen, and repeats the next day unattended.
-- **23** — tapping the notification opens the app on the Alarms screen and dismisses the notification,
-  without launching a second copy of the app.
+- **31** — with notifications off, or exact alarms not permitted, the Alarms screen says so and offers
+  the fix, and the warning clears itself once the setting is corrected.
 - **32** — an alarm set before a reboot still arrives after it, without the user opening the app.
+- **35** — both new screens look like they belong to this app: black ground, the product blue, no
+  Material-default lilac, every label legible.
 
-**31** (the OS-permission notice) will join this pool once D-007 unblocks A-006's completion — the code
-is done and reviewed, only its own screenshot evidence is missing.
-
-None of these are being requested yet, deliberately. The Human Verification Request is raised once at
-the end of the run (§11) rather than per phase: it costs one sitting instead of several.
+Each item's exact steps (what to open, what to do, what to expect) are already written in `DoD.md` §
+Verification Evidence Required. The next invocation to find `STATE.md`'s `DONE-candidate: yes` is the
+Verifier (ENGINE.md §11): it re-proves every `machine` criterion fresh, then raises the Human
+Verification Request for these sixteen and reports `ESCALATE` — not `DONE` — until a person signs each
+one off.
 
 ## Review findings recorded but not fixed
 
@@ -110,6 +108,23 @@ live) and was outside A-005's Declared File Scope. The race is unchanged and sti
 would give `AlarmReceiver` the same "read the table, not the intent" treatment `rearmAll` has, which is
 a receiver-level change no task in this run's plan owns.
 
+### The German bottom-bar label truncates
+
+Pre-existing, not introduced by this run. Filed here per `PLAN.md` risk 6 and `TASKS/A-007.md`'s own
+note — this is a standing defect, not a Constraint, because it predates the Alarms feature entirely.
+
+### Pre-existing hardcoded colour literals outside `Color.kt`/`Type.kt`
+
+C-01 in `.harness/knowledge/PROJECT.md` cites "43 such literals" carried forward from a previous run's
+count. A fresh grep this run (`grep -rnE 'Color\(0x|Color\.White|Color\.Black' app/src/main/java`,
+excluding `Color.kt` and `Type.kt` where such literals are the deliberate token definitions) finds **45**
+today, across `CoreLayout.kt`, `CoreBottomSheet.kt`, `CoreTopBar.kt`, `CoreTopBar4.kt`,
+`RateBottomSheet.kt`, `HomePermissionBottomSheet.kt`, `SettingItem.kt`, `LanguageItem.kt`,
+`SettingLanguageFragment.kt`, `SettingFragment.kt` — none of them files this run touched. The two-count
+discrepancy (43 vs 45) is unreconciled; worth a future task re-verifying the exact count and either
+correcting C-01's number or explaining the drift, rather than a run that touches none of these files
+guessing at it.
+
 ## Recorded assumptions
 
 - **AS-1 … AS-11 live in `.harness/run/DoD.md`**, not here — see D-001's archived exchange.
@@ -126,16 +141,11 @@ a receiver-level change no task in this run's plan owns.
 
 ## Closed since the last report
 
-- **A-005** is complete: alarms are re-armed on boot via a new `BootReceiver` and
-  `AlarmScheduler.rearmAll`.
-- **A-006** is code-complete (banner, ViewModel wiring, tests) but not yet marked done — blocked on
-  D-007, a new queued decision (see above).
-- **Six defects** the Fresh-Context Review found across A-005/A-006's combined diff are fixed: two
-  MAJOR (granting exact alarms back was not re-arming anything; a test suite exercised a code path
-  production had overridden away) and four MINOR (two settings deep-links landing one screen short of
-  the named switch; two silently-swallowed failures; one unbounded `goAsync()`). See `AMENDMENTS.md`
-  A-14.
-- **Two new Constraints** recorded in `.harness/knowledge/PROJECT.md`: C-14 (settings deep-links need
-  the app-specific intent) and C-15 (`HomeRequestPermission.kt`'s `requestExactAlarm` is a local
-  function, not importable).
-- **`README.md`**'s feature table and package tree are brought current with both A-005 and A-006.
+- **A-006** is complete: D-007's goal-scoped screenshot grant was applied, the reference image recorded,
+  all four verification commands green.
+- **A-007** is complete: `.harness/knowledge/PROJECT.md` reconciled with the tree, two new Constraints
+  (C-16, C-17) added. A Fresh-Context Review found and the Iteration fixed one MAJOR (an overstated
+  testability claim) and one MINOR (a stale constant count) — see `AMENDMENTS.md` A-16.
+- **All seven tasks in this run are now complete.** Nothing abandoned, nothing deferred, no queued
+  decision outstanding. `STATE.md` records `DONE-candidate: yes`. The only remaining work is the
+  end-of-run Human Verification Request (§11), owed to the sixteen `human` criteria listed above.

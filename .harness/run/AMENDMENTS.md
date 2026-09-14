@@ -6,6 +6,51 @@
 
 <!-- Newest first. -->
 
+### A-16 — A-007 completed: `PROJECT.md` reconciled, two review findings fixed, run's last task closed (Tier 1, review-driven)
+
+- **Iteration:** 8
+- **Date:** 2026-09-14
+- **What changed:** A-007 (Phase 6, the run's final task) landed via one Worker dispatch, scope
+  `.harness/knowledge/PROJECT.md` only — verified against `git status` before being trusted. The Worker
+  replaced every stale claim (the "100% absent" notification/alarm line, the three-tab bottom bar, the
+  "iteration 11" toolchain numbers, the "ledger not installed" paragraph) with sourced, cross-checked
+  current state, and added two new Constraints: **C-16** (an Activity's launch `Intent` replays on every
+  recreation) and **C-17** (revoking the exact-alarm permission cancels pending alarms; granting it back
+  arms nothing without an explicit re-arm on the transition). A Fresh-Context Review against the task's own
+  acceptance criteria found one MAJOR (C-06's new sentence claimed the `AlarmScheduler` seam was "the only
+  part of the alarms feature any test can see", contradicting the 85 tests that exist over
+  `AlarmRepositoryImpl`/`AlarmsViewModel`/`AlarmEditorViewModel`, and contradicting C-17's own citation of
+  `AlarmsViewModelTest` nine lines later) and one MINOR (`AlarmNotifier` exposes five constants, not four,
+  mirrored from a stale comment in the source file itself). Both fixed by the Iteration: C-06 reworded to
+  state the seam makes the *scheduling decision* testable, not that it is the only tested alarms code;
+  `AlarmNotifier.kt`'s KDoc corrected from "four constants" to "five". A-007 marked complete. **All seven
+  tasks in this run (A-001 … A-007) are now complete; none abandoned, none deferred.**
+- **Also fixed, reviewer-flagged but not a `PROJECT.md` defect:** the reference image D-007 recorded
+  (`AlarmsPermissionNoticeCase_..._a2b5ee82_0.png`) was untracked in git — staged in this checkpoint's
+  commit so a fresh clone gets all 23 references, not 22.
+- **Why:** all fixes sit inside A-007's own file or a source-file comment with no Declared File Scope
+  conflict (no other task touches `AlarmNotifier.kt` any more); none changes the PRD, DoD, architecture, or
+  A-007's acceptance criteria — only correctness of what already exists.
+- **Tier:** 1 — review-driven correctness fixes; no PRD/DoD/architecture change.
+
+### A-15 — D-007 consumed: goal-scoped `updateDebugScreenshotTest` grant applied, A-006 marked complete (Tier 2)
+
+- **Iteration:** 8
+- **Date:** 2026-09-14
+- **What changed:** A-006's completion is no longer blocked. Ran exactly one invocation of
+  `./gradlew :app:updateDebugScreenshotTest --tests "*AlarmsPermissionNoticeCase*"`, recording the
+  reference image for `AlarmsPermissionNoticeCase` (before: two files in
+  `AlarmsScreenshotTestKt`'s reference directory; after: three — only the new case's file appeared).
+  Re-verified `assembleDebug` + `testDebugUnitTest` + `lintDebug` + `validateDebugScreenshotTest` together:
+  `BUILD SUCCESSFUL`, 251 tests / 0 failures, lint 0 errors / 72 warnings, 23/23 screenshot cases green.
+  A-006 marked complete; its `human` criterion (31) joins the pool for the end-of-run Human Verification
+  Request. A-007 becomes selectable.
+- **Why:** The human approved option 1 as written, matching D-003/D-004/D-006's precedent: a single-use
+  grant for exactly one new, prior-reference-free case, with a before/after report of the reference
+  directory.
+- **Conditions met:** answered decision, named task (A-006) unblocked, transitively unblocking A-007, per
+  ENGINE.md §6.2.
+
 ### A-14 — Six Fresh-Context Review findings fixed across both Workers' files, A-005 marked complete (Tier 1, review-driven)
 
 - **Iteration:** 7

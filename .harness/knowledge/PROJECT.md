@@ -98,7 +98,13 @@ So `Bundle`, `Intent`, `Uri`, `PendingIntent`, `AlarmManager`, `NotificationMana
 `NotificationChannel` are all untestable here — assertions against them pass vacuously. There is no
 Robolectric, no MockK, no Mockito. **Do not write a test whose subject is one of those types.** Pull the
 decision that carries an acceptance criterion out into a plain Kotlin function behind an injected seam and
-test that instead — `NoteRepositoryImpl`'s injected `java.time.Clock` is the worked example.
+test that instead — `NoteRepositoryImpl`'s injected `java.time.Clock` is the worked example, and the
+`AlarmScheduler` seam is the large one: `nextFireTimeMillis`, `scheduleDecision`, `requestCodeFor` and
+`AlarmNotifier`'s five exposed constants are all ordinary Kotlin, reachable with no framework stub in the
+way at all. They are not the *only* alarms code under test, though — `AlarmRepositoryImpl`,
+`AlarmsViewModel` and `AlarmEditorViewModel` are tested too, over hand-written fakes standing in for the DAO
+and the scheduler, the same pattern the rest of this codebase already uses. The seam is what makes the
+*scheduling decision itself* (not just the repository and ViewModel plumbing around it) testable at all.
 
 ### C-07 — Do not debounce a control with `NavigationUtil.canNavigate()`.
 
@@ -216,6 +222,44 @@ cannot import it and has to write the few lines itself (guard on `Build.VERSION_
 extracting it from a file it does not own. Two independent Workers hit this in Phase 5 and both caught it
 before writing code around the wrong assumption — recorded here so a third does not have to rediscover it.
 
+### C-16 — An Activity's launch `Intent` is replayed on every recreation, so intent-driven navigation needs `savedInstanceState == null`.
+
+`getIntent()` keeps answering the **same** intent for the whole life of an activity instance. A rotation
+recreates the activity and re-runs `onCreate` with it; so does this app's in-app language picker, through
+`AppLocalesMetadataHolderService`. Handling the intent unguarded therefore re-navigates on every one of
+those, with no new tap from anybody — a notification tapped once can throw the user onto Alarms over an
+open editor days later, and the user's own half-written alarm is what gets covered.
+
+Found in the Phase-4 Fresh-Context Review (iteration 6, `AMENDMENTS.md` A-12 #1). The fix in
+`MainActivity` is three parts and all three matter: `if (savedInstanceState == null) openAlarmsIfRequested(...)`
+in `onCreate`, the same call from `onNewIntent` (which is the path when the app is already on top —
+`AlarmNotifier`'s `PendingIntent` carries `CLEAR_TOP or SINGLE_TOP`), and navigating through the
+**`R.id.toAlarms` tab-swap action** (`popUpTo="@id/homeFragment"` + `launchSingleTop`) rather than the raw
+`alarmsFragment` destination, so the tap collapses to Home→Alarms instead of stacking on whatever was open.
+
+Nothing mechanical catches the unguarded version: there is no device and no instrumented test here, and it
+builds, tests, lints and validates green. Any future intent this activity learns to handle — a widget, a
+deep link, a second kind of notification — carries the same trap.
+
+### C-17 — Revoking the exact-alarm permission cancels every alarm already pending; granting it back arms nothing.
+
+From Android 12, when the user withdraws `SCHEDULE_EXACT_ALARM` the system drops the exact alarms this app
+has pending. Grant it again and the rows are still in Room, every switch on the Alarms screen still reads
+ON, the warning banner correctly disappears — and **not one alarm is armed.** It is the same silent state a
+reboot leaves (which is what `BootReceiver` exists for), reached by the very fix path the banner asks the
+user to walk. Clearing the warning is not the repair; re-arming is.
+
+`AlarmsViewModel.setPermissionState(...)` detects the **false→true transition** of `exactAlarmGranted` and
+calls `alarmScheduler.rearmAll(alarms = ...)`. The transition, not the value: the Fragment calls this on
+every `RESUMED` transition, so re-arming whenever the flag reads `true` would re-arm the whole list on every
+resume of a perfectly healthy screen. A new screen, or a refactor that moves where permission state is read,
+must carry that re-arm with it.
+
+Found in the Phase-5 Fresh-Context Review (iteration 7, `AMENDMENTS.md` A-14 #1), covered by three
+`AlarmsViewModelTest` cases (re-arms on the grant transition; not when already granted; not on a
+notifications-only change). No command in this repository can observe the real behaviour — it needs a phone
+and a trip through system settings.
+
 ---
 
 # REFERENCE
@@ -229,9 +273,9 @@ before writing code around the wrong assumption — recorded here so a third doe
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — 138 tests across 8 classes as of the previous run's iteration 11 |
-| Lint | `./gradlew :app:lintDebug` | **yes** — `0 errors, 64 warnings` as of iteration 11 |
-| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — ~15s, 20 cases as of iteration 11 |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — 251 tests across 15 classes, 0 failures (alarms run, iteration 8) |
+| Lint | `./gradlew :app:lintDebug` | **yes** — `0 errors, 72 warnings` (alarms run, iteration 8) |
+| Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — ~15s, **23 of 23** cases green (alarms run, iteration 8) |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes**, but **not granted to the engine** — see below |
 
 Success is a literal `BUILD SUCCESSFUL` line. Read test counts from
@@ -239,9 +283,16 @@ Success is a literal `BUILD SUCCESSFUL` line. Read test counts from
 and the lint summary from
 `app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt`.
 
-**These commands require a standing capability grant that is not currently installed at
-`.harness/knowledge/capabilities.json`.** The previous run's ledger sits at `knowledge/capabilities.json`,
-which the runtime no longer reads. Until it is moved, the engine cannot build, test or lint anything.
+All three figures come from **one** invocation of
+`:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest` whose own
+`BUILD SUCCESSFUL` was observed (the alarms run, iteration 8 — `TASKS/A-006.md` § Evidence). The tree
+agrees: 251 `@Test`s in `app/src/test/`, 23 `@PreviewTest`s in `app/src/screenshotTest/`.
+
+**The standing capability ledger is installed** at `.harness/knowledge/capabilities.json` (re-installed by
+the human on approving D-001, migrated verbatim from the previous run's `knowledge/capabilities.json`,
+which the runtime no longer reads). It grants `assembleDebug` / `compileDebugKotlin` / `testDebugUnitTest` /
+`lintDebug`, `validateDebugScreenshotTest`, and the `MSYS_NO_PATHCONV=1 git show|ls-tree` workaround.
+`updateDebugScreenshotTest` is **deliberately absent** from it — see below.
 
 ### `updateDebugScreenshotTest` is withheld on purpose
 
@@ -256,8 +307,10 @@ Three further traps around it:
 - **It orphans references rather than replacing them.** A reference filename ends in a hash of the
   preview's *parameters*. Change the `@Preview` body only and the file is overwritten in place; change
   `name`, `widthDp` or `heightDp` and the plugin writes a **new** file under a new hash and leaves the old
-  one sitting there. Validation ignores strays and stays green, so nothing ever tells you. Eight orphans
-  are in the tree today.
+  one sitting there. Validation ignores strays and stays green, so nothing ever tells you. The eight
+  orphans the previous run recorded are **gone**: `app/src/screenshotTestDebug/reference/` holds exactly
+  23 `.png` files today and each one's filename prefix is a distinct live `@PreviewTest` function, so
+  every file maps to exactly one of the 23 live cases. Keep it that way.
 - **Telling a stray from a live reference takes one command.** After a green validation run,
   `grep -o '[a-f0-9]\{8\}_0\.png' app/build/reports/screenshotTest/preview/debug/com.example.skeleton.screenshot.<Class>Kt.html`
   lists exactly the live hashes for that class. Anything on disk and not in that list is dead. Iteration 10
@@ -317,15 +370,23 @@ confirmed against the code that exists.
   `MyApplicationTheme { }`.
 - **Scaffolding:** use `core/CoreLayout.kt`, not a raw `Scaffold`. It takes `topBar` / `bottomBar` /
   `floatingActionButton` / `snackbarHost` / `showLoading` / `content` and paints
-  `colorScheme.background` as the ground. **`floatingActionButton` already exists and nothing in the app
-  uses it yet.** `CoreTopBar` handles status-bar padding itself; secondary screens use `CoreTopBar4`.
-- **Bottom bar:** `domain/enums/BottomBarDestination.kt` — declaration order is layout order, and adding an
-  entry is the whole job of putting a new top-level screen in the bar. `CoreBottomBar` splits the entries
-  down the middle around a centre round add button; it is written for an even split and its KDoc states a
-  **fourth** screen fills the deliberately-empty right slot and needs no change to that file. But
-  `CoreBottomBar(onCreateNote: () -> Unit)` has **no default, deliberately** — a new top-level screen must
-  decide what the centre button means there. Note that `ThemeScreenshotTest` renders the whole bar and its
-  two references pin a **three-tab** layout: a fourth entry changes those pixels from a file no task opens.
+  `colorScheme.background` as the ground. **`floatingActionButton` now has exactly one user:**
+  `AlarmsFragment`'s `AlarmsLayout` (a `primaryContainer` / `onPrimaryContainer` FAB — the contrast-verified
+  pair, taken together). A screen that fills that slot must also keep its own list clear of it:
+  `AlarmsFragment` reserves `56.dp + 16.dp + 16.dp` of bottom `contentPadding`, because the button floats
+  *over* the list and otherwise eats the last row's taps. `CoreTopBar` handles status-bar padding itself;
+  secondary screens use `CoreTopBar4`.
+- **Bottom bar: four tabs.** `domain/enums/BottomBarDestination.kt` — `Home`, `Calendar`, `Setting`,
+  `Alarms`; declaration order is layout order, and adding an entry is the whole job of putting a new
+  top-level screen in the bar. `CoreBottomBar` splits the entries around the centre round add button with
+  `leftCount = (entries.size + 1) / 2`, so today it is Home/Calendar | + | Setting/Alarms — the
+  deliberately-empty right slot the three-tab era left is now filled. A destination opts out of the shared
+  centre "+" with `hidesCreateButton = true` on its own enum entry (Alarms does, because it has its own
+  FAB); the decision lives on the destination, never as an id check inside `CoreBottomBar`.
+  `CoreBottomBar(onCreateNote: () -> Unit)` still has **no default, deliberately** — a new top-level screen
+  must decide what the centre button means there. `ThemeScreenshotTest` renders the whole bar, and its two
+  references were re-recorded for the fourth tab under the goal-scoped D-003 grant and are green today, so
+  they now pin the **four-tab** layout: a fifth entry changes those pixels from a file no task opens.
 - **Theme:** one fixed dark scheme in `ui/theme/Theme.kt`; `MyApplicationTheme(content)` takes no
   parameters and nothing reads the system light/dark setting. All 36 Material 3 roles are assigned
   explicitly, and `DarkColorSchemeTest` fails if any still matches `darkColorScheme()`'s default.
@@ -335,33 +396,46 @@ confirmed against the code that exists.
   the lighter blue reaches only 3.94:1 while on this fill it reaches 9.12:1 — it is the contrast-verified
   choice for a FAB.
 - **Clean architecture layers:** `domain/model`, `domain/repository` (interfaces, Android-free),
-  `domain/enums`, `data/database/local` (`AppDatabase`, `dao/`, `entity/`, `converter/`, `Migration.kt`),
-  `data/repository/impl`, `data/mapper`, `data/remote`, `common/` (`Outcome<T>`, `Constant`),
-  `core/extension/...`, `injection/` (Koin modules), `ui/`.
+  `domain/enums`, `domain/scheduler` (the `AlarmScheduler` seam + `NextFireTime.kt`, also Android-free),
+  `data/database/local` (`AppDatabase`, `dao/`, `entity/`, `converter/`, `Migration.kt`),
+  `data/repository/impl`, `data/mapper`, `data/remote`, `data/scheduler`, `data/receiver`,
+  `data/notification`, `common/` (`Outcome<T>`, `Constant`), `core/extension/...`, `injection/`
+  (Koin modules), `ui/`.
 - **DI is Koin**, wired in `injection/AppModule.kt` from `databaseModule`, `datastoreModule`,
-  `repositoryModule`, `viewModelModule`, `networkModule`, `localeModule` — a *new* module must be added to
-  that `includes` list. Repositories are bound by interface with named arguments; ViewModels use
-  `viewModel { }`. `MainApplication` starts Koin with `modules(appModule)` only.
+  `repositoryModule`, `viewModelModule`, `networkModule`, `localeModule`, `schedulerModule` — a *new*
+  module must be added to that `includes` list. Repositories are bound by interface with named arguments;
+  ViewModels use `viewModel { }`. `MainApplication` starts Koin with `modules(appModule)` only, and reads
+  anything it needs at startup back out of `startKoin { ... }`'s return value rather than constructing a
+  second, DI-invisible copy of it (that is how the notification channel is created — see below).
 - **Room:** `AppDatabase` is at **`version = 4`** (1 = user actions, 2 = posts, 3 = `notes`, 4 = `alarms`),
   `exportSchema = false`, file `"app_database"`, `@TypeConverters(DateConverter::class)` (`Date` ↔ `Long`).
   Adding an entity means: entity + DAO + register in `@Database` + bump `version` + write the migration +
   register it in `addMigrations` + expose the DAO both in `AppDatabase` and in `databaseModule`. `NoteEntity`
   stores a calendar day as a raw epoch-day `Long` rather than through a converter, so `WHERE date = :epochDay`
-  is an integer compare — the same reasoning points a time-of-day at minute-of-day or hour+minute `Int`s,
-  with the conversion confined to the mapper.
+  is an integer compare — and `AlarmEntity` follows it, storing a time of day as plain `hourOfDay` / `minute`
+  `Int`s (`alarms` table: `id`, `message`, `hourOfDay`, `minute`, `enabled`, `createdAt`), with any
+  conversion confined to the mapper.
 - **DAO shape:** `observeAll(): Flow<List<XEntity>>` non-suspend, `suspend fun getById(id): XEntity?`,
   `@Insert(onConflict = REPLACE) suspend fun upsert(…): Long`, `@Delete suspend fun delete(…): Int`.
 - **ViewModel state:** one `data class XxxUiState` with defaults for every field and derived values as
   computed `val`s inside it; updates are always `_uiState.value = _uiState.value.copy(...)`, never
   `.update { }`; `TAG` is an instance `private val` (the **opposite** of the repository convention, where
   `TAG` is a `companion object` const).
-- **The notes store owns the clock, and it is injected.** `NoteRepositoryImpl` takes
+- **A store owns its clock, and it is injected.** `NoteRepositoryImpl` takes
   `clock: Clock = Clock.systemDefaultZone()` — one `Clock` rather than two lambdas, so the millisecond it
   stamps and the day it compares against cannot come from two different readings. The parameter exists so a
   test can pass a fixed clock; DI leaves it at its default. **Keep any new time-dependent rule behind it.**
+  `AlarmRepositoryImpl` and `AlarmManagerAlarmScheduler` each take one too, and the two are **not** the same
+  job: the repository's clock only stamps `createdAt`, while the instant an alarm actually fires is decided
+  solely by the scheduler's, through `nextFireTimeMillis`. A test comment that confused the two had to be
+  corrected in iteration 6.
 - **Strings:** every user-visible string in `res/values/strings.xml`, appended at the end, named for the
   words themselves. Reusable keys already present: `notification`, `exact_alarm`, `cancel`, `delete`,
-  `save`, `title`.
+  `save`, `title`. The alarms feature added, in both locales: `alarms`, `alarm`, `no_alarms_yet`,
+  `add_alarm`, `delete_alarm`, `delete_this_alarm`, `the_alarm_will_be_removed_permanently`,
+  `alarm_deleted`, `the_alarm_could_not_be_opened` / `_deleted` / `_changed`, `alarms_may_not_reach_you`,
+  `notifications_are_turned_off`, `exact_alarms_are_not_allowed`, `turn_on_notifications`,
+  `allow_exact_alarms`. Look here before inventing a key — and see C-02 about who writes the two files.
 - **List row recipe:** `ui/component/NoteSummaryRow.kt` — `Column` → `fillMaxWidth` →
   `clip(RoundedCornerShape(16.dp))` → `border(1.dp, colorScheme.outlineVariant)` →
   `background(colorScheme.surfaceContainer)` → `clickable(onClickLabel, interactionSource, ripple)` →
@@ -408,20 +482,53 @@ confirmed against the code that exists.
 - **Dependencies** are declared through `gradle/libs.versions.toml`. Present: `junit 4.13.2`,
   `kotlinx-coroutines-test`, `room-testing` (unused — needs a device), `screenshot-validation-api`,
   `androidx-core-ktx` (which is where `NotificationCompat` lives). **Absent:** Robolectric, MockK, Mockito,
-  Turbine, WorkManager. An alarms feature needs **no new dependency**: `AlarmManager` is framework and
-  `NotificationCompat` already ships. A task proposing to edit `libs.versions.toml` or `app/build.gradle.kts`
-  has silently become an architecture decision.
+  Turbine, WorkManager. An alarms feature needs **no new dependency**, and the shipped one added none —
+  `AlarmManager` is framework and `NotificationCompat` already ships; `libs.versions.toml` still has no
+  alarm-, notification- or WorkManager-related entry. A task proposing to edit `libs.versions.toml` or
+  `app/build.gradle.kts` has silently become an architecture decision.
 - **The HTTP client is Ktor, not Retrofit** — the reflex guess for an Android repo of this shape, and a
   README written on that reflex had to be corrected in iteration 2.
-- **Notification and alarm infrastructure is 100% absent, not 90%.** `POST_NOTIFICATIONS` and
-  `SCHEDULE_EXACT_ALARM` are declared in the manifest, and `ui/fragment/home/component/HomeRequestPermission.kt`
-  is a complete Accompanist permission flow with `canScheduleExactAlarm(context)`,
-  `isNotificationGranted(context)`, `requestExactAlarm()` and `openAppSettings(context)` — wired into
-  `HomeFragment` with **all three callbacks empty**. That makes it *look* like the groundwork is done. It is
-  not: grep returns **zero** hits for `NotificationChannel`, `NotificationCompat`, `BroadcastReceiver` and
-  `WorkManager` across `app/src/main/java`. There is no channel, no notification icon drawable, no
-  `<receiver>` of any kind, no `RECEIVE_BOOT_COMPLETED`, no `PendingIntent`, and `MainActivity` (27 lines)
-  has no intent handling or `launchMode`.
+- **Notification and alarm infrastructure now exists — it is the alarms feature, shipped over this run.**
+  Where each piece lives, because the next task will need to find it:
+  - **Channel:** `data/notification/AlarmNotifier.kt`. One channel, id `"alarms"`, `IMPORTANCE_HIGH`, name
+    read from the existing `exact_alarm` string, sound + `VIBRATION_PATTERN`, `PRIORITY_HIGH` and
+    `CATEGORY_ALARM` on the builder (both halves of C-10). Created in `MainApplication.onCreate` through
+    **Koin's own** `AlarmNotifier` instance, and again before each post (`createNotificationChannel` is
+    idempotent). Notification id is the alarm's row id, so an alarm replaces its own banner and never
+    another alarm's. Small icon `res/drawable/ic_notification_alarm.xml`, solid white — never the launcher
+    mipmap. Tapping it opens `MainActivity` with the action `AlarmNotifier.ACTION_OPEN_ALARMS`.
+  - **Receivers, both in `data/receiver/`:** `AlarmReceiver` (**not** exported; hears the app's own
+    `ACTION_ALARM_FIRED`, shows the notification and then arms tomorrow's — `setExactAndAllowWhileIdle`
+    fires once, so that second step *is* the daily repeat) and `BootReceiver` (**exported**, with a
+    `BOOT_COMPLETED` intent-filter and the `RECEIVE_BOOT_COMPLETED` permission, because the boot broadcast
+    comes from outside the app; `goAsync()` + `withTimeoutOrNull(8_000L)` around a `Dispatchers.IO`
+    coroutine that reads `alarmsFlow.first()` and calls `rearmAll`, with `pendingResult.finish()` in a
+    `finally`). Neither has a constructor to inject into — the system builds receivers itself — so both
+    reach Koin through `KoinComponent` + `by inject()`.
+  - **The scheduler seam:** interface `domain/scheduler/AlarmScheduler.kt` (`schedule`, `cancel`,
+    `rearmAll`) with `data/scheduler/AlarmManagerAlarmScheduler.kt` behind it, bound in
+    `injection/SchedulerModule.kt`. **It is a seam because of C-06**, not for style: `AlarmManager`,
+    `PendingIntent` and `NotificationManager` are silent stubs under this toolchain, so every decision is
+    pulled to the plain-Kotlin side of the line and unit-tested there — `nextFireTimeMillis`
+    (`domain/scheduler/NextFireTime.kt`, behind an injected `Clock`), and `scheduleDecision` /
+    `requestCodeFor` (`internal`, in the scheduler file; the request code is the alarm's row id).
+    `rearmAll`'s loop lives in the **interface default** and nothing overrides it, deliberately: an
+    override would mean the fakes in `RearmAllTest` exercise a path production never runs. `AlarmRepositoryImpl`
+    mirrors every mutation (save / edit / delete / enable / disable) through the interface, so no caller can
+    arm or cancel behind the store's back.
+  - **Permission notice:** `ui/fragment/alarms/component/AlarmsPermissionNotice.kt` — a banner above the
+    list, drawing nothing at all when both permissions are in order, one sentence and one fix button per
+    problem (the two fixes are two different system screens — C-14). `AlarmsFragment` reads both permissions
+    on **every** `RESUMED` transition and hands them to `AlarmsViewModel.setPermissionState(...)` — see
+    C-17 for what has to happen on the false→true transition.
+  - **Manifest:** `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`, `VIBRATE`, `RECEIVE_BOOT_COMPLETED`, plus
+    both `<receiver>` elements. `MainActivity` still has **no `launchMode`** — the notification's
+    `PendingIntent` carries `CLEAR_TOP or SINGLE_TOP` instead, and the activity handles the intent in both
+    `onCreate` and `onNewIntent` (C-16).
+  - Still **absent**, and still true: no `WorkManager`, no `setFullScreenIntent`, no do-not-disturb
+    override, no `USE_EXACT_ALARM`. And `ui/fragment/home/component/HomeRequestPermission.kt` remains a
+    *Home-screen* Accompanist flow wired into `HomeFragment` with all three callbacks empty — read C-15
+    before reusing anything out of it.
 - **`README.md`** exists at the repository root with the package tree `CLAUDE.md` requires and a feature
   table marking each feature built vs. planned — keep that table honest in the same change that lands a
   feature.
@@ -440,3 +547,7 @@ confirmed against the code that exists.
 - `app/src/main/AndroidManifest.xml`, `res/navigation/navigation_graph.xml`, `res/values*/strings.xml`
 - Existing sources under `core/`, `injection/`, `data/`, `domain/`, `ui/`, and all three test source sets
 - `knowledge/PROJECT.md` and `knowledge/ISSUES.md` from the previous run
+- The alarms run's own record: `.harness/run/TASKS/A-001.md` … `A-007.md` (§ Evidence),
+  `.harness/run/AMENDMENTS.md` (A-1 … A-14), `.harness/run/STATE.md`
+- For the numbers and the current shape, the tree itself: `app/src/test/`, `app/src/screenshotTest/`,
+  `app/src/screenshotTestDebug/reference/`, `AndroidManifest.xml`, `.harness/knowledge/capabilities.json`
