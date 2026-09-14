@@ -172,7 +172,7 @@ class AlarmEditorFragment : CoreFragment() {
 private fun AlarmEditorLayout(
     uiState: AlarmEditorUiState,
     onMessageChange: (String) -> Unit = {},
-    onTimeChange: (hourOfDay: Int, minute: Int) -> Unit = {},
+    onTimeChange: (hourOfDay: Int, minute: Int) -> Unit = { _, _ -> },
     onSave: () -> Unit = {},
     onBack: () -> Unit = {},
 ) {

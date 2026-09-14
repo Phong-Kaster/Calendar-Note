@@ -74,4 +74,10 @@
     <!-- Alarms -->
     <string name="alarms">Wecker</string>
     <string name="no_alarms_yet">Noch keine Wecker</string>
+    <string name="alarm">Wecker</string>
+    <string name="open_alarm">Wecker öffnen</string>
+    <string name="what_is_this_alarm_for">Wofür ist dieser Wecker?</string>
+    <string name="time">Uhrzeit</string>
+    <string name="an_alarm_needs_something_written_on_it">Ein Wecker braucht einen Text</string>
+    <string name="the_alarm_could_not_be_opened">Der Wecker konnte nicht geöffnet werden</string>
 </resources>

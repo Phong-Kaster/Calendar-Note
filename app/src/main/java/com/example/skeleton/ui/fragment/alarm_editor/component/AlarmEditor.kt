@@ -76,7 +76,7 @@ fun AlarmEditor(
     hourOfDay: Int,
     minute: Int,
     onMessageChange: (String) -> Unit = {},
-    onTimeChange: (hourOfDay: Int, minute: Int) -> Unit = {},
+    onTimeChange: (hourOfDay: Int, minute: Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     // `is24Hour` is deliberately left at its default, which follows the *device's* clock setting.

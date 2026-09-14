@@ -83,4 +83,14 @@
     <!-- Alarms -->
     <string name="alarms">Alarms</string>
     <string name="no_alarms_yet">No alarms yet</string>
+    <string name="alarm">Alarm</string>
+    <string name="open_alarm">Open alarm</string>
+    <string name="what_is_this_alarm_for">What is this alarm for?</string>
+    <string name="time">Time</string>
+    <!--
+        Shown when a save is refused because the alarm says nothing. It names what is missing
+        instead of asking the user to try again — a retry would be refused the same way.
+    -->
+    <string name="an_alarm_needs_something_written_on_it">An alarm needs something written on it</string>
+    <string name="the_alarm_could_not_be_opened">The alarm could not be opened</string>
 </resources>
