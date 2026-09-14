@@ -160,8 +160,10 @@ class AlarmEditorFragment : CoreFragment() {
  * Pure UI — it renders the state it is handed and navigates nowhere, which is what lets the previews
  * at the bottom of this file draw it with made-up data and no database behind them.
  *
- * There is no delete action here. Nothing in the app can remove an alarm yet, and a control that is
- * visible but inert is a worse answer than one that is not there.
+ * There is no delete action here, and that is a placement decision rather than a missing feature: an
+ * alarm is removed from its row on the Alarms list, where the bin sits next to the alarm it belongs
+ * to and the confirmation names it. A second delete control here would be a second path to the one
+ * irreversible thing this app does, and two paths means two places to keep the confirmation on.
  *
  * @param uiState what to draw.
  * @param onMessageChange forwarded from the message field.

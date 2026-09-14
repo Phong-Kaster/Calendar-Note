@@ -12,6 +12,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.fragment.alarm_editor.AlarmEditorFragment
+import com.example.skeleton.ui.fragment.alarms.component.AlarmDeleteConfirmSheet
 import com.example.skeleton.ui.fragment.alarms.component.AlarmRow
 import com.example.skeleton.ui.fragment.alarms.component.AlarmsEmptyState
 import com.example.skeleton.ui.theme.MyApplicationTheme
@@ -51,12 +53,17 @@ private val ALARM_LIST_BOTTOM_PADDING = 56.dp + 16.dp + 16.dp
 /**
  * The Alarms screen: the fourth top-level tab.
  *
- * It lists every alarm the store holds and offers one action — write a new one. Both the action and
- * a tap on a row lead to the same place, the alarm editor; the only difference is which alarm it
- * opens with, and that travels as a navigation argument.
+ * It lists every alarm the store holds and offers three things to do with one: open it, switch it on
+ * or off without opening it, and remove it. Writing a new alarm and opening an existing one lead to
+ * the same place, the alarm editor; the only difference is which alarm it opens with, and that
+ * travels as a navigation argument.
  *
- * Thin, like every Fragment here: it owns the ViewModel and the navigation, and hands the drawing to
- * [AlarmsLayout].
+ * Removing an alarm never happens on one tap — the bin on a row only *asks*. The question and the
+ * answer both live in `AlarmsViewModel`, so the store stays unreachable from a single tap by
+ * construction rather than by the layout being careful.
+ *
+ * Thin, like every Fragment here: it owns the ViewModel, the navigation and the messages, and hands
+ * the drawing to [AlarmsLayout].
  *
  * @author Phong-Kaster
  */
@@ -73,7 +80,50 @@ class AlarmsFragment : CoreFragment() {
             uiState = uiState,
             onCreateAlarm = { openAlarmEditor() },
             onOpenAlarm = { alarm -> openAlarmEditor(alarmId = alarm.id) },
+            onToggleAlarm = { alarm, enabled ->
+                viewModel.setEnabled(alarm = alarm, enabled = enabled)
+            },
+            onAskToDelete = { alarm -> viewModel.askToDelete(alarmId = alarm.id) },
         )
+
+        // Overlays are siblings of the layout call, never children of it — that is what keeps
+        // `AlarmsLayout` previewable with nothing but an `AlarmsUiState`. There is one overlay on
+        // this screen, so a single nullable id is enough; a second one would want the
+        // mutually-exclusive enum the house rules describe, and the `when` for it would live here.
+        AlarmDeleteConfirmSheet(
+            enable = uiState.confirmingDelete,
+            onCancel = { viewModel.dismissDelete() },
+            onConfirm = { viewModel.confirmDelete() },
+        )
+
+        // The row leaves the list on its own — the store's list is live — but "a row vanished" is
+        // thin feedback for the one action in this app that cannot be undone, and thinner still if
+        // the user's eye was elsewhere. The counter, not a flag: it changes on every successful
+        // delete, so this effect re-runs on every one of them.
+        LaunchedEffect(uiState.deletedTrigger) {
+            if (uiState.deletedTrigger > 0) {
+                showToast(message = getString(R.string.alarm_deleted))
+                viewModel.consumeDeleted()
+            }
+        }
+
+        LaunchedEffect(uiState.deleteFailed) {
+            if (uiState.deleteFailed) {
+                showToast(message = getString(R.string.the_alarm_could_not_be_deleted))
+                viewModel.consumeDeleteFailed()
+            }
+        }
+
+        // A switch that snapped back is a control that looks like it ignored the tap. It gets its
+        // own sentence rather than the delete one: nothing was removed here, and telling somebody
+        // their alarm could not be deleted when they only tried to switch it off would be alarming
+        // and wrong.
+        LaunchedEffect(uiState.toggleFailed) {
+            if (uiState.toggleFailed) {
+                showToast(message = getString(R.string.the_alarm_could_not_be_changed))
+                viewModel.consumeToggleFailed()
+            }
+        }
     }
 
     /**
@@ -133,6 +183,9 @@ class AlarmsFragment : CoreFragment() {
  * @param uiState what to draw.
  * @param onCreateAlarm the user wants to write a new alarm.
  * @param onOpenAlarm the user tapped a row and wants that alarm opened.
+ * @param onToggleAlarm the user moved a row's switch. True means "arm this alarm".
+ * @param onAskToDelete the user tapped a row's bin. It opens a confirmation and nothing else — see
+ *   `AlarmsViewModel.askToDelete()`.
  * @author Phong-Kaster
  */
 @Composable
@@ -140,6 +193,8 @@ private fun AlarmsLayout(
     uiState: AlarmsUiState,
     onCreateAlarm: () -> Unit = {},
     onOpenAlarm: (Alarm) -> Unit = {},
+    onToggleAlarm: (Alarm, Boolean) -> Unit = { _, _ -> },
+    onAskToDelete: (Alarm) -> Unit = {},
 ) {
     CoreLayout(
         modifier = Modifier,
@@ -173,6 +228,8 @@ private fun AlarmsLayout(
                 AlarmsList(
                     alarms = uiState.alarms,
                     onOpenAlarm = onOpenAlarm,
+                    onToggleAlarm = onToggleAlarm,
+                    onAskToDelete = onAskToDelete,
                 )
             }
         },
@@ -190,6 +247,8 @@ private fun AlarmsLayout(
  *
  * @param alarms the alarms to show, earliest first.
  * @param onOpenAlarm the user tapped a row.
+ * @param onToggleAlarm the user moved a row's switch.
+ * @param onAskToDelete the user tapped a row's bin.
  * @param modifier applied to the scrolling container.
  * @author Phong-Kaster
  */
@@ -197,6 +256,8 @@ private fun AlarmsLayout(
 private fun AlarmsList(
     alarms: List<Alarm>,
     onOpenAlarm: (Alarm) -> Unit = {},
+    onToggleAlarm: (Alarm, Boolean) -> Unit = { _, _ -> },
+    onAskToDelete: (Alarm) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -213,6 +274,8 @@ private fun AlarmsList(
             AlarmRow(
                 alarm = alarm,
                 onClick = { onOpenAlarm(alarm) },
+                onToggleEnabled = { enabled -> onToggleAlarm(alarm, enabled) },
+                onDelete = { onAskToDelete(alarm) },
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -238,6 +301,10 @@ private fun AlarmsLayoutPopulatedPreview() {
     // The state the empty preview cannot show anything about, and the one where the layout can
     // actually go wrong: the rows, their order, and the gap the floating button needs under the last
     // of them. Three alarms rather than one, because a single row would sit nowhere near the button.
+    //
+    // The middle alarm is switched **off** on purpose. On and off next to each other is the only way
+    // to see whether the switch reads at a glance — a list where every switch points the same way
+    // looks perfectly fine even when the two states are indistinguishable.
     MyApplicationTheme(
         content = {
             AlarmsLayout(
@@ -248,6 +315,7 @@ private fun AlarmsLayoutPopulatedPreview() {
                             message = "Take the bread out of the freezer",
                             hourOfDay = 7,
                             minute = 30,
+                            enabled = true,
                             createdAt = 1_773_000_000_000L,
                         ),
                         Alarm(
@@ -255,6 +323,7 @@ private fun AlarmsLayoutPopulatedPreview() {
                             message = "Leave for the dentist",
                             hourOfDay = 14,
                             minute = 5,
+                            enabled = false,
                             createdAt = 1_772_950_000_000L,
                         ),
                         Alarm(

@@ -111,6 +111,39 @@ class AlarmRepositoryImpl(
         }
     }
 
+    override suspend fun delete(alarm: Alarm): Outcome<Unit> = withContext(ioDispatcher) {
+        // An alarm that was never stored has no row to remove, and Room's `@Delete` would match
+        // nothing and report success. The screen above would then tell the user their alarm was
+        // deleted while it sat in the list untouched — so the refusal happens here, where every
+        // caller reaches it, exactly like the blank-message rule above.
+        if (alarm.id == Alarm.UNSAVED_ID) {
+            Log.w(TAG, "delete refused: the alarm has never been stored")
+            return@withContext Outcome.Error(
+                message = "An alarm that was never saved cannot be deleted.",
+            )
+        }
+
+        try {
+            // The count is the whole point of asking. Room's `@Delete` matches on the primary key
+            // and is perfectly content to match nothing — so an alarm removed a moment ago, or a
+            // stale id from a list that has not caught up, would come back here as a success and
+            // the screen would say "Alarm deleted" about a row that was already gone. The sentinel
+            // check above catches only *one* way of having no row; this catches all of them.
+            val removed = alarmDao.delete(alarm = alarm.toEntity())
+            if (removed == 0) {
+                Log.w(TAG, "delete(id=${alarm.id}) matched no row")
+                return@withContext Outcome.Error(message = "There was no such alarm to delete.")
+            }
+
+            Outcome.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "delete(id=${alarm.id}) failed", e)
+            Outcome.Error(message = "The alarm could not be deleted.", throwable = e)
+        }
+    }
+
     companion object {
 
         private const val TAG = "AlarmRepositoryImpl"

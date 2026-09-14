@@ -257,6 +257,41 @@ class AlarmEditorViewModelTest {
     }
 
     @Test
+    fun `editing an alarm that was switched off does not switch it back on`() = runTest {
+        // The Alarms list can now switch an alarm off, and this screen does not draw that flag at
+        // all — so the only thing standing between "off" and "on again the next time somebody fixes
+        // a typo" is the alarm being carried through whole. A ViewModel that rebuilt the alarm from
+        // the three fields it *does* draw would re-arm every alarm the user had silenced, and
+        // nothing on either screen would look wrong until one went off at six in the morning.
+        val repository = FakeAlarmRepository(stored = A_SWITCHED_OFF_ALARM)
+        val viewModel = AlarmEditorViewModel(alarmRepository = repository)
+        viewModel.openAlarm(alarmId = 8L)
+
+        viewModel.setMessage(value = "Leave for the dentist, early")
+        viewModel.save()
+
+        val saved = repository.savedAlarm!!
+        assertFalse(saved.enabled)
+        assertEquals(8L, saved.id)
+        assertEquals("Leave for the dentist, early", saved.message)
+    }
+
+    @Test
+    fun `the editor never deletes anything`() = runTest {
+        // Deleting belongs to the Alarms list, and this is the assertion that says the editor has
+        // not grown a second path to it. Opening, editing and saving an alarm must leave the store's
+        // delete untouched.
+        val repository = FakeAlarmRepository(stored = A_STORED_ALARM)
+        val viewModel = AlarmEditorViewModel(alarmRepository = repository)
+        viewModel.openAlarm(alarmId = 7L)
+
+        viewModel.setMessage(value = "Take the bread out earlier")
+        viewModel.save()
+
+        assertEquals(0, repository.deleteCount)
+    }
+
+    @Test
     fun `a blank message still reaches the store, which owns the rule`() = runTest {
         // Deliberately the opposite of a guard. Checking "is it blank?" here as well would be a
         // second copy of a rule that lives in the store, and two copies is one that gets missed —
@@ -426,6 +461,21 @@ class AlarmEditorViewModelTest {
             enabled = true,
             createdAt = 1_000L,
         )
+
+        /**
+         * A stored alarm the user has switched **off** on the Alarms list.
+         *
+         * This editor draws no switch, so the flag is invisible to it from start to finish — which
+         * is exactly why an alarm in this state is worth a fixture of its own.
+         */
+        private val A_SWITCHED_OFF_ALARM = Alarm(
+            id = 8L,
+            message = "Leave for the dentist",
+            hourOfDay = 14,
+            minute = 5,
+            enabled = false,
+            createdAt = 2_000L,
+        )
     }
 }
 
@@ -467,6 +517,10 @@ private class FakeAlarmRepository(
     var saveCount: Int = 0
         private set
 
+    /** How many times [delete] was called. It should be zero for every test in this file. */
+    var deleteCount: Int = 0
+        private set
+
     // The editor never reads the whole list — it opens one alarm by id — so this is here to satisfy
     // the interface and nothing more.
     override val alarmsFlow: Flow<List<Alarm>> = flowOf(listOfNotNull(stored))
@@ -481,5 +535,18 @@ private class FakeAlarmRepository(
         savedAlarm = alarm
         saveCount++
         return outcome
+    }
+
+    /**
+     * Counted rather than implemented, because **this screen must never delete anything**.
+     *
+     * Removing an alarm belongs to the Alarms list, where the bin sits next to the alarm and the
+     * confirmation names it. A delete reaching the store from the editor would be a second path to
+     * the one irreversible thing this app does, and the assertion that [deleteCount] stays zero is
+     * what says the editor has not quietly grown one.
+     */
+    override suspend fun delete(alarm: Alarm): Outcome<Unit> {
+        deleteCount++
+        return Outcome.Success(Unit)
     }
 }

@@ -161,27 +161,25 @@ Report what you wrote; the Iteration reads the diff from git. `rm` is not in the
 a stray file you create cannot be removed by the engine — **choose a file's name and a preview's
 `name`/`widthDp`/`heightDp` before writing it, not after.**
 
-### C-13 — `fallbackToDestructiveMigration(false)` **enables** destructive migration. It does not disable it.
+### C-13 — `fallbackToDestructiveMigration` opts into destructive migration; calling it at all is the trap.
 
-`injection/DatabaseModule.kt` calls it, and four KDoc blocks in this repository state that it means Room
-will refuse to wipe and throw instead. **That reading is inverted, and it is the dangerous direction to be
-wrong in.**
+**Resolved (D-005, iteration 5): the call is removed.** `injection/DatabaseModule.kt` no longer calls
+`fallbackToDestructiveMigration` at all, which is Room's default — an upgrade with no matching migration now
+throws `IllegalStateException` at launch instead of silently dropping and recreating tables. The four KDoc
+blocks that used to claim this behaviour while the call still enabled the opposite
+(`DatabaseModule.kt`, `Migration.kt` ×2, `AlarmEntity.kt`, `Alarm.kt`) were corrected in the same checkpoint.
 
-Room is `2.7.2`. In 2.7 the no-arg `fallbackToDestructiveMigration()` was deprecated in favour of
-`fallbackToDestructiveMigration(dropAllTables: Boolean)`. The boolean is **not** an on/off switch —
-*calling the method at all* opts into destructive migration, and the parameter only chooses whether every
-table is dropped (`true`) or only the ones Room owns (`false`). The behaviour those comments describe —
-throw when no migration path exists — is what you get by **not calling the method at all**.
+The trap for future work: Room `2.7.2` deprecated the no-arg `fallbackToDestructiveMigration()` in favour of
+`fallbackToDestructiveMigration(dropAllTables: Boolean)`. The boolean is **not** an on/off switch — *calling
+the method at all*, with either `true` or `false`, opts into destructive migration; the parameter only
+chooses whether every table is dropped (`true`) or only the ones Room owns (`false`). If a future task adds
+this call back — for a debug build type, for example — it must not read the boolean as "false = safe": the
+only way to keep Room's throw-on-missing-migration behaviour is to not call the method at all.
 
-So today, a task that bumps `AppDatabase.version` and forgets to write or register the migration does not
-crash. Room drops and recreates `alarms`, `notes`, `posts` and `user_actions`, and the app opens looking
-perfectly healthy with every alarm and note the user owned silently gone. Nothing in a build, a test, a
-lint run or a fresh-install QA pass can see it, because a fresh install has no data to lose.
-
-**Until this is changed, treat every version bump as unprotected**: the migration is the only thing standing
-between an upgrade and an empty database, and no mechanism will tell you if it is missing. Do not repeat
-the "it throws instead" claim in new comments. Filed for a human decision as **D-005** — changing it alters
-upgrade behaviour for every installed copy, which is not the engine's call to make unilaterally.
+A task that bumps `AppDatabase.version` and forgets to write or register the migration now crashes at launch
+instead of silently wiping `alarms`, `notes`, `posts` and `user_actions` — the loud failure D-005 chose over
+the quiet one, since nothing in a build, test, lint or fresh-install QA pass could ever have seen the quiet
+version.
 
 ---
 

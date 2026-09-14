@@ -30,8 +30,8 @@ import java.time.ZoneOffset
 /**
  * Holds [AlarmRepositoryImpl] to the promises its interface makes: alarms come out earliest time of
  * day first whatever order they went in, an alarm with nothing written on it never goes in at all,
- * a read has three answers rather than two, and **nothing that goes wrong inside ever leaves as an
- * exception**.
+ * a read has three answers rather than two, **a delete that removed nothing is reported as a failure
+ * rather than as a success**, and **nothing that goes wrong inside ever leaves as an exception**.
  *
  * The DAO underneath is a fake — a list in memory, no Room, no Android, no device. That is the point
  * of the fake rather than a convenience. `AlarmDao.observeAll()` has **no `ORDER BY` at all**: the
@@ -352,6 +352,135 @@ class AlarmRepositoryImplTest {
         assertTrue(outcome is Outcome.Error)
     }
 
+    // ---------- Switching an alarm off: an ordinary edit, and it has to stick ----------
+
+    @Test
+    fun `an alarm switched off stays switched off in the store`() = runTest {
+        // There is no `setEnabled` in this store and there is not supposed to be one: being armed is
+        // a field on the alarm, so flipping it is an ordinary save. What this checks is that the
+        // ordinary save carries the field — a `toEntity` that dropped it, or a table that never
+        // wrote the column, would leave every alarm armed and nothing would say so until one went
+        // off at six in the morning.
+        val dao = FakeAlarmDao(rows = listOf(entity(id = 5L, enabled = true)))
+        val repository = AlarmRepositoryImpl(alarmDao = dao, clock = CLOCK)
+
+        val existing = repository.storedAlarm(id = 5L)
+        val outcome = repository.save(alarm = existing.copy(enabled = false))
+
+        assertTrue(outcome is Outcome.Success)
+        assertFalse(repository.storedAlarm(id = 5L).enabled)
+        // Switched off, not replaced: everything else about the alarm survives the trip.
+        assertEquals("Take the bread out of the freezer", repository.storedAlarm(id = 5L).message)
+        assertEquals(1_000L, repository.storedAlarm(id = 5L).createdAt)
+        assertEquals(1, repository.alarmsFlow.first().size)
+    }
+
+    @Test
+    fun `a switched-off alarm is still in the list`() = runTest {
+        // Off is not gone. A store that filtered disabled alarms out of its own list would make
+        // switching one off indistinguishable from deleting it, and the user would have no way back.
+        val dao = FakeAlarmDao(
+            rows = listOf(entity(id = 1L, enabled = false), entity(id = 2L, enabled = true)),
+        )
+
+        val alarms = AlarmRepositoryImpl(alarmDao = dao, clock = CLOCK).alarmsFlow.first()
+
+        assertEquals(listOf(1L, 2L), alarms.map { alarm -> alarm.id })
+    }
+
+    // ---------- Deleting: a write that matched nothing is not a success ----------
+
+    @Test
+    fun `deleting an alarm takes it out of the store`() = runTest {
+        val dao = FakeAlarmDao(rows = listOf(entity(id = 5L), entity(id = 6L, hourOfDay = 9)))
+        val repository = AlarmRepositoryImpl(alarmDao = dao, clock = CLOCK)
+
+        val outcome = repository.delete(alarm = repository.storedAlarm(id = 5L))
+
+        assertTrue(outcome is Outcome.Success)
+        // The one that was asked for, and only that one. A delete that cleared the table would pass
+        // an assertion on the removed alarm alone.
+        assertEquals(listOf(6L), repository.alarmsFlow.first().map { alarm -> alarm.id })
+    }
+
+    @Test
+    fun `the list drops an alarm deleted while it was already being read`() = runTest {
+        // The same reason `alarmsFlow` is a flow at all, from the other direction: the row has to
+        // leave the screen without anybody asking the store again. Every dispatcher here is the
+        // test's own, unconfined, or the collector would run on a real background thread and this
+        // test would pass or fail on timing.
+        val dao = FakeAlarmDao(rows = listOf(entity(id = 5L)))
+        val repository = AlarmRepositoryImpl(
+            alarmDao = dao,
+            clock = CLOCK,
+            ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+        )
+
+        val emissions = mutableListOf<List<Long>>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.alarmsFlow.collect { alarms -> emissions += alarms.map { it.id } }
+        }
+        repository.delete(alarm = repository.storedAlarm(id = 5L))
+
+        assertEquals(listOf(listOf(5L), emptyList<Long>()), emissions)
+    }
+
+    @Test
+    fun `a delete that matched no row is an error, not a quiet success`() = runTest {
+        // **The reason `AlarmDao.delete` returns an `Int` at all.** Room matches on the primary key
+        // and is perfectly content to match nothing and report nothing wrong — so without the count
+        // this would come back as a success and the screen would say "Alarm deleted" about a row
+        // that was never there. The id is a plausible one, not the unsaved sentinel: this is the
+        // ordinary race, an alarm already gone by the time the confirmation was answered.
+        val repository = AlarmRepositoryImpl(alarmDao = FakeAlarmDao(rows = emptyList()), clock = CLOCK)
+
+        val outcome = repository.delete(
+            alarm = Alarm(
+                id = 404L,
+                message = "Take the bread out of the freezer",
+                hourOfDay = 8,
+                minute = 0,
+                createdAt = 1_000L,
+            ),
+        )
+
+        assertTrue(outcome is Outcome.Error)
+    }
+
+    @Test
+    fun `an alarm that was never stored cannot be deleted, and the table is never asked`() = runTest {
+        // A draft has no row to remove. The refusal happens above the DAO on purpose — `deleteCount`
+        // is what says so, because "the table still has the same rows" would also be true of a
+        // delete that reached the table and matched nothing.
+        val dao = FakeAlarmDao(rows = listOf(entity(id = 5L)))
+        val repository = AlarmRepositoryImpl(alarmDao = dao, clock = CLOCK)
+
+        val outcome = repository.delete(alarm = Alarm.draft(message = "Leave for the dentist"))
+
+        assertTrue(outcome is Outcome.Error)
+        assertEquals(0, dao.deleteCount)
+        assertEquals(1, repository.alarmsFlow.first().size)
+    }
+
+    @Test
+    fun `a delete the database refuses comes back as an error rather than as an exception`() = runTest {
+        // The fail-soft contract, on the one method that did not exist when it was written down. An
+        // exception here would leave the confirmation sheet open over a crashed screen.
+        val repository = AlarmRepositoryImpl(alarmDao = BrokenAlarmDao(), clock = CLOCK)
+
+        val outcome = repository.delete(
+            alarm = Alarm(
+                id = 5L,
+                message = "Take the bread out of the freezer",
+                hourOfDay = 8,
+                minute = 0,
+                createdAt = 1_000L,
+            ),
+        )
+
+        assertTrue(outcome is Outcome.Error)
+    }
+
     private fun entity(
         id: Long,
         hourOfDay: Int = 8,
@@ -412,6 +541,16 @@ private class FakeAlarmDao(rows: List<AlarmEntity>) : AlarmDao {
 
     private val storedRows = MutableStateFlow(rows)
 
+    /**
+     * How many times [delete] was asked to remove something.
+     *
+     * It is here for the tests about a delete that must **not** reach the table at all — an alarm
+     * that was never stored. "The table still has the same rows" is a weaker statement than "the
+     * table was never asked", because a delete that matched nothing leaves the rows alone too.
+     */
+    var deleteCount: Int = 0
+        private set
+
     override fun observeAll(): Flow<List<AlarmEntity>> = storedRows
 
     override suspend fun getById(id: Long): AlarmEntity? =
@@ -420,6 +559,23 @@ private class FakeAlarmDao(rows: List<AlarmEntity>) : AlarmDao {
     override suspend fun upsert(alarm: AlarmEntity): Long {
         storedRows.value = storedRows.value.filterNot { row -> row.id == alarm.id } + alarm
         return alarm.id
+    }
+
+    /**
+     * Removes the row with this id and reports how many went — **exactly the way Room does**,
+     * including the part that matters: matching nothing is `0` and not a complaint.
+     *
+     * A fake that threw, or that returned 1 regardless, would agree with the repository instead of
+     * checking it, and the "the screen announced a deletion that never happened" defect would have
+     * no test that could see it.
+     */
+    override suspend fun delete(alarm: AlarmEntity): Int {
+        deleteCount++
+
+        val remaining = storedRows.value.filterNot { row -> row.id == alarm.id }
+        val removed = storedRows.value.size - remaining.size
+        storedRows.value = remaining
+        return removed
     }
 }
 
@@ -444,6 +600,8 @@ private class BrokenAlarmDao : AlarmDao {
     override suspend fun getById(id: Long): AlarmEntity? = throw IOException("disk is gone")
 
     override suspend fun upsert(alarm: AlarmEntity): Long = throw IOException("disk is gone")
+
+    override suspend fun delete(alarm: AlarmEntity): Int = throw IOException("disk is gone")
 }
 
 /**

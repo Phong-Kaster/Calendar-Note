@@ -23,7 +23,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
  *
  * A migration is the instructions for turning a database that is already on somebody's phone into
  * the shape the new code expects. It is not optional here: `DatabaseModule` builds the database
- * with `fallbackToDestructiveMigration(false)`, so an app that meets a database it does not know
+ * with no `fallbackToDestructiveMigration` call, so an app that meets a database it does not know
  * how to upgrade **crashes at launch** rather than quietly wiping the user's notes.
  *
  * The statement below has to describe the same table Room would have created from `NoteEntity` on
@@ -70,8 +70,8 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
  * Room's own `MigrationTestHelper` needs a device — so the only way to know a migration agrees with
  * its entity is to have copied it from the same source Room will compare it against.
  *
- * And disagreement is not a small bug here: `DatabaseModule` builds the database with
- * `fallbackToDestructiveMigration(false)`, so a column whose type or nullability is one character off
+ * And disagreement is not a small bug here: `DatabaseModule` builds the database with no
+ * `fallbackToDestructiveMigration` call, so a column whose type or nullability is one character off
  * is not a degraded read, it is a crash at launch for every person who already had the app.
  *
  * `enabled` is `INTEGER NOT NULL` because SQLite has no boolean type — Room stores it as 0 or 1.

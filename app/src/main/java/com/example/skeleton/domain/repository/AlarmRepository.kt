@@ -83,4 +83,29 @@ interface AlarmRepository {
      * @return whether the alarm was stored.
      */
     suspend fun save(alarm: Alarm): Outcome<Unit>
+
+    /**
+     * Removes an alarm for good. [alarmsFlow] emits again without it, with nobody having to ask.
+     *
+     * **A delete that removed nothing is an [Outcome.Error], not a success.** Room matches on the
+     * primary key and is perfectly content to match no row and report nothing wrong — so without
+     * this, the screen above would say "deleted" about an alarm that is still sitting in the list,
+     * or about one that went a moment ago. Two ways of having no row are refused, and they are
+     * separate on purpose: an alarm carrying [Alarm.UNSAVED_ID] was never stored at all (a caller
+     * mistake — a draft cannot be deleted), while any *other* id that matches nothing is an ordinary
+     * race with the world. Both get a refusal; neither gets a silent no-op. Same shape, same
+     * reasoning, as `NoteRepository.delete`.
+     *
+     * **There is no separate "switch this alarm off" here, and that is deliberate.** Turning an
+     * alarm on or off is an ordinary edit of [Alarm.enabled] — hand [save] the same alarm with the
+     * flag flipped. A second write method would be a second place for the write rules (the
+     * blank-message refusal, the creation stamp) to be applied, and the second place is the one that
+     * gets missed.
+     *
+     * Returns a value rather than throwing, like [save]. [Outcome.Loading] is never returned.
+     *
+     * @param alarm the alarm to remove. Only its [Alarm.id] decides which row goes.
+     * @return whether the alarm was removed.
+     */
+    suspend fun delete(alarm: Alarm): Outcome<Unit>
 }

@@ -11,10 +11,11 @@ import org.koin.dsl.module
 /**
  * Builds the one database instance the whole app shares, and hands out its DAOs.
  *
- * Every migration ever written has to be listed in `addMigrations`. `fallbackToDestructiveMigration(false)`
- * means Room will **not** silently delete the user's data when an upgrade path is missing — it
- * throws instead, which is the loud failure you want while developing and the honest one in
- * production.
+ * Every migration ever written has to be listed in `addMigrations`. There is no
+ * `fallbackToDestructiveMigration` call, which is Room's default: an upgrade with no matching
+ * migration **throws `IllegalStateException` at launch** instead of silently dropping and recreating
+ * tables. Loud in development, honest in production — a bad version bump is a crash the first
+ * developer to open the app after it hits, not a user's alarms disappearing with no log line.
  *
  * @author Phong-Kaster
  */
@@ -26,7 +27,6 @@ val databaseModule = module {
             "app_database"
         )
             .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
-            .fallbackToDestructiveMigration(false)
             .build()
     }
 

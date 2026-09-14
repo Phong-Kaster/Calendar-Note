@@ -6,6 +6,51 @@
 
 <!-- Newest first. -->
 
+### A-10 — Three Fresh-Context Review findings fixed inside A-003's own files (Tier 1, review-driven)
+
+- **Iteration:** 5
+- **Date:** 2026-09-14
+- **What changed:**
+  1. `AlarmsUiState.deletedTrigger` was never consumed. Unlike the note editor (which leaves the screen
+     on a delete and never needs to), the Alarms screen stays put, so a `LaunchedEffect` keyed on the
+     trigger would replay "Alarm deleted" on the next unrelated recomposition (a rotation, or a return
+     from the editor). Added `AlarmsViewModel.consumeDeleted()`, wired it from `AlarmsFragment`, and
+     added a regression test (`the delete trigger clears once it has been shown, so a later delete is
+     still announced`).
+  2. The delete bin's content description reused `delete_this_alarm` — the confirmation sheet's
+     *question* text ("Delete this alarm?") — so a screen reader announced a question where an action
+     name belongs. Added a separate `delete_alarm` string ("Delete alarm") for the icon.
+  3. `README.md`'s feature table and package tree still said three things this task's diff made false:
+     switching/deleting were listed as not-yet-built, `AlarmDao` was described as having no delete, and
+     the new `AlarmDeleteConfirmSheet.kt` was missing from the tree. Corrected in the same change,
+     per `.claude/android-skeleton-project.md`'s own rule that README is updated in the change that lands
+     each piece.
+- **Why:** all three are inside files already in A-003's Declared File Scope or are Iteration-owned
+  (`README.md`, `strings.xml`); none changes the PRD, DoD, architecture, or A-003's acceptance criteria —
+  only correctness and truthfulness of what already exists.
+- **Recorded, not acted on:** the Review also flagged `AlarmDeleteConfirmSheet.kt` as a near-duplicate of
+  `NoteDeleteConfirmSheet.kt` with no shared component behind either. Not extracted this checkpoint —
+  doing so would touch `NoteFragment.kt` and `NoteScreenshotTest.kt`, both outside this task and both
+  already shipped and reviewed. Noted in `TASKS/A-003.md` and `ISSUES.md` instead.
+- **Tier:** 1 — review-driven correctness fixes inside already-owned files; no PRD/DoD/architecture change.
+
+### A-9 — D-005 consumed: the destructive-migration call is removed, four KDoc blocks corrected (Tier 2)
+
+- **Iteration:** 5
+- **Date:** 2026-09-14
+- **What changed:** `injection/DatabaseModule.kt` no longer calls `.fallbackToDestructiveMigration(false)`
+  — Room's default now applies: a missing migration path throws `IllegalStateException` at launch instead
+  of silently dropping and recreating tables. The four KDoc blocks that asserted the opposite behaviour
+  while the call was still in force are corrected (`DatabaseModule.kt`, `Migration.kt` ×2,
+  `AlarmEntity.kt`, `Alarm.kt`). Constraint **C-13** in `.harness/knowledge/PROJECT.md` rewritten to
+  record the resolved state rather than only the trap.
+- **Why:** The human answered D-005 with option 1, matching the engine's own recommendation: this is a
+  reusable skeleton meant to be copied into other projects, so a loud crash a developer hits immediately
+  beats a silent data-loss bug a real user hits later.
+- **Conditions met:** answered decision, applied directly by the Iteration (not a Worker, since the
+  touched files sit outside A-003's Declared File Scope) per ENGINE.md §6.2. Blocked nothing, so no task
+  needed unblocking — logged regardless, per §6.2's rule that every consumed decision is logged.
+
 ### A-8 — A-002's Worker scope shrank to what was actually missing (Tier 1)
 
 - **Iteration:** 4

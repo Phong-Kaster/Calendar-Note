@@ -81,4 +81,11 @@
     <string name="an_alarm_needs_something_written_on_it">Ein Wecker braucht einen Text</string>
     <string name="the_alarm_could_not_be_opened">Der Wecker konnte nicht geöffnet werden</string>
     <string name="add_alarm">Wecker hinzufügen</string>
+    <string name="delete_this_alarm">Diesen Wecker löschen?</string>
+    <string name="delete_alarm">Wecker löschen</string>
+    <string name="the_alarm_will_be_removed_permanently">Der Wecker wird von diesem Gerät entfernt. Das kann nicht rückgängig gemacht werden.</string>
+    <string name="alarm_deleted">Wecker gelöscht</string>
+    <string name="the_alarm_could_not_be_deleted">Der Wecker konnte nicht gelöscht werden</string>
+    <string name="the_alarm_could_not_be_changed">Der Wecker konnte nicht geändert werden</string>
+    <string name="turn_this_alarm_on_or_off">Diesen Wecker ein- oder ausschalten</string>
 </resources>

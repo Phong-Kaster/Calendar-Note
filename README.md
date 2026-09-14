@@ -40,7 +40,10 @@ Two things at once:
 | Write an alarm — a message and a time — save it, and see it in the list | ✅ built |
 | Alarms survive the app being killed, and are listed earliest time of day first | ✅ built |
 | Refuse — and say why — when an alarm would be saved with nothing written on it | ✅ built |
-| Turn an alarm off, delete one, or have one actually go off and notify you | ❌ not yet — later tasks in this run |
+| Re-open an alarm from its row, change it, and save it back to the same row | ✅ built |
+| Switch an alarm off or on from its row, without opening it | ✅ built |
+| Delete an alarm, behind a confirmation step | ✅ built |
+| Have an alarm actually go off and notify you | ❌ not yet — later tasks in this run |
 
 > **Implementation status is deliberately explicit.** The note feature is complete: every row above
 > is code that exists, and this table was updated in the same change that landed each piece — a
@@ -49,11 +52,11 @@ Two things at once:
 > Three rows are honest about being less than finished. The **language picker** is inherited and only
 > two of its seven languages have translations. The **German bottom-bar label** truncates
 > ("Einstell…") — a known defect, filed in `knowledge/ISSUES.md` and pinned by a reference image so
-> it cannot get quietly worse. **Alarms** is a run in progress: an alarm can now be written, saved,
-> listed and reopened, and it survives a restart — but nothing arms one yet. No alarm can be switched
-> off or deleted, and none will ever go off: there is no scheduler, no receiver and no notification.
-> The `enabled` column exists in the table and deliberately nothing reads it, because adding a column
-> after the table has shipped costs a second migration. Those land in the tasks that follow.
+> it cannot get quietly worse. **Alarms** is a run in progress: an alarm can be written, saved, listed,
+> reopened and changed, switched off or on, and deleted behind a confirmation, and it survives a
+> restart — but nothing actually rings yet. The `enabled` column now drives the per-row switch, but
+> nothing schedules an alarm or wakes the device for it: there is no scheduler, no receiver and no
+> notification. Those land in the tasks that follow.
 
 ## Business rules
 
@@ -186,7 +189,7 @@ com/example/skeleton/
 │   │       ├── converter/
 │   │       │   └── DateConverter.kt        #     Room TypeConverter: Date <-> Long
 │   │       ├── dao/
-│   │       │   ├── AlarmDao.kt             #     The alarms table: observe all, get one, upsert. No delete yet — nothing removes an alarm
+│   │       │   ├── AlarmDao.kt             #     The alarms table: observe all, get one, upsert, delete
 │   │       │   ├── NoteDao.kt              #     The notes table: observe all, observe one day, upsert, delete
 │   │       │   ├── PostDao.kt
 │   │       │   └── UserActionDao.kt
@@ -265,7 +268,8 @@ com/example/skeleton/
 │   │   │   └── AlarmEditorViewModel.kt
 │   │   ├── alarms/                         #     The fourth tab: every alarm, earliest first, plus the button that adds one
 │   │   │   ├── component/
-│   │   │   │   ├── AlarmRow.kt             #       One alarm as a card — its time and what it says
+│   │   │   │   ├── AlarmDeleteConfirmSheet.kt #    The step between "delete" and an alarm actually going away
+│   │   │   │   ├── AlarmRow.kt             #       One alarm as a card — its time, what it says, its switch, its bin
 │   │   │   │   └── AlarmsEmptyState.kt     #       "No alarms yet", centred in the content area
 │   │   │   ├── AlarmsFragment.kt
 │   │   │   ├── AlarmsUiState.kt

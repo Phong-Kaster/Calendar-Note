@@ -14,7 +14,7 @@ import androidx.room.PrimaryKey
  *
  * [enabled] is here even though nothing reads it yet. Adding a column to a table that has already
  * shipped costs a second Room migration, and in this app a migration that disagrees with its entity
- * is a launch crash for every existing install (`fallbackToDestructiveMigration(false)`). So the
+ * is a launch crash for every existing install (no `fallbackToDestructiveMigration` call). So the
  * column lands once, with the table.
  *
  * @param id row id, handed out by Room. Leave it `0` when inserting a new alarm.

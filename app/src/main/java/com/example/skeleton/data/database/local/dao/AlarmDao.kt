@@ -1,6 +1,7 @@
 package com.example.skeleton.data.database.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -18,9 +19,6 @@ import kotlinx.coroutines.flow.Flow
  * time of day first — is a promise `AlarmRepositoryImpl` makes and keeps for itself, so a sort in
  * this SQL string would be a second copy of that promise that a future query could silently drop.
  * See the comparator's own comment in the repository for the whole story.
- *
- * There is no `delete` yet either; nothing in the app can remove an alarm at this point, and a DAO
- * function with no caller is a function nobody has checked.
  *
  * @author Phong-Kaster
  */
@@ -42,4 +40,15 @@ interface AlarmDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(alarm: AlarmEntity): Long
+
+    /**
+     * Removes one alarm, matched on [AlarmEntity.id].
+     *
+     * @return how many rows went — `1` normally, and **`0` when there was no such row**. Room is
+     *   perfectly happy to delete nothing and say nothing about it, so without this count the
+     *   repository above could not tell "removed" from "there was nothing there", and the screen
+     *   would announce a deletion that never happened. Same shape, same reason, as `NoteDao.delete`.
+     */
+    @Delete
+    suspend fun delete(alarm: AlarmEntity): Int
 }

@@ -6,6 +6,58 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 5 — 2026-09-14 — Phase 3 (A-003) implemented and reviewed; D-005 applied; one screenshot grant queued (D-006)
+
+- **Phase:** 3 — A-003 alone, the only executable task (strictly linear chain).
+- **Recover (§6.1):** working tree carried one uncommitted change on entry — a human had filled in
+  D-005's `## Decision` section in `ESCALATION.md` directly (not run debris; a normal between-iteration
+  edit, exactly what §6.2 exists to consume).
+- **Consume decisions (§6.2):** **D-005 answered — option 1.** Applied directly (not through a Worker,
+  since it touches files outside A-003's Declared File Scope): removed
+  `.fallbackToDestructiveMigration(false)` from `DatabaseModule.kt`; corrected the four KDoc blocks that
+  asserted the inverted behaviour (`DatabaseModule.kt`, `Migration.kt` ×2, `AlarmEntity.kt`, `Alarm.kt`);
+  rewrote Constraint C-13 in `.harness/knowledge/PROJECT.md` to record the resolved state. Blocked
+  nothing, so no task was unblocked by it — logged and archived regardless, per §6.2's "every consumed
+  decision is logged" rule.
+- **Dispatch (§6.5):** one Worker at **Capable**, scoped to A-003's fourteen declared files. All thirteen
+  Constraints passed verbatim per ADR-016. The Worker also verified (rather than re-implemented) that
+  re-opening and re-saving an alarm already worked correctly from A-002's over-delivery — confirmed by
+  reading the actual chain, not assumed.
+- **Scope check (§6.6):** `git status` showed exactly the declared CREATE/MODIFY set plus this
+  iteration's own D-005 edits. Clean.
+- **Wire (§6.6):** the six string keys the Worker reported (`delete_this_alarm`,
+  `the_alarm_will_be_removed_permanently`, `alarm_deleted`, `the_alarm_could_not_be_deleted`,
+  `the_alarm_could_not_be_changed`, `turn_this_alarm_on_or_off`) added to both `strings.xml` files.
+- **Build/test (§6.7):** first combined run — `assembleDebug` / `testDebugUnitTest` / `lintDebug` /
+  `validateDebugScreenshotTest` — was `BUILD SUCCESSFUL` with **206 unit tests** (up from 177), lint **0
+  errors / 68 warnings** (+2, both pre-existing style warnings on the sibling Note pattern), screenshots
+  green.
+- **Fresh-Context Review (§6.8):** clean context, Capable, checked the combined diff against every
+  Constraint and against `.claude/figma-design-system.md`. No Constraint violation; contrast numbers for
+  the new switch verified by computation rather than trusted. Three findings acted on this checkpoint —
+  see `AMENDMENTS.md` A-9. Two more recorded rather than acted on: `AlarmDeleteConfirmSheet.kt` duplicates
+  `NoteDeleteConfirmSheet.kt` with no shared component (a real concern, but extracting one now would touch
+  already-shipped, already-reviewed Note files outside this task's scope — noted in `ISSUES.md` instead of
+  acted on); a KDoc line claiming a screenshot case that did not exist yet at review time (resolved by
+  adding the case itself, see below).
+- **Screenshot pin added this checkpoint:** `AlarmDeleteConfirmationCase` in `AlarmsScreenshotTestKt`,
+  matching the `DeleteConfirmation` precedent in `NoteScreenshotTest.kt`. Has **no reference image yet** →
+  `ScreenshotImageNotFoundException`, exactly the D-004 situation one Phase earlier. **`AlarmRow` in both
+  switch states was deliberately not pinned**: its displayed time is host-dependent
+  (`DateFormat.is24HourFormat` + the app's locale), the exact trap `AMENDMENTS.md` A-6 flagged when that
+  formatting was added, and pinning it would record a reference valid on one machine's clock format only.
+  `assembleDebug` / `testDebugUnitTest` / `lintDebug` were re-verified in a separate invocation once the
+  screenshot task started failing (PROJECT.md's "one failing task aborts the others" note) — still green,
+  206/0/0 and 0 errors / 68 warnings; 22 of 23 screenshot cases green.
+- **Reconcile (§6.9):** the missing reference → **queued decision D-006** (goal-scoped grant, mirroring
+  D-004's shape exactly, restricted to this one new test name). A-003 marked **blocked by decision**
+  rather than complete — every other Acceptance line is met and machine-evidenced, but this task's own
+  Acceptance explicitly required the screenshot pin, so the same standard D-004 set for A-001 applies here.
+  No attempt charged; the Worker succeeded on its first try.
+- **Outcome:** real progress checkpointed (D-005 applied, A-003 fully implemented and reviewed except for
+  the screenshot pin), but A-003 cannot be marked complete and A-004 … A-007 are unreachable behind it
+  until D-006 is answered → `ESCALATE`.
+
 ### Iteration 4 — 2026-09-14 — Phase 2 (A-002): the alarm vertical works end to end; A-001 closed
 
 - **Phase:** 2 — A-002. A-001 also closed this iteration when D-004 was consumed.
@@ -237,3 +289,79 @@
 - **Decision:** Grant it, goal-scoped — option 1. Re-record only `BottomBar_*` and `BottomBarSystemNight_*`;
   report the live-hash list before and after. Lives only in `.harness/run/capabilities.json`, expires with
   the run, never copied into the standing ledger.
+
+### D-004 — A goal-scoped grant to record one brand-new screenshot reference: the Alarms empty state
+
+- **Type:** Capability grant | **Queued:** iteration 3, 2026-09-13 | **Consumed:** iteration 4
+- **Blocked:** A-001's completion only. Every other task (A-002 … A-007) was unreachable regardless, since
+  each depends on A-001 directly or transitively and none was executable until it was marked complete.
+- **Question:** Grant `./gradlew :app:updateDebugScreenshotTest --tests "*AlarmsEmptyStateCase*"`,
+  goal-scoped, to record the reference image for the **new** `AlarmsScreenshotTestKt.AlarmsEmptyStateCase`
+  case, added iteration 3 — see `AMENDMENTS.md` A-5.
+- **Context:** Not the D-003 situation (an existing, previously-approved reference invalidated by a layout
+  change) — a case with **no reference at all yet**, which `.harness/knowledge/PROJECT.md`'s own
+  `updateDebugScreenshotTest` note calls out as needing an Escalation Request exactly like an intentional
+  change does: *"a new state with no reference yet."* Running the existing D-003 grant against this case
+  would have exceeded its named scope (`BottomBar_*`/`BottomBarSystemNight_*` only).
+  Without this grant, `validateDebugScreenshotTest` fails with `ScreenshotImageNotFoundException` on this
+  one case and DoD criterion 2 stays red for a reason unrelated to whether the empty state is correct —
+  everything else about Phase 1 was green: `assembleDebug`, all 138 unit tests, `lintDebug` (0 errors), and
+  the other 20 screenshot cases including the two `BottomBar*` re-records from D-003.
+- **Options:** (1) grant it, goal-scoped to exactly this one test name, with a before/after live-hash
+  report for `AlarmsScreenshotTestKt` restricted to that file's directory; (2) refuse — a human records it
+  manually and the run reports `ESCALATE` until that reference appears on disk; (3) drop the
+  `@PreviewTest` annotation and keep the composable as a plain `@Preview` — not recommended, listed only
+  because it needs no grant.
+- **Engine recommendation:** option 1. The case is small (one component, one state, `heightDp = 320` per
+  C-05), the render is deterministic (no locale-formatted date or time), and a human looking at one
+  rendered "No alarms yet" screen before approving is a cheap check against the same class of risk
+  `updateDebugScreenshotTest` always carries.
+- **Decision:** Option 1 — granted, goal-scoped to exactly `*AlarmsEmptyStateCase*`. Added as a separate
+  entry in `.harness/run/capabilities.json` distinct from the D-003 entry, since this is a first recording
+  rather than a re-record of an already-approved baseline. Report the before/after state of
+  `AlarmsScreenshotTestKt`'s reference directory (empty before, one file after).
+- **Applied (iteration 4) — and the grant was never exercised.** Between iterations, commit `7d0c0da`
+  landed the reference image itself. This iteration ran `validateDebugScreenshotTest` and the case
+  **passed**, which is the evidence the grant was meant to unlock — so `updateDebugScreenshotTest` was
+  never run. Exactly one file existed in that reference directory, as the decision required. The grant
+  stayed in `capabilities.json` unused and expires with the run.
+
+### D-005 — `fallbackToDestructiveMigration(false)` silently wipes the database on a missing migration path. Change it?
+
+- **Type:** Architecture / behaviour change | **Queued:** iteration 4, 2026-09-14 | **Consumed:** iteration 5
+- **Blocks:** nothing. Every remaining task (A-003 … A-007) was executable while this sat unanswered, and
+  A-002 shipped correctly regardless — `MIGRATION_3_4` is written and registered, so the 3→4 upgrade path
+  is real and does not take the destructive branch. This was about the **next** version bump, not that one.
+- **Question:** `injection/DatabaseModule.kt:29` called `.fallbackToDestructiveMigration(false)`. Should
+  that call be **removed**?
+- **Context:** Found by the Fresh-Context Review in iteration 4 and confirmed against the Room version in
+  `gradle/libs.versions.toml` (`2.7.2`). In Room 2.7 the no-arg overload was deprecated and replaced by
+  `fallbackToDestructiveMigration(dropAllTables: Boolean)`. **Calling the method enables destructive
+  migration**; the boolean only selects whether all tables are dropped or only Room-owned ones. The
+  behaviour everyone believed was in force — throw when no migration path exists — is what you get by
+  **not calling it at all**. Four KDoc blocks in the repository asserted the opposite
+  (`DatabaseModule.kt:14-17`, `Migration.kt` twice, `AlarmEntity.kt`, `Alarm.kt`). Recorded as Constraint
+  **C-13** in iteration 4's checkpoint so the trap was written down whichever way this was answered.
+  Concrete failure it allowed: a later task bumps `version` to 5 and forgets `addMigrations(MIGRATION_4_5)`.
+  Room drops and recreates `alarms`, `notes`, `posts` and `user_actions`. The app opens clean, no crash, no
+  log line — and every alarm and note the user owned is gone. No build, test, lint or fresh-install QA pass
+  can detect this, because a fresh install has nothing to lose.
+- **Options:** (1) **remove the call**, restoring Room's default — a missing migration throws
+  `IllegalStateException` at launch instead of wiping. Costs: an incomplete migration becomes a hard crash
+  rather than a silent reset, an interruption rather than a convenience during development; (2) **keep it
+  and fix only the four comments**, accepting silent data loss as deliberate policy for a single-developer
+  skeleton app with no shipped users yet; (3) keep it for debug builds and remove it for release — more
+  code, and this repo has no build-type split in `DatabaseModule` today.
+- **Engine recommendation:** option 1. This app's whole point is to be copied into other projects, and the
+  comments claiming safety travel with the copy. An app that silently empties a user's alarms on an upgrade
+  is the worst of the three outcomes, and the crash option 1 produces is exactly the signal that prevents
+  it. The interruption cost lands on a developer who already made a mistake; the data loss lands on a user
+  who did not.
+- **Decision:** Option 1 — removed the `.fallbackToDestructiveMigration(false)` call from
+  `DatabaseModule.kt`, restoring Room's default. Accepted per the engine's own recommendation. The four
+  KDoc blocks were corrected in the same checkpoint, and `AMENDMENTS.md` / `.harness/knowledge/PROJECT.md`
+  Constraint C-13 were updated to reflect the resolved state rather than just the trap.
+- **Applied (iteration 5).** `injection/DatabaseModule.kt`'s `.fallbackToDestructiveMigration(false)` call
+  removed; the four KDoc blocks corrected to state Room's restored default; Constraint C-13 in
+  `.harness/knowledge/PROJECT.md` rewritten to record the resolved state. Verified: `assembleDebug` still
+  reaches `BUILD SUCCESSFUL` with the call gone.

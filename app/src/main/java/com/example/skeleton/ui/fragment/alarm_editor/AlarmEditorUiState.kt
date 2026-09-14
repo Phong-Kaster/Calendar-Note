@@ -42,11 +42,17 @@ import com.example.skeleton.domain.model.Alarm
  * @param openFailed true when the screen could not open the alarm it was sent to edit — it has been
  *   removed, or the store would not answer. Either way there is nothing here to edit, so the
  *   Fragment says so and leaves rather than letting the user type into an editor with no alarm
- *   behind it. (The note editor splits these two apart into a `NoteProblem`; here they are still one
- *   flag. Tapping a row on the Alarms screen now does reach this editor with a stored id, so the
- *   difference has become reachable in practice — but nothing yet removes an alarm, so "it has been
- *   removed" cannot actually happen and the two cases stay indistinguishable to a user. Revisit this
- *   with the task that adds deletion, which is what makes the first case real.)
+ *   behind it.
+ *
+ *   **Both cases are now genuinely reachable**, which they were not before: the Alarms list can
+ *   remove an alarm, so "it has been removed" is a thing that can really happen to a row somebody is
+ *   opening, and it is no longer only a theoretical branch. It is still **one flag**, and that is a
+ *   decision rather than an oversight. The note editor splits its two into a `NoteProblem` because
+ *   they lead to two different sentences there; here they lead to the same one — *the alarm could
+ *   not be opened*, say so, leave — and a second field that no code ever reads differently is a
+ *   second field to keep right for nothing. The store already tells the two apart by return value
+ *   (`Outcome.Success(null)` against `Outcome.Error`), so the day this screen wants to word them
+ *   differently, the information is sitting there waiting and only this flag has to be split.
  * @author Phong-Kaster
  */
 data class AlarmEditorUiState(

@@ -94,4 +94,11 @@
     <string name="an_alarm_needs_something_written_on_it">An alarm needs something written on it</string>
     <string name="the_alarm_could_not_be_opened">The alarm could not be opened</string>
     <string name="add_alarm">Add alarm</string>
+    <string name="delete_this_alarm">Delete this alarm?</string>
+    <string name="delete_alarm">Delete alarm</string>
+    <string name="the_alarm_will_be_removed_permanently">The alarm will be removed from this device. This cannot be undone.</string>
+    <string name="alarm_deleted">Alarm deleted</string>
+    <string name="the_alarm_could_not_be_deleted">The alarm could not be deleted</string>
+    <string name="the_alarm_could_not_be_changed">The alarm could not be changed</string>
+    <string name="turn_this_alarm_on_or_off">Turn this alarm on or off</string>
 </resources>

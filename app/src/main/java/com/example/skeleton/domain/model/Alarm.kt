@@ -13,8 +13,9 @@ package com.example.skeleton.domain.model
  *
  * [enabled] is carried even though nothing reads it yet. It is here now because the column that
  * backs it is here now — adding a column to a shipped table costs a second Room migration, and a
- * migration in this app is the one thing that turns a mistake into a launch crash for every
- * existing install. Cheaper to carry a field than to add a column later.
+ * migration in this app (no `fallbackToDestructiveMigration` call) is the one thing that turns a
+ * mistake into a launch crash for every existing install. Cheaper to carry a field than to add a
+ * column later.
  *
  * @param id row id. `0` means "not saved yet" — Room hands out the real one on insert. See
  *   [UNSAVED_ID].
