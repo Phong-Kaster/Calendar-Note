@@ -59,3 +59,37 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
     }
 }
+
+/**
+ * Adds the `alarms` table when upgrading a database that was created at version 3.
+ *
+ * **This statement was copied out of Room's own generated code, not written by hand.** After a
+ * build, `app/build/generated/ksp/debug/kotlin/.../AppDatabase_Impl.kt` holds the exact
+ * `CREATE TABLE` that a *fresh* install runs, and this is that line character for character. It
+ * matters because nothing in this project can execute SQLite to check — there is no Robolectric, and
+ * Room's own `MigrationTestHelper` needs a device — so the only way to know a migration agrees with
+ * its entity is to have copied it from the same source Room will compare it against.
+ *
+ * And disagreement is not a small bug here: `DatabaseModule` builds the database with
+ * `fallbackToDestructiveMigration(false)`, so a column whose type or nullability is one character off
+ * is not a degraded read, it is a crash at launch for every person who already had the app.
+ *
+ * `enabled` is `INTEGER NOT NULL` because SQLite has no boolean type — Room stores it as 0 or 1.
+ * Nothing reads that column until a later task; it lands now because adding it afterwards would cost
+ * a second migration, and this is the most dangerous operation in the codebase to pay for twice.
+ *
+ * @author Phong-Kaster
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `alarms` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`message` TEXT NOT NULL, " +
+                "`hourOfDay` INTEGER NOT NULL, " +
+                "`minute` INTEGER NOT NULL, " +
+                "`enabled` INTEGER NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL)"
+        )
+    }
+}

@@ -2,6 +2,7 @@ package com.example.skeleton.injection
 
 
 
+import com.example.skeleton.ui.fragment.alarm_editor.AlarmEditorViewModel
 import com.example.skeleton.ui.fragment.alarms.AlarmsViewModel
 import com.example.skeleton.ui.fragment.calendar.CalendarViewModel
 import com.example.skeleton.ui.fragment.home.HomeViewModel
@@ -25,6 +26,10 @@ val viewModelModule = module {
     // only reason that parameter exists as a parameter: so a test can pass a different one.
     viewModel { CalendarViewModel(noteRepository = get()) }
 
-    // Alarms View Model — no dependencies yet: no alarm store exists until a later task.
-    viewModel { AlarmsViewModel() }
+    // Alarms View Model — reads the alarm store's live list so the screen stays current on its own.
+    viewModel { AlarmsViewModel(alarmRepository = get()) }
+
+    // Alarm Editor View Model — writes through the same store. Without this registration the editor
+    // would compile perfectly and crash the moment a user opened it.
+    viewModel { AlarmEditorViewModel(alarmRepository = get()) }
 }

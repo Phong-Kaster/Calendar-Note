@@ -1,5 +1,6 @@
 package com.example.skeleton.ui.fragment.alarms.component
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +27,8 @@ import com.example.skeleton.R
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.theme.customizedTextStyle
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 /**
  * One alarm as a list row: the time it goes off, and what it says.
@@ -56,10 +61,22 @@ fun AlarmRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val displayTime =
-        alarm.hourOfDay.toString().padStart(length = 2, padChar = '0') +
-            ":" +
-            alarm.minute.toString().padStart(length = 2, padChar = '0')
+    // Written the way the clock on this device is written, because the time picker in the editor
+    // already does exactly that (`rememberTimePickerState` defaults `is24Hour` to the device
+    // setting). Hard-coding 24-hour here would mean a user on a 12-hour device sets "9:30 PM",
+    // taps Save, and the row that appears reads "21:30" — the same alarm in two notations, one
+    // screen apart, which reads like the app changed what they typed.
+    //
+    // Formatted through `java.time` against the app's own locale rather than `Locale.getDefault()`:
+    // this app has its own language picker, so the device locale is not necessarily the one the
+    // user chose to read the app in. `remember(...)` keyed on both inputs so the formatter is not
+    // rebuilt on every recomposition, but is rebuilt when either actually changes.
+    val locale = LocalConfiguration.current.locales[0]
+    val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
+    val timeFormatter = remember(locale, is24Hour) {
+        DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a", locale)
+    }
+    val displayTime = timeFormatter.format(LocalTime.of(alarm.hourOfDay, alarm.minute))
 
     Column(
         modifier = modifier

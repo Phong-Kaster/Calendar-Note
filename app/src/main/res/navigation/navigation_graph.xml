@@ -55,6 +55,23 @@
             app:argType="long" />
     </fragment>
 
+    <!--
+        The alarm editor. Same reasoning as the note editor above: the one argument carries a
+        default, so a navigate() that forgets it starts a new alarm rather than throwing. Build the
+        bundle with AlarmEditorFragment.argumentsFor(...) — it owns the key name.
+    -->
+    <fragment
+        android:id="@+id/alarmEditorFragment"
+        android:name="com.example.skeleton.ui.fragment.alarm_editor.AlarmEditorFragment"
+        android:label="Alarm Editor Fragment">
+
+        <!-- -1 means "no stored alarm yet"; any other value is a row id to edit. -->
+        <argument
+            android:name="alarmId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+    </fragment>
+
     <!-- FOUR MAIN SCREEN-->
     <action
         android:id="@+id/toHome"
@@ -102,6 +119,15 @@
     <action
         android:id="@+id/toNote"
         app:destination="@id/noteFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right" />
+
+    <!-- Same shape as toNote: a push, so saving returns to the Alarms list with safeNavigateUp(). -->
+    <action
+        android:id="@+id/toAlarmEditor"
+        app:destination="@id/alarmEditorFragment"
         app:enterAnim="@anim/enter_slide_in_right"
         app:exitAnim="@anim/exit_slide_out_left"
         app:popEnterAnim="@anim/enter_slide_in_left"

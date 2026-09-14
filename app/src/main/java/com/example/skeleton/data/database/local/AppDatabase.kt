@@ -4,9 +4,11 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.skeleton.data.database.local.converter.DateConverter
+import com.example.skeleton.data.database.local.dao.AlarmDao
 import com.example.skeleton.data.database.local.dao.NoteDao
 import com.example.skeleton.data.database.local.dao.PostDao
 import com.example.skeleton.data.database.local.dao.UserActionDao
+import com.example.skeleton.data.database.local.entity.AlarmEntity
 import com.example.skeleton.data.database.local.entity.NoteEntity
 import com.example.skeleton.data.database.local.entity.PostEntity
 import com.example.skeleton.data.database.local.entity.UserActionEntity
@@ -19,7 +21,8 @@ import com.example.skeleton.data.database.local.entity.UserActionEntity
  * `injection/DatabaseModule.kt`, and expose the DAO both here and in that module. Skipping any of
  * them crashes the app at launch for anybody who already had the previous version installed.
  *
- * Version history: 1 = user actions only, 2 = the demo posts table, 3 = the notes table.
+ * Version history: 1 = user actions only, 2 = the demo posts table, 3 = the notes table,
+ * 4 = the alarms table.
  *
  * @author Phong-Kaster
  */
@@ -28,8 +31,9 @@ import com.example.skeleton.data.database.local.entity.UserActionEntity
         UserActionEntity::class,
         PostEntity::class,
         NoteEntity::class,
+        AlarmEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(
@@ -39,4 +43,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userActionDao(): UserActionDao
     abstract fun postDao(): PostDao
     abstract fun noteDao(): NoteDao
+    abstract fun alarmDao(): AlarmDao
 }

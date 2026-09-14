@@ -6,6 +6,57 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 4 — 2026-09-14 — Phase 2 (A-002): the alarm vertical works end to end; A-001 closed
+
+- **Phase:** 2 — A-002. A-001 also closed this iteration when D-004 was consumed.
+- **Recover (§6.1):** working tree clean — nothing to salvage or revert. But `git log` showed **three
+  commits on the Loop Branch that no task produced**, landed between iterations: `7d0c0da` ("uncompleted
+  work because run out of quota"), `be95b3f` (alarm strings + an `onTimeChange` default) and `ee7b5c9`
+  (dropped the `org.gradle.java.home` pin). `STATE.md` and `RESUME.md` described a repository that no
+  longer existed. §6.3's rule decided it: the derived cache is the thing that is wrong. Reconciled as
+  `AMENDMENTS.md` A-7 rather than reverted — all three were coherent and none conflicted with the plan.
+- **Consume decisions (§6.2):** **D-004 answered — option 1, granted.** Applied, and found already
+  satisfied: `7d0c0da` had landed the `AlarmsEmptyStateCase` reference image itself, and
+  `validateDebugScreenshotTest` confirmed the case passes. **The grant was therefore never exercised** —
+  re-recording a reference that already validates would be a pointless write against an approved
+  baseline. Exactly one file sits in that reference directory, as the decision required. A-001 → complete.
+- **Orient (§6.3):** `RESUME.md` claimed no task was executable and A-002 was untouched. Git disagreed on
+  both counts: twelve of A-002's fourteen CREATE targets already existed. Verified what was genuinely
+  missing — the two test files, and **every** piece of Iteration-owned wiring (`AppDatabase` still
+  `version = 3` with no `AlarmEntity`, no `MIGRATION_3_4`, no DI bindings, no `alarmEditorFragment` in the
+  navigation graph). The feature compiled while being completely unreachable and unpersisted, which is
+  why a green `assembleDebug` was not read as "it works".
+- **Toolchain re-verified first.** Because `ee7b5c9` removed the JDK pin and iteration 2 had once found no
+  JDK at all, the build was re-proved from scratch before anything else: `BUILD SUCCESSFUL`. The pin is
+  not load-bearing; that note in `PROJECT.md` is now closed rather than outstanding.
+- **Select (§6.4):** one task — A-002. The dependency chain is strictly linear, so no larger phase exists.
+- **Dispatch (§6.5):** one Worker at **Capable**, scoped to the three `alarms/` MODIFY targets and the two
+  test files, with the twelve pre-existing files named as read-only context rather than as work to redo
+  (`AMENDMENTS.md` A-8). All thirteen Constraints passed verbatim per ADR-016.
+- **Scope check (§6.6):** `git status` showed exactly the five declared files and nothing else. Clean.
+- **Wire (§6.6):** `AppDatabase` → `version = 4` + `AlarmEntity` + `alarmDao()`; `MIGRATION_3_4` with the
+  `CREATE TABLE` **copied verbatim** from the generated `AppDatabase_Impl.kt:61` (C-03) — note
+  `:app:kspDebugKotlin` is not a granted command, so `assembleDebug` was the route to the generated file;
+  DI bindings in all three modules, including `AlarmEditorViewModel`, which had never been registered at
+  all and would have crashed the editor on first open; `alarmEditorFragment` + `toAlarmEditor` with a
+  `defaultValue` on the argument (C-08); `add_alarm` in both `strings.xml` files (C-02); README.
+- **Build/test (§6.7):** all four commands in one invocation → `BUILD SUCCESSFUL`. **177 unit tests, 0
+  failures** (up from 138), lint **0 errors** / 66 warnings, screenshots green. No re-dispatch needed.
+- **Review (§6.8):** fresh context at Capable, pointed at the twelve unreviewed pre-existing files as well
+  as the new work. **No Constraint violation, no blocking finding.** It checked `MIGRATION_3_4` character
+  by character against the generated SQL, confirmed no vacuously-passing assertions (C-06) and that
+  `FakeAlarmDao` really returns a jumbled list, and traced the round trip through the DI and nav graphs.
+  Four non-blocking defects, **all fixed and re-verified**: the row/editor 12-vs-24-hour mismatch (A-6),
+  two wrong README tree notes, three stale KDoc claims, and the Save control's unlabelled `clickable`.
+- **Reconcile (§6.9):** the review's most serious finding was one this task did not cause —
+  `fallbackToDestructiveMigration(false)` **enables** destructive migration; the boolean only chooses
+  which tables get dropped. Four KDoc blocks assert the opposite. Cross-checked against Room `2.7.2` in
+  `libs.versions.toml` and confirmed. Classified as a **trap**, so written down as Constraint **C-13** in
+  this same checkpoint, and the fix queued as **D-005** — it changes upgrade behaviour for every installed
+  copy, which is Tier 2, not the engine's to apply. It blocks nothing. C-03's stated premise corrected in
+  the same edit, since it had repeated the same inverted claim.
+- **Outcome:** `CONTINUE`. A-003 is executable and unblocked.
+
 ### Iteration 3 — 2026-09-13 — Phase 1 (A-001) implemented; one screenshot grant queued (D-004)
 
 - **Phase:** 1 — A-001.

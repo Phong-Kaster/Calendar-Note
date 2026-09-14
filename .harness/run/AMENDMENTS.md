@@ -6,6 +6,64 @@
 
 <!-- Newest first. -->
 
+### A-8 — A-002's Worker scope shrank to what was actually missing (Tier 1)
+
+- **Iteration:** 4
+- **Date:** 2026-09-14
+- **What changed:** A-002's Declared File Scope lists 14 CREATE targets and 3 MODIFY targets. Twelve of the
+  CREATE targets already existed on disk, committed between iterations by `7d0c0da` (see A-7). Rather than
+  re-dispatch a Worker to write files that were already written — which would have overwritten reviewed,
+  working code with a second independent guess at the same spec — the Worker Brief named those twelve as
+  read-only context and scoped the Worker to what was genuinely absent: the three `alarms/` MODIFY targets
+  (still in their A-001 "nothing is stored yet" state) and the two test files (which did not exist).
+- **Why:** the task's acceptance criteria are unchanged and every file in the original scope is still
+  covered — the difference is only *who wrote it and when*. Re-writing them would have been volume for its
+  own sake, and would have thrown away the one thing the existing files have that a fresh attempt would
+  not: they already compile and validate.
+- **Guard against trusting them blindly:** the twelve pre-existing files had never been reviewed by
+  anything, so the Fresh-Context Review this iteration was explicitly pointed at them as well as at the
+  new work. It found no Constraint violation in them and four non-blocking defects across the vertical,
+  all fixed this iteration (see `HISTORY.md`).
+- **Tier:** 1 — the PRD, the DoD, the architecture and the task's acceptance criteria are all unchanged.
+
+### A-7 — The plan is reconciled with three commits made outside the loop (Tier 1)
+
+- **Iteration:** 4
+- **Date:** 2026-09-14
+- **What changed:** three commits landed on the Loop Branch between iteration 3 and iteration 4 that no
+  task and no Worker produced. `STATE.md` and `RESUME.md` described a repository that no longer existed,
+  and §6.3's rule applied: the derived cache was wrong and git was right. Reconciled as follows.
+  - **`7d0c0da`** ("uncompleted work because run out of quota") — landed twelve of A-002's source files
+    (the whole domain/data vertical plus the `alarm_editor/` screen and `AlarmRow.kt`) **and** the
+    `AlarmsEmptyStateCase` screenshot reference that D-004 was queued to obtain. It did **not** land
+    A-002's two test files, nor any of the Iteration-owned wiring the vertical needs to function
+    (`AppDatabase` was still `version = 3` with no `AlarmEntity`, no `MIGRATION_3_4`, no DI bindings, no
+    `alarmEditorFragment` in the navigation graph). The app therefore compiled while the entire feature
+    was unreachable and unpersisted — which is why "it builds" was not treated as "it works".
+  - **`be95b3f`** — added the alarm strings to both `values/` and `values-de/` and fixed an
+    `onTimeChange` default. Absorbed as-is; it is consistent with C-02 and needed no correction.
+  - **`ee7b5c9`** — removed the machine-specific `org.gradle.java.home` pin from `gradle.properties`.
+    Re-verified this iteration: all four commands still reach `BUILD SUCCESSFUL` without it. The
+    `.harness/knowledge/PROJECT.md` entry that flagged the pin for relocation is now closed rather than
+    outstanding.
+- **Tier:** 1 — no PRD, DoD or architecture change. The task list, the dependency graph and every
+  acceptance criterion are exactly as approved; only the record of which work was already done moved.
+
+### A-6 — `AlarmRow` formats its time to the device's clock rather than hardcoding 24-hour (Tier 1, review-driven)
+
+- **Iteration:** 4
+- **Date:** 2026-09-14
+- **What changed:** `AlarmRow` rendered `21:30` unconditionally, while the editor's
+  `rememberTimePickerState` leaves `is24Hour` at its default — the device setting. On a 12-hour device a
+  user set an alarm reading `9:30 PM`, saved, and the row that appeared read `21:30`: the same alarm in
+  two notations one screen apart, which reads as the app having changed what they typed. Now formatted
+  through `DateTimeFormatter` against `LocalConfiguration.current.locales[0]` and
+  `DateFormat.is24HourFormat(...)`, per C-11.
+- **Consequence to carry forward:** the row's text is now host-dependent, so **any future screenshot case
+  photographing `AlarmRow` is host-locked** and must take a pre-formatted `String` instead — the trap
+  PROJECT.md already records for the Note editor. No reference photographs `AlarmRow` today.
+- **Tier:** 1 — a defect fix inside a file already in A-002's Declared File Scope.
+
 ### A-5 — Phase 1 gains `AlarmsScreenshotTest.kt` as an Iteration-owned file (Tier 1)
 
 - **Iteration:** 3

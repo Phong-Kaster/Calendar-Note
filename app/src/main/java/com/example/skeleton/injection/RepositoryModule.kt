@@ -1,9 +1,11 @@
 package com.example.skeleton.injection
 
+import com.example.skeleton.data.repository.impl.AlarmRepositoryImpl
 import com.example.skeleton.data.repository.impl.NoteRepositoryImpl
 import com.example.skeleton.data.repository.impl.PostRepositoryImpl
 import com.example.skeleton.data.repository.impl.SettingRepositoryImpl
 import com.example.skeleton.data.repository.impl.UserActionRepositoryImpl
+import com.example.skeleton.domain.repository.AlarmRepository
 import com.example.skeleton.domain.repository.NoteRepository
 import com.example.skeleton.domain.repository.PostRepository
 import com.example.skeleton.domain.repository.SettingRepository
@@ -33,4 +35,8 @@ val repositoryModule = module {
     single<PostRepository> { PostRepositoryImpl(api = get(), dao = get()) }
 
     single<NoteRepository> { NoteRepositoryImpl(noteDao = get()) }
+
+    // The alarm store. `clock` and `ioDispatcher` are left at their defaults on purpose — they are
+    // parameters only so a test can pass a fixed clock and a test dispatcher.
+    single<AlarmRepository> { AlarmRepositoryImpl(alarmDao = get()) }
 }

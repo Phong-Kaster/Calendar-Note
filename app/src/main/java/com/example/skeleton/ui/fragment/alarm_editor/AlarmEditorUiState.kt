@@ -42,9 +42,11 @@ import com.example.skeleton.domain.model.Alarm
  * @param openFailed true when the screen could not open the alarm it was sent to edit — it has been
  *   removed, or the store would not answer. Either way there is nothing here to edit, so the
  *   Fragment says so and leaves rather than letting the user type into an editor with no alarm
- *   behind it. (The note editor splits these two apart into a `NoteProblem`; here they are one flag
- *   because nothing navigates to this screen with a real id yet. The task that adds "tap a row to
- *   edit" is the one that will find out whether the difference is worth telling the user about.)
+ *   behind it. (The note editor splits these two apart into a `NoteProblem`; here they are still one
+ *   flag. Tapping a row on the Alarms screen now does reach this editor with a stored id, so the
+ *   difference has become reachable in practice — but nothing yet removes an alarm, so "it has been
+ *   removed" cannot actually happen and the two cases stay indistinguishable to a user. Revisit this
+ *   with the task that adds deletion, which is what makes the first case real.)
  * @author Phong-Kaster
  */
 data class AlarmEditorUiState(

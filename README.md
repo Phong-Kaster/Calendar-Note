@@ -36,7 +36,11 @@ Two things at once:
 | Tap one of that day's notes to open it in the editor | ✅ built |
 | Add a note dated to the day picked on the calendar (rather than to today) | ✅ built |
 | Refuse — and say why — when a note would be dated in the future | ✅ built |
-| Alarms as a fourth bottom-bar tab, opening on an explicit empty state | ⚠️ partial — screen only, nothing can be saved yet |
+| Alarms as a fourth bottom-bar tab, opening on an explicit empty state | ✅ built |
+| Write an alarm — a message and a time — save it, and see it in the list | ✅ built |
+| Alarms survive the app being killed, and are listed earliest time of day first | ✅ built |
+| Refuse — and say why — when an alarm would be saved with nothing written on it | ✅ built |
+| Turn an alarm off, delete one, or have one actually go off and notify you | ❌ not yet — later tasks in this run |
 
 > **Implementation status is deliberately explicit.** The note feature is complete: every row above
 > is code that exists, and this table was updated in the same change that landed each piece — a
@@ -45,9 +49,11 @@ Two things at once:
 > Three rows are honest about being less than finished. The **language picker** is inherited and only
 > two of its seven languages have translations. The **German bottom-bar label** truncates
 > ("Einstell…") — a known defect, filed in `knowledge/ISSUES.md` and pinned by a reference image so
-> it cannot get quietly worse. **Alarms** is a run in progress: this is the fourth tab and its empty
-> state, with no `Alarm` model, no store and no floating action button yet — those land in the tasks
-> that follow.
+> it cannot get quietly worse. **Alarms** is a run in progress: an alarm can now be written, saved,
+> listed and reopened, and it survives a restart — but nothing arms one yet. No alarm can be switched
+> off or deleted, and none will ever go off: there is no scheduler, no receiver and no notification.
+> The `enabled` column exists in the table and deliberately nothing reads it, because adding a column
+> after the table has shipped costs a second migration. Those land in the tasks that follow.
 
 ## Business rules
 
@@ -180,10 +186,12 @@ com/example/skeleton/
 │   │       ├── converter/
 │   │       │   └── DateConverter.kt        #     Room TypeConverter: Date <-> Long
 │   │       ├── dao/
+│   │       │   ├── AlarmDao.kt             #     The alarms table: observe all, get one, upsert. No delete yet — nothing removes an alarm
 │   │       │   ├── NoteDao.kt              #     The notes table: observe all, observe one day, upsert, delete
 │   │       │   ├── PostDao.kt
 │   │       │   └── UserActionDao.kt
 │   │       ├── entity/
+│   │       │   ├── AlarmEntity.kt          #     A stored alarm; its time is two Int columns, not a time type
 │   │       │   ├── NoteEntity.kt           #     A stored note; its day is an epoch-day Long, not a date type
 │   │       │   ├── PostEntity.kt
 │   │       │   └── UserActionEntity.kt
@@ -192,6 +200,7 @@ com/example/skeleton/
 │   ├── datastore/
 │   │   └── SettingDatastore.kt             #   Typed Flows over Preferences DataStore
 │   ├── mapper/                             #   toDomain() / toEntity() extensions. Repositories never map inline.
+│   │   ├── AlarmMapper.kt                  #     Entity <-> domain for alarms, field for field
 │   │   ├── NoteMapper.kt                   #     The only place an epoch day becomes a LocalDate
 │   │   ├── PostMapper.kt
 │   │   └── UserActionMapper.kt
@@ -206,6 +215,7 @@ com/example/skeleton/
 │   │       └── safeApiCallFlow.kt          #     Wraps a call as Flow<Outcome<T>>; repositories never throw
 │   └── repository/
 │       └── impl/                           #   The implementations behind the domain interfaces
+│           ├── AlarmRepositoryImpl.kt      #     Room-only store; owns the earliest-first order and the blank-message refusal
 │           ├── NoteRepositoryImpl.kt       #     Room-only store; guarantees the newest-first order itself
 │           ├── PostRepositoryImpl.kt
 │           ├── SettingRepositoryImpl.kt
@@ -214,12 +224,15 @@ com/example/skeleton/
 │   ├── enums/
 │   │   └── BottomBarDestination.kt         #   Home, Calendar, Setting, Alarms — declaration order is tab order
 │   ├── model/                              #   Models the UI and repositories agree on
+│   │   ├── Alarm.kt                        #     An alarm: a message and a time of day
+│   │   ├── BlankAlarmMessageException.kt   #     The "an alarm must say something" rule saying no, carried as a value
 │   │   ├── CalendarMonth.kt                #     One month laid out as a Sunday-first grid of squares
 │   │   ├── FutureDateRefusedException.kt   #     The no-future-dates rule saying no, carried as a value
 │   │   ├── Note.kt                         #     A note, plus the displayTitle fallback a row draws
 │   │   ├── Post.kt
 │   │   └── UserAction.kt
 │   └── repository/                         #   Interfaces only. Implementations live in data/.
+│       ├── AlarmRepository.kt
 │       ├── NoteRepository.kt
 │       ├── PostRepository.kt
 │       ├── SettingRepository.kt
@@ -244,8 +257,15 @@ com/example/skeleton/
 │   │   ├── LifecycleComposable.kt
 │   │   └── NoteSummaryRow.kt               #     One note as a card — used by Home and by the Calendar day list
 │   ├── fragment/                           #   One folder per screen: Fragment + UiState + ViewModel + component/
-│   │   ├── alarms/                         #     The fourth tab. Nothing is stored yet — the screen exists and says so
+│   │   ├── alarm_editor/                   #     Write one alarm: a message, a time, and Save in the top bar
 │   │   │   ├── component/
+│   │   │   │   └── AlarmEditor.kt          #       The message field and the time control
+│   │   │   ├── AlarmEditorFragment.kt      #       Owns argumentsFor(alarmId) — the only place that key name lives
+│   │   │   ├── AlarmEditorUiState.kt
+│   │   │   └── AlarmEditorViewModel.kt
+│   │   ├── alarms/                         #     The fourth tab: every alarm, earliest first, plus the button that adds one
+│   │   │   ├── component/
+│   │   │   │   ├── AlarmRow.kt             #       One alarm as a card — its time and what it says
 │   │   │   │   └── AlarmsEmptyState.kt     #       "No alarms yet", centred in the content area
 │   │   │   ├── AlarmsFragment.kt
 │   │   │   ├── AlarmsUiState.kt

@@ -58,10 +58,13 @@ migration verbatim, backticks and all**, then read the `_columnsXxx` map below i
 `NOT NULL` and primary key.
 
 Nothing in this repository can execute SQLite — no Robolectric, and `MigrationTestHelper` needs a device —
-and `injection/DatabaseModule.kt` builds with `fallbackToDestructiveMigration(false)`, which turns a
-migration that disagrees with the entity into a **launch crash** for every existing install rather than a
-degraded read. So a migration is either right by construction or unverified. Iteration 4 composed one by
-eye and wrote a `DEFAULT ''` the entity does not declare.
+so a migration is either right by construction or unverified. Iteration 4 composed one by eye and wrote a
+`DEFAULT ''` the entity does not declare.
+
+A migration that *runs* but builds the wrong schema still fails loudly: Room's `validateMigration` compares
+the result against the entity and throws. That is the case this Constraint protects. The **missing**-path
+case is the opposite and much quieter — see **C-13**, which corrects what this entry used to claim about
+`fallbackToDestructiveMigration(false)`.
 
 ### C-04 — Any new screen with a text field needs `Modifier.imePadding()` before `verticalScroll`.
 
@@ -157,6 +160,28 @@ the app has its own language picker. Wrap formatters in `remember(locale) { … 
 Report what you wrote; the Iteration reads the diff from git. `rm` is not in the granted capability set, so
 a stray file you create cannot be removed by the engine — **choose a file's name and a preview's
 `name`/`widthDp`/`heightDp` before writing it, not after.**
+
+### C-13 — `fallbackToDestructiveMigration(false)` **enables** destructive migration. It does not disable it.
+
+`injection/DatabaseModule.kt` calls it, and four KDoc blocks in this repository state that it means Room
+will refuse to wipe and throw instead. **That reading is inverted, and it is the dangerous direction to be
+wrong in.**
+
+Room is `2.7.2`. In 2.7 the no-arg `fallbackToDestructiveMigration()` was deprecated in favour of
+`fallbackToDestructiveMigration(dropAllTables: Boolean)`. The boolean is **not** an on/off switch —
+*calling the method at all* opts into destructive migration, and the parameter only chooses whether every
+table is dropped (`true`) or only the ones Room owns (`false`). The behaviour those comments describe —
+throw when no migration path exists — is what you get by **not calling the method at all**.
+
+So today, a task that bumps `AppDatabase.version` and forgets to write or register the migration does not
+crash. Room drops and recreates `alarms`, `notes`, `posts` and `user_actions`, and the app opens looking
+perfectly healthy with every alarm and note the user owned silently gone. Nothing in a build, a test, a
+lint run or a fresh-install QA pass can see it, because a fresh install has no data to lose.
+
+**Until this is changed, treat every version bump as unprotected**: the migration is the only thing standing
+between an upgrade and an empty database, and no mechanism will tell you if it is missing. Do not repeat
+the "it throws instead" claim in new comments. Filed for a human decision as **D-005** — changing it alters
+upgrade behaviour for every installed copy, which is not the engine's call to make unilaterally.
 
 ---
 
@@ -284,7 +309,7 @@ confirmed against the code that exists.
   `repositoryModule`, `viewModelModule`, `networkModule`, `localeModule` — a *new* module must be added to
   that `includes` list. Repositories are bound by interface with named arguments; ViewModels use
   `viewModel { }`. `MainApplication` starts Koin with `modules(appModule)` only.
-- **Room:** `AppDatabase` is at **`version = 3`** (1 = user actions, 2 = posts, 3 = `notes`),
+- **Room:** `AppDatabase` is at **`version = 4`** (1 = user actions, 2 = posts, 3 = `notes`, 4 = `alarms`),
   `exportSchema = false`, file `"app_database"`, `@TypeConverters(DateConverter::class)` (`Date` ↔ `Long`).
   Adding an entity means: entity + DAO + register in `@Database` + bump `version` + write the migration +
   register it in `addMigrations` + expose the DAO both in `AppDatabase` and in `databaseModule`. `NoteEntity`
@@ -315,16 +340,14 @@ confirmed against the code that exists.
 ## Environmental Facts
 
 - **Platform:** Windows 11, PowerShell primary shell, Gradle wrapper, Gradle 9.1.0.
-- **`gradle.properties` now pins `org.gradle.java.home`** to this machine's Android Studio JBR
-  (`C:/Users/phong/AppData/Local/Programs/Android Studio/jbr`), added to the tracked working tree by a
-  human between iteration 2 (which found no JDK reachable at all) and iteration 3 (which found
-  `./gradlew --version` already working) — not by any task or Worker. Iteration 3 only escaped the drive
-  letter's colon (`C\:/...`), because AGP's `lintDebug` rates an unescaped one a `PropertyEscape` **error**,
-  which was failing DoD criterion 2 for a reason unrelated to any feature in this run. **Flagged, not
-  fixed:** a personal absolute path is now committed in a file every future run reads; the conventional fix
-  is a user-level, untracked `~/.gradle/gradle.properties` instead, but the engine's working directory is
-  sandboxed to the repository and cannot write there. Left for a human to relocate at convenience — this
-  single-developer skeleton has no CI to break in the meantime.
+- **`gradle.properties` no longer pins `org.gradle.java.home`, and the build works anyway.** The pin to a
+  personal Android Studio JBR path was added by a human between iterations 2 and 3, escaped by iteration 3
+  to satisfy `lintDebug`'s `PropertyEscape` check, and **removed by a human in commit `ee7b5c9`** ("drop
+  machine-specific org.gradle.java.home pin"). Iteration 4 re-verified from scratch: all four commands run
+  to `BUILD SUCCESSFUL` with no pin, so Gradle is finding a JDK from the environment (`JAVA_HOME` / PATH)
+  without help. The earlier "no JDK reachable at all" of iteration 2 was an environment problem that has
+  since been fixed outside the repository, **not** something the pin was load-bearing for. This is now
+  closed rather than flagged — nothing is left for a human to relocate.
 - **Android SDK** path comes from git-ignored `local.properties`; a fresh clone will not build without it.
 - `compileSdk 36`, `targetSdk 36`, `minSdk 24`, `jvmTarget 11`.
 - **No CI configuration exists.** No lint baseline, no ktlint, no detekt — "lint" means AGP lint.

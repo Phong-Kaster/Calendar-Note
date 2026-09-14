@@ -107,8 +107,9 @@ class AlarmEditorViewModel(
             //
             // A successful read of `null` lands in the same place, one line down, and for this
             // screen the two lead to the same behaviour: there is nothing here to edit, so say so
-            // and leave. They are still asked in the right order, because the day a caller can
-            // reach this screen with a real id is the day the difference starts to matter.
+            // and leave. They are still asked in the right order, because a caller can now reach
+            // this screen with a real id — a tap on a row in the Alarms list — so the difference is
+            // one deletion feature away from mattering.
             val stored = (outcome as? Outcome.Success)?.data
             if (stored == null) {
                 Log.w(TAG, "openAlarm($alarmId) found no alarm to edit")

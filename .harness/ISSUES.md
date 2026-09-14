@@ -1,112 +1,88 @@
-# LOOP ISSUES REPORT
+# ISSUES
 
-> Regenerated every iteration and kept at `.harness/ISSUES.md` — a **sibling** of `run/`, not inside
-> it, which is why the Cleanup Commit that removes `.harness/run/` leaves this file standing. This is
-> what a human reads when they come back to the run.
+> Problems only. Regenerated every iteration. What succeeded is in `git log`, not here.
 >
-> Problems only. What succeeded is in the commit messages.
-
-_Last updated: 2026-09-13 — branch `loop/calendar-note-app` — iteration 3_
-
-**Read this first: the environment now builds. A-001 is implemented and almost entirely evidenced —
-one new screenshot reference needs your approval (D-004) before it can be marked complete.** Everything
-else in Phase 1 is green: `assembleDebug`, all 138 unit tests, `lintDebug` (0 errors), and 21 of 21
-*existing* screenshot cases. No task is abandoned. No task failed an attempt.
+> This file sits beside `run/` rather than inside it, so it survives the Cleanup Commit that removes
+> `.harness/run/` when the run completes.
 
 ## Abandoned tasks
 
-None.
+None. No task has failed an attempt in this run.
 
 ## Unreachable tasks
 
-None. A-002 … A-007 are simply not yet selectable: each depends on A-001 (directly or transitively),
-which cannot be marked complete until D-004 is answered.
+None.
 
-## Decisions awaiting an answer
+## Queued decisions awaiting an answer
 
-**D-004 — a goal-scoped grant to record one brand-new screenshot reference.** Full text in
-`.harness/run/ESCALATION.md`. Short version: `AlarmsScreenshotTest.kt` is a new file this iteration added
-(a `@PreviewTest` case A-001's own acceptance criteria required but the plan's Phase 1 row omitted — see
-`AMENDMENTS.md` A-5) and it has no reference image yet. Recording one needs
-`./gradlew :app:updateDebugScreenshotTest --tests "*AlarmsEmptyStateCase*"`, which is not covered by the
-existing D-003 grant (that one is scoped by name to the two `BottomBar*` cases only). Blocks A-001's
-completion only.
+### D-005 — `fallbackToDestructiveMigration(false)` silently wipes the database on a missing migration
 
-D-001, D-002, D-003 were answered 2026-09-13 and consumed in iteration 2 — archived in
-`.harness/run/HISTORY.md` § Archived Decisions.
+**Blocks nothing.** Every remaining task runs while this is unanswered; it does not stop the loop.
 
-## Capability ledgers — installed and verified
+`injection/DatabaseModule.kt:29` calls `.fallbackToDestructiveMigration(false)`. On Room 2.7 (this project
+is on `2.7.2`) **calling that method enables destructive migration** — the boolean only selects whether all
+tables are dropped or just Room-owned ones. The behaviour four KDoc blocks in this repository claim is in
+force, "it throws instead of wiping", is what you get by *not calling it at all*.
 
-- `.harness/knowledge/capabilities.json` — the three D-001 standing blocks, unchanged since iteration 2.
-- `.harness/run/capabilities.json` — the D-003 goal-scoped block, already consumed against the two
-  `BottomBar*` references this iteration. D-004, once answered, adds a second goal-scoped entry here.
+What it allows: a future task bumps `AppDatabase.version` to 5 and forgets to register the migration. Room
+drops and recreates `alarms`, `notes`, `posts` and `user_actions`. The app opens looking healthy and every
+alarm and note the user owned is gone — no crash, no log line. No build, test, lint or fresh-install QA
+pass can catch it, because a fresh install has no data to lose.
 
-## Review findings — fixed this iteration
-
-The Fresh-Context Review (§6.8) on A-001's diff found two issues, both corrected before this checkpoint:
-
-- **Missing acceptance evidence:** A-001 required a new `@PreviewTest` pinning the empty state; none
-  existed. Fixed — `AlarmsScreenshotTest.kt` added (AMENDMENTS.md A-5); its reference image is what D-004
-  is waiting on.
-- **AS-5's hide-the-"+"-button check lived in the wrong file:** a hardcoded destination-id comparison
-  inside `CoreBottomBar` rather than a property on `BottomBarDestination` itself, which would silently stop
-  working the day Alarms is reached through a different back-stack hierarchy (e.g. the notification-tap
-  route in criterion 23). Fixed — `BottomBarDestination.hidesCreateButton` (AMENDMENTS.md A-6).
-
-No Constraint (C-01 … C-12) violation was found. Both fixes are already in this iteration's checkpoint.
-
-## Flagged, not fixed — a personal path is now committed in `gradle.properties`
-
-Between iteration 2 (no JDK reachable at all) and iteration 3 (this iteration), `gradle.properties` picked
-up `org.gradle.java.home=<this machine's Android Studio JBR path>` in the tracked working tree — not
-written by any task. Iteration 3 only escaped its drive-letter colon, which `lintDebug` was rating a
-`PropertyEscape` **error** unrelated to anything in this feature. The engine cannot relocate this to a
-user-level, untracked `~/.gradle/gradle.properties` (its working directory is sandboxed to the
-repository), so a personal absolute path stays committed for now. Low stakes today — this is a
-single-developer skeleton with no CI — but worth moving out of the tracked file at your convenience. Full
-note in `.harness/knowledge/PROJECT.md` § Environmental Facts.
+Recorded as Constraint **C-13** in `.harness/knowledge/PROJECT.md` so the trap survives whatever is
+decided. The engine recommends removing the call. It did not do so unilaterally because that changes
+upgrade behaviour for every installed copy of the app. Full options in `.harness/run/ESCALATION.md`.
 
 ## `human` criteria still unsigned
 
-All 17 — unchanged from iteration 2; A-001 adds no `human`-signable surface of its own beyond criteria 8
-and 10, and neither is ready to show a person until the D-004 grant lands and the full Phase is complete.
+**All 17.** No person has looked at the running app in this run — the engine cannot, and says so rather
+than certifying what it cannot see.
 
-| # | What a person has to check |
-|---|---|
-| 4 | The app installs **over an existing v3 install** and launches without crashing |
-| 8 | The Alarms screen can be found, and it is obvious which screen you are on |
-| 9 | A long list scrolls and the last alarm is not hidden under the FAB or the bottom bar |
-| 10 | An empty Alarms screen says it is empty rather than looking broken |
-| 11 | A long message clips with an ellipsis and the alarm's time stays readable |
-| 13 | The floating action button is visible and opens the "new alarm" screen |
-| 16 | The editor is usable — the keyboard does not cover the line you are typing |
-| 18 | An alarm survives the app being force-stopped and reopened |
-| 22 | **The alarm actually fires, as a popup, with your message — and again the next day** |
-| 23 | Tapping the notification opens the Alarms list without stacking a second copy of the app |
-| 25 | Tapping an alarm opens it pre-filled |
-| 28 | The delete control is findable and its confirming button is unmistakable |
-| 30 | The enabled switch reads correctly at a glance |
-| 31 | With notifications off, the screen says so and offers the fix |
-| 32 | Alarms still fire after the phone is **rebooted** |
-| 35 | The two new screens look like they belong to this app |
+Nine are **ready to be shown to someone now**, since A-001 and A-002 are complete with green machine
+evidence: criteria **3, 4** (upgrade over a v3 install does not crash), **8** (the Alarms tab is findable
+and it is obvious which screen you are on), **9** (the list scrolls and the last row is not hidden under
+the floating button), **10** (the empty screen reads as empty rather than broken), **11** (a long alarm
+message has defined overflow), **13, 16** (the floating button is visible and opens the editor; the editor
+stays usable with the keyboard up).
 
-## Inherited defects (predate this run)
+They are **not** being requested yet, deliberately. The Human Verification Request is raised once at the
+end of the run (§11) rather than per phase: it costs one sitting instead of six, and several of these
+criteria will be re-opened by A-003 anyway, which changes the same two screens. Listed here so the work
+waiting for a human is visible now instead of arriving as a surprise at the end.
 
-These were found by the previous run on this branch and are recorded, not fixed.
+## Review findings recorded but not fixed
 
-- **43 hardcoded colour literals survive in the tree**, none added by this run. See C-01.
-- **Eight orphaned screenshot reference images** in `app/src/screenshotTestDebug/reference/`, none added
-  by this run.
-- **German bottom-bar labels truncate** ("Einstellungen" already ellipsizes at three tabs; the new fourth
-  tab makes every slot narrower). A-001 chose short labels in both languages ("Alarms"/"Wecker") so it does
-  not make this worse, but the underlying truncation defect predates this feature and is not fixed by it.
-- **`.claude/figma-design-system.md` § 4(b) contradicts C-01** — a human-owned rule file the engine reads
-  but never edits. Overridden in `PROJECT.md`; still worth your correcting at the source.
+### The bottom bar's "+" flashes into the Alarms tab during the push to the editor
 
-## Assumptions recorded
+`ui/fragment/alarms/AlarmsFragment.kt` with `ui/component/CoreBottomBar.kt:94-97`. `hideCreateButton` is
+derived from the live back-stack entry, so the instant `navigate(R.id.toAlarmEditor)` runs,
+`currentDestination` becomes `alarmEditorFragment`, matches no `BottomBarDestination`, and the flag flips
+to false — while the Alarms view is still composed and animating out. A "+" button materialises in the bar
+for the length of the exit animation, wired to a deliberate no-op.
 
-- **The bootstrap that produced `DoD.md`, `PLAN.md`, `A-001` and `A-002` was interrupted before writing any
-  run scaffolding**, and iteration 1 salvaged that debris rather than reverting it — see `STATE.md`.
-- **`PRD.md` is left modified and uncommitted in the working tree.** It holds your Alarms addendum. It is
-  your intent file, not the engine's to stage.
-- **AS-1 … AS-11** live in `.harness/run/DoD.md` § Assumptions, not duplicated here.
+Cosmetic, and visible only during a transition. Not fixed here because the clean fix changes
+`CoreBottomBar`'s signature to take the decision rather than re-derive it, and that file is shared by four
+screens — a change worth making deliberately in a task that owns it, not as a drive-by in A-002's
+checkpoint.
+
+## Recorded assumptions
+
+- **AS-1 … AS-11 live in `.harness/run/DoD.md`**, not here — see D-001's archived exchange.
+- `AlarmRow` now formats its time to the device's 12/24-hour setting and the app's locale, which makes its
+  rendered text **host-dependent**. Any future screenshot case photographing `AlarmRow` is therefore
+  host-locked and must be handed a pre-formatted `String` — the same trap `PROJECT.md` already records for
+  the Note editor. No reference photographs `AlarmRow` today.
+- `AlarmEntity.enabled` ships in the table while nothing reads it until A-004. Deliberate: adding a column
+  after the table has shipped costs a second migration, and C-13 makes a missing migration path a silent
+  data wipe rather than a crash.
+- `AlarmEditorUiState.openFailed` merges "the alarm is gone" with "the store would not answer". Tapping a
+  row now reaches the editor with a real id, so the distinction is reachable — but nothing deletes an
+  alarm yet, so the first case cannot actually occur. Revisit in A-003, which adds deletion.
+
+## Closed since the last report
+
+- **The `org.gradle.java.home` pin** is gone (removed outside the loop in `ee7b5c9`) and the toolchain was
+  re-verified from scratch this iteration: all four commands reach `BUILD SUCCESSFUL` without it. This was
+  previously filed here as a personal absolute path committed to a shared file. No longer an issue.
+- **D-004** (the screenshot-recording grant) is answered and closed. The reference image arrived via
+  commit `7d0c0da` and validates, so the granted command was never run.

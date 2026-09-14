@@ -3,16 +3,19 @@ package com.example.skeleton.ui.fragment.alarm_editor
 import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -39,9 +42,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  * incorrectly in the other produces no compiler error, no crash, and a screen that quietly opens a
  * blank alarm instead of the one that was tapped. One factory function means there is one spelling.
  *
- * **Nothing navigates here with a real id yet** — the Alarms list's rows gain their tap in a later
- * task. The argument exists now anyway, because a screen that has to grow an argument later is a
- * screen that has to be reshaped later, and this one is easier to get right while it is new.
+ * Both callers are on the Alarms screen: its floating action button arrives here with no id, and a
+ * tap on a row arrives with that row's id.
  *
  * @author Phong-Kaster
  */
@@ -197,7 +199,16 @@ private fun AlarmEditorLayout(
                         modifier = Modifier
                             .clip(shape = RoundedCornerShape(12.dp))
                             .background(color = MaterialTheme.colorScheme.primary)
-                            .clickable(onClick = onSave)
+                            // The full call, not the one-argument shorthand. This is the screen's
+                            // primary action: it needs a label a screen reader can announce, and a
+                            // ripple bounded by the rounded shape above rather than the platform
+                            // default spilling past its corners.
+                            .clickable(
+                                onClickLabel = stringResource(R.string.save),
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = ripple(bounded = true),
+                                onClick = onSave,
+                            )
                             .padding(vertical = 6.dp, horizontal = 14.dp),
                     )
                 },
