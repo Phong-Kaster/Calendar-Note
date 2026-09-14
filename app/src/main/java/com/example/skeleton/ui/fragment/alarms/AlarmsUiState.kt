@@ -41,6 +41,18 @@ import com.example.skeleton.domain.model.Alarm
  *   [deleteFailed] because the two are different sentences: nothing was removed here, the switch
  *   simply snapped back to what the store still holds, and telling the user "could not be deleted"
  *   about it would be alarming and wrong. Cleared by `consumeToggleFailed()`.
+ * @param notificationsGranted whether the operating system will let this app show a notification.
+ *   False puts the warning banner on screen, because an alarm that cannot notify is an alarm that
+ *   goes off where nobody can see it.
+ * @param exactAlarmGranted whether the operating system will let this app schedule an *exact*
+ *   alarm. False puts the second line of the warning banner on screen.
+ *
+ *   **Both default to true, and the default is the safe one.** These two are read from the device
+ *   — they need a `Context`, which the ViewModel has not got — so they arrive from the Fragment a
+ *   moment after the screen appears. Defaulting them to false would flash a warning at every user
+ *   on every entry to the tab, including the ones with nothing wrong, for the one frame before the
+ *   truth lands. The cost of this direction is the opposite frame: a user who really is blocked
+ *   sees the banner appear a frame late, which nobody notices.
  * @author Phong-Kaster
  */
 data class AlarmsUiState(
@@ -53,6 +65,10 @@ data class AlarmsUiState(
     val deletedTrigger: Int = 0,
     val deleteFailed: Boolean = false,
     val toggleFailed: Boolean = false,
+
+    // --- What the operating system will actually let an alarm do, re-read on every resume ---
+    val notificationsGranted: Boolean = true,
+    val exactAlarmGranted: Boolean = true,
 ) {
 
     /** True when there is no alarm to show, which is what puts the empty message on screen. */

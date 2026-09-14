@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.skeleton.common.Outcome
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.repository.AlarmRepository
+import com.example.skeleton.domain.scheduler.AlarmScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +34,7 @@ import kotlinx.coroutines.launch
  */
 class AlarmsViewModel(
     private val alarmRepository: AlarmRepository,
+    private val alarmScheduler: AlarmScheduler,
 ) : ViewModel() {
 
     private val TAG = "AlarmsViewModel"
@@ -204,5 +206,60 @@ class AlarmsViewModel(
     /** Clears [AlarmsUiState.toggleFailed] once the Fragment has shown the message. */
     fun consumeToggleFailed() {
         _uiState.value = _uiState.value.copy(toggleFailed = false)
+    }
+
+    /**
+     * Records what the operating system will currently let an alarm do.
+     *
+     * **The reading happens in the Fragment, not here, and that split is deliberate.** Both answers
+     * come from `Context`-dependent system calls — `isNotificationGranted(context)` and
+     * `canScheduleExactAlarm(context)` — and a ViewModel that reached for a `Context` would be a
+     * ViewModel no plain JVM test could construct. Taking the two answers as arguments keeps this
+     * class testable and keeps the Android-shaped half where the Android lifecycle already is.
+     *
+     * **It is plain state, not an event.** Called again with different answers it simply overwrites
+     * — the Fragment calls it on every resume, and a user who leaves to fix a setting and comes
+     * back must find the warning gone rather than stacked up twice.
+     *
+     * **Granting exact alarms re-arms the whole list, and this is not optional.** From Android 12
+     * the system cancels every exact alarm the app has pending the moment this permission is
+     * revoked — so by the time it is granted again, nothing is actually armed, even though every
+     * switch on screen still reads ON and the warning banner is about to disappear as if the
+     * problem were solved. Detected here as a false-to-true transition rather than "true means
+     * armed": re-arming every time this is called with `true` would re-arm on every single resume
+     * of a perfectly healthy screen, for no reason at all.
+     *
+     * @param notificationsGranted true when the app may post notifications. False raises the
+     *   warning banner's first line.
+     * @param exactAlarmGranted true when the app may schedule exact alarms. False raises its second
+     *   line.
+     */
+    fun setPermissionState(notificationsGranted: Boolean, exactAlarmGranted: Boolean) {
+        val exactAlarmJustGranted = exactAlarmGranted && !_uiState.value.exactAlarmGranted
+
+        _uiState.value = _uiState.value.copy(
+            notificationsGranted = notificationsGranted,
+            exactAlarmGranted = exactAlarmGranted,
+        )
+
+        if (exactAlarmJustGranted) rearmEverything()
+    }
+
+    /**
+     * Puts every alarm the screen currently shows back onto the system's clock.
+     *
+     * Only [setPermissionState] calls this, and only on the transition described there. The list
+     * handed to [AlarmScheduler.rearmAll] is [AlarmsUiState.alarms] as it stands right now rather
+     * than a fresh store read — this ViewModel is already subscribed to the store for as long as it
+     * lives, so that list is never stale by more than the one collection this class always keeps
+     * current anyway.
+     *
+     * No explicit dispatcher, matching [setEnabled] and [confirmDelete] above: [AlarmScheduler] is
+     * itself the seam that keeps Android calls off a test's back, not a dispatcher switch.
+     */
+    private fun rearmEverything() {
+        viewModelScope.launch {
+            alarmScheduler.rearmAll(alarms = _uiState.value.alarms)
+        }
     }
 }

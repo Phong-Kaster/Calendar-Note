@@ -44,6 +44,8 @@ Two things at once:
 | Switch an alarm off or on from its row, without opening it | ✅ built |
 | Delete an alarm, behind a confirmation step | ✅ built |
 | Have an alarm actually go off, as a heads-up notification, and repeat the next day | ✅ built |
+| Alarms still fire after the phone is restarted | ✅ built |
+| When the OS will not let an alarm fire, the Alarms screen says so and offers the fix | ✅ built |
 
 > **Implementation status is deliberately explicit.** The note feature is complete: every row above
 > is code that exists, and this table was updated in the same change that landed each piece — a
@@ -52,12 +54,15 @@ Two things at once:
 > Two rows are honest about being less than finished. The **language picker** is inherited and only
 > two of its seven languages have translations. The **German bottom-bar label** truncates
 > ("Einstell…") — a known defect, filed in `knowledge/ISSUES.md` and pinned by a reference image so
-> it cannot get quietly worse. **Alarms is otherwise complete**: an alarm can be written, saved,
-> listed, reopened and changed, switched off or on, deleted behind a confirmation, and — at the time
-> set — arrives as a heads-up notification carrying its message, then repeats the next day with no
-> further action from the user. What no command in this repository can check — whether a real phone
-> actually pops the banner up, and whether tapping it opens the Alarms list without stacking a second
-> copy of the app — is left for a person; see the Human Verification Request when this run finishes.
+> it cannot get quietly worse. **Alarms is complete**: an alarm can be written, saved, listed,
+> reopened and changed, switched off or on, deleted behind a confirmation, and — at the time set —
+> arrives as a heads-up notification carrying its message, then repeats the next day with no further
+> action from the user; it survives a restart of the phone; and when the operating system will not
+> let an alarm fire at all (notifications off, or exact alarms refused), the screen says so and offers
+> the fix, clearing itself once the setting is corrected. What no command in this repository can
+> check — whether a real phone actually pops the banner up, whether tapping it opens the Alarms list
+> without stacking a second copy of the app, and whether an alarm set before a reboot really does
+> survive one — is left for a person; see the Human Verification Request when this run finishes.
 
 ## Business rules
 
@@ -211,7 +216,8 @@ com/example/skeleton/
 │   ├── notification/
 │   │   └── AlarmNotifier.kt                #   Builds and posts the alarm's heads-up notification; owns the channel
 │   ├── receiver/
-│   │   └── AlarmReceiver.kt                #   Fires the notification, then re-arms tomorrow's occurrence
+│   │   ├── AlarmReceiver.kt                #   Fires the notification, then re-arms tomorrow's occurrence
+│   │   └── BootReceiver.kt                 #   Re-arms every stored alarm after a restart; the one exported receiver
 │   ├── remote/
 │   │   ├── api/
 │   │   │   ├── ApiPath.kt                  #     Every endpoint path lives here
@@ -248,7 +254,7 @@ com/example/skeleton/
 │   │   ├── SettingRepository.kt
 │   │   └── UserActionRepository.kt
 │   └── scheduler/                          #   The seam that makes "when does this go off" and "arm/cancel it" testable
-│       ├── AlarmScheduler.kt               #     Interface: schedule(alarm), cancel(alarmId) — no Android in sight
+│       ├── AlarmScheduler.kt               #     Interface: schedule, cancel, rearmAll (default: schedule in a loop)
 │       └── NextFireTime.kt                 #     Pure arithmetic: next occurrence of hour:minute against a Clock
 ├── injection/                              # Koin modules. AppModule pulls the rest together.
 │   ├── AppModule.kt
@@ -281,7 +287,8 @@ com/example/skeleton/
 │   │   │   ├── component/
 │   │   │   │   ├── AlarmDeleteConfirmSheet.kt #    The step between "delete" and an alarm actually going away
 │   │   │   │   ├── AlarmRow.kt             #       One alarm as a card — its time, what it says, its switch, its bin
-│   │   │   │   └── AlarmsEmptyState.kt     #       "No alarms yet", centred in the content area
+│   │   │   │   ├── AlarmsEmptyState.kt     #       "No alarms yet", centred in the content area
+│   │   │   │   └── AlarmsPermissionNotice.kt #     Banner: tells the two OS-level reasons an armed alarm might not fire
 │   │   │   ├── AlarmsFragment.kt
 │   │   │   ├── AlarmsUiState.kt
 │   │   │   └── AlarmsViewModel.kt

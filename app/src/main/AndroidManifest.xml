@@ -12,6 +12,7 @@
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".MainApplication"
@@ -43,6 +44,17 @@
         <receiver
             android:name=".data.receiver.AlarmReceiver"
             android:exported="false" />
+
+        <!-- Re-arms every stored alarm after a restart. Android drops all scheduled alarms on
+             reboot, and the boot broadcast comes from the system, so this is the one receiver in
+             this feature that must be exported. -->
+        <receiver
+            android:name=".data.receiver.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <!-- AndroidX in-app language: persist and restore user locale (Android 12 and lower). -->
         <service

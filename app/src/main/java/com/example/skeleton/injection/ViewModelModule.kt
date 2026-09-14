@@ -26,8 +26,10 @@ val viewModelModule = module {
     // only reason that parameter exists as a parameter: so a test can pass a different one.
     viewModel { CalendarViewModel(noteRepository = get()) }
 
-    // Alarms View Model — reads the alarm store's live list so the screen stays current on its own.
-    viewModel { AlarmsViewModel(alarmRepository = get()) }
+    // Alarms View Model — reads the alarm store's live list so the screen stays current on its
+    // own, and re-arms the whole list on the one occasion the system has quietly cancelled it all:
+    // the exact-alarm permission being granted back after having been revoked.
+    viewModel { AlarmsViewModel(alarmRepository = get(), alarmScheduler = get()) }
 
     // Alarm Editor View Model — writes through the same store. Without this registration the editor
     // would compile perfectly and crash the moment a user opened it.

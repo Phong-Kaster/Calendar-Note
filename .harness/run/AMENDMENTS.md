@@ -6,6 +6,80 @@
 
 <!-- Newest first. -->
 
+### A-14 — Six Fresh-Context Review findings fixed across both Workers' files, A-005 marked complete (Tier 1, review-driven)
+
+- **Iteration:** 7
+- **Date:** 2026-09-14
+- **What changed:** A-005 (boot re-arm) and A-006 (permission notice banner) landed as two parallel
+  Workers with disjoint scope, plus this Iteration's manifest/strings/screenshot-test/README wiring. A
+  clean-context Fresh-Context Review against every Constraint and the DoD found no Constraint violation
+  and six findings, all fixed this checkpoint:
+  1. **MAJOR** — Granting the exact-alarm permission back after it had been refused cleared the warning
+     banner but re-armed nothing. From Android 12 the system cancels every exact alarm the app has
+     pending the moment the permission is revoked, so by the time it is granted again nothing is
+     actually armed even though every switch still reads ON — the exact silent failure DoD 31 exists to
+     prevent, reintroduced by the fix path it asked for. Fixed: `AlarmsViewModel` now takes
+     `AlarmScheduler` as a second constructor dependency, and `setPermissionState` calls a new private
+     `rearmEverything()` (`alarmScheduler.rearmAll(alarms = uiState.value.alarms)`) exactly on the
+     false-to-true transition of `exactAlarmGranted` — not on every call, which would re-arm on every
+     healthy resume for nothing. `injection/ViewModelModule.kt` updated to inject it.
+  2. **MAJOR** — `RearmAllTest`'s own KDoc claimed its fake was "exercising the real default body on
+     `AlarmScheduler`", but `AlarmManagerAlarmScheduler` (the only production binding) **overrode**
+     `rearmAll`, so all five tests exercised a code path production never runs — a filter silently added
+     to the override would go undetected while all 248 tests before this fix stayed green. Fixed by
+     removing the override entirely: the per-alarm failure isolation it existed for (`runCatching` around
+     each `schedule` call, "one bad alarm must not cost the other twenty") moved into
+     `AlarmScheduler.rearmAll`'s interface default itself, so there is exactly one implementation and
+     `RearmAllTest`'s fake now genuinely is the code path production uses. The minor efficiency the
+     override also bought — asking `canScheduleExactAlarms()` once per list instead of once per alarm —
+     was given up; a real permission check per alarm during a reboot re-arm (typically a handful of
+     alarms) is not worth a second, untested code path.
+  3. **MINOR** — The banner's headline ("Alarms will not go off") is false in the commonest Android
+     12+ state: notifications on, only exact alarms refused, where `AlarmManagerAlarmScheduler.arm`
+     already falls back to an inexact `set()` and the alarm *does* fire, late. Reworded to "Alarms may
+     not reach you" (`alarms_may_not_reach_you`, renamed from `alarms_will_not_go_off` to match its own
+     new words per C-02) in both `strings.xml` files.
+  4. **MINOR** — Both fix buttons opened a screen short of the switch they named. The notification
+     button used `openAppSettings` (the app's general "App info" page) instead of
+     `ACTION_APP_NOTIFICATION_SETTINGS`; the exact-alarm button opened `ACTION_REQUEST_SCHEDULE_EXACT_ALARM`
+     with no `data`, landing on the system-wide list of every app rather than this app's own toggle.
+     Fixed in `AlarmsFragment.kt`; recorded as Constraint **C-14** since nothing mechanical catches a
+     settings deep-link landing one screen short.
+  5. **MINOR** — Both fix buttons swallowed a failed `startActivity` with no log, unlike every other
+     caught exception in this feature. Added `Log.w` on failure in both.
+  6. **MINOR** — `BootReceiver`'s `goAsync()` had no upper bound: a Room read that never completes (a
+     locked or corrupt database at boot) would hold `pendingResult` open until the system's own broadcast
+     timeout kills the process anyway, with `finish()` never called. Wrapped the read + re-arm in
+     `withTimeoutOrNull(8_000L)`, logging and letting go cleanly on this class's own terms instead.
+- **Recorded, not acted on:** none — all six were fixed.
+- **Also recorded this checkpoint:** Constraint **C-15** in `.harness/knowledge/PROJECT.md` — both
+  Workers independently discovered that `HomeRequestPermission.kt`'s `requestExactAlarm()` is a local
+  function inside that composable's body and cannot be imported, and both correctly wrote their own small
+  version rather than trying to extract it from a file outside their scope. Recorded so a third task does
+  not have to rediscover it.
+- **Why:** all six fixes sit inside files already in A-005's or A-006's Declared File Scope, or are
+  Iteration-owned (`AlarmsViewModel.kt` and `injection/ViewModelModule.kt` count as A-006's own scope
+  extended by the same reasoning A-004's review used for `MainActivity.kt`); none changes the PRD, DoD,
+  architecture, or either task's acceptance criteria — only correctness of what already exists. A-005
+  marked complete. A-006 stays pending: its acceptance explicitly requires screenshots green, and the
+  new `AlarmsPermissionNoticeCase` has no reference image yet (see D-007).
+- **Tier:** 1 — review-driven correctness fixes; no PRD/DoD/architecture change.
+
+### A-13 — `.harness/run/` wiring for Phase 5: manifest, strings, screenshot case, README (Tier 1)
+
+- **Iteration:** 7
+- **Date:** 2026-09-14
+- **What changed:** Iteration-owned integration for A-005 and A-006, done after both Workers reported:
+  `AndroidManifest.xml` gained `RECEIVE_BOOT_COMPLETED` and the exported `BootReceiver` `<receiver>`
+  (exact elements as A-005's Worker reported them); both `strings.xml` files gained the five keys A-006's
+  Worker reported; `AlarmsScreenshotTest.kt` gained the `AlarmsPermissionNoticeCase` `@PreviewTest`
+  (`heightDp = 260`, from the Worker's reported 222dp banner + 24dp scaffold padding); `README.md`'s
+  feature table and package tree updated for both tasks.
+- **Why:** these are exactly the shared/Iteration-owned files both task files named as off-limits to their
+  Worker (`AndroidManifest.xml`, both `strings.xml`, `AlarmsScreenshotTest.kt`, `README.md`) — no task's
+  scope, dependency graph, or acceptance criteria changed.
+- **Tier:** 1 — routine Iteration-owned wiring, not a plan mutation in substance.
+
 ### A-12 — Four Fresh-Context Review findings fixed inside already-owned files, A-004 marked complete (Tier 1, review-driven)
 
 - **Iteration:** 6

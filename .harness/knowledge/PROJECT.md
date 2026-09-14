@@ -181,6 +181,41 @@ instead of silently wiping `alarms`, `notes`, `posts` and `user_actions` — the
 the quiet one, since nothing in a build, test, lint or fresh-install QA pass could ever have seen the quiet
 version.
 
+### C-14 — Deep-linking to a system settings screen needs the *specific* intent, or the user lands one screen short of the switch that was named.
+
+Found in the Phase-5 Fresh-Context Review: a permission-notice banner told the user exactly which switch was
+wrong, then its own fix button opened a screen that did not contain that switch. Nothing here is mechanically
+checkable — the intent resolves, an activity opens, the app does not crash, and every build/test/lint command
+stays green. A human looking at the wrong screen is the only thing that would ever catch it, and this app has
+no human in the loop until the end of a run.
+
+- **Notifications**: `openAppSettings(context)` (`ui/fragment/home/component/HomeRequestPermission.kt`) opens
+  `ACTION_APPLICATION_DETAILS_SETTINGS` — the app's general "App info" page, one tap short of the
+  notification toggle. Use `Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)`
+  instead when the fix is specifically "turn notifications back on". `openAppSettings` is still the right
+  call when the ask is genuinely "open this app's settings" (e.g. a permanently-denied runtime permission
+  with no dedicated screen).
+- **Exact alarms**: `Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)` with **no `data`** opens the
+  system-wide list of every app that can be granted the permission, and the user has to find this app in
+  that list after already being told which switch to flip. Add
+  `.setData(Uri.parse("package:${context.packageName}"))` so the intent names this app the way the platform
+  expects — the same `package:` convention `ACTION_APPLICATION_DETAILS_SETTINGS` already uses.
+- Both fields (`ACTION_APP_NOTIFICATION_SETTINGS`, `Settings.EXTRA_APP_PACKAGE`) are `InlinedApi` on this
+  app's `minSdk 24` (added in API 26) — a real, accepted lint warning here, not an error; wrap the call in
+  `runCatching` and log the failure, the same fail-soft shape every other settings deep-link in this app
+  already uses.
+
+### C-15 — `HomeRequestPermission.kt`'s `requestExactAlarm` is not what it looks like from the outside.
+
+`canScheduleExactAlarm(context)`, `isNotificationGranted(context)` and `openAppSettings(context)` in that
+file are all top-level functions and safe to import. `requestExactAlarm()` looks like a fourth one and is
+not: it is declared *inside* the `HomeRequestPermission` composable's body, a local function with no
+visibility outside that composable. A task reusing "the exact-alarm request helper" from a different screen
+cannot import it and has to write the few lines itself (guard on `Build.VERSION_CODES.S`, build the
+`ACTION_REQUEST_SCHEDULE_EXACT_ALARM` intent per C-14, `runCatching` + log the `startActivity`) rather than
+extracting it from a file it does not own. Two independent Workers hit this in Phase 5 and both caught it
+before writing code around the wrong assumption — recorded here so a third does not have to rediscover it.
+
 ---
 
 # REFERENCE

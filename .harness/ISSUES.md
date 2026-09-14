@@ -11,19 +11,24 @@ None. No task has failed an attempt in this run.
 
 ## Unreachable tasks
 
-None. A-005 and A-006 depend only on A-004, now complete, and are both selectable. A-007 depends on all
-six other tasks and stays unreachable until A-005 and A-006 land.
+**A-007** — depends on A-005 (complete) **and** A-006 (code-complete, blocked on D-007). Stays
+unreachable until D-007 is answered and A-006 is marked complete.
 
 ## Queued decisions awaiting an answer
 
-None. `ESCALATION.md` is empty — D-001 through D-006 are all answered and archived into `HISTORY.md`.
+**D-007** — a goal-scoped `updateDebugScreenshotTest` grant for exactly `AlarmsPermissionNoticeCase`
+(A-006's permission-notice banner, its first `@PreviewTest` reference, never before recorded). Same
+shape as D-003, D-004 and D-006, all previously granted and spent. Blocks A-006's completion (its
+acceptance requires screenshots green) and, transitively, A-007's selectability. Blocks nothing else —
+everything else in this run is either complete or already unreachable for an unrelated reason. See
+`ESCALATION.md` for the full context and options.
 
 ## `human` criteria still unsigned
 
 All of them. No person has looked at the running app in this run — the engine cannot, and says so
 rather than certifying what it cannot see.
 
-Fifteen are **ready to be shown to someone now**, since A-001 through A-004 are all complete with
+Sixteen are **ready to be shown to someone now**, since A-001 through A-005 are all complete with
 green machine evidence:
 
 - **3, 4** — upgrade over a v3 install does not crash.
@@ -42,10 +47,13 @@ green machine evidence:
   is on screen, and repeats the next day unattended.
 - **23** — tapping the notification opens the app on the Alarms screen and dismisses the notification,
   without launching a second copy of the app.
+- **32** — an alarm set before a reboot still arrives after it, without the user opening the app.
+
+**31** (the OS-permission notice) will join this pool once D-007 unblocks A-006's completion — the code
+is done and reviewed, only its own screenshot evidence is missing.
 
 None of these are being requested yet, deliberately. The Human Verification Request is raised once at
-the end of the run (§11) rather than per phase: it costs one sitting instead of several, and some of
-these will be re-opened anyway by A-006, which touches the same Alarms screen files.
+the end of the run (§11) rather than per phase: it costs one sitting instead of several.
 
 ## Review findings recorded but not fixed
 
@@ -91,8 +99,16 @@ re-arm steps, `AlarmRepositoryImpl.delete`'s `mirrorCancel` finds nothing pendin
 re-armed yet) and the receiver's re-arm then puts a schedule back for a row that no longer exists in
 the table — one that can never be cancelled again through the app, because there is no row left to
 delete a second time. The window is sub-second (device-dependent), so this is a rare-but-real race, not
-a routine one. Flagged for A-005, which introduces a `rearmAll` seam that reads the table on boot — the
-natural place to have every re-arm consult the table rather than only the intent's cached copy of it.
+a routine one.
+
+**Looked at again by A-005, per its own task instruction, and left open.** A-005's boot-time `rearmAll`
+reads `AlarmRepository.alarmsFlow.first()` fresh, so it does not have this race — a delete confirmed
+before a reboot is simply absent from the list `rearmAll` re-arms. But that is a different code path
+from the one this race lives in: `AlarmReceiver.onReceive`'s ordinary daily re-arm, which still rebuilds
+from the firing intent's own extras by design (A-004's deliberate choice — `onReceive` has seconds to
+live) and was outside A-005's Declared File Scope. The race is unchanged and still open. A real fix
+would give `AlarmReceiver` the same "read the table, not the intent" treatment `rearmAll` has, which is
+a receiver-level change no task in this run's plan owns.
 
 ## Recorded assumptions
 
@@ -110,13 +126,16 @@ natural place to have every re-arm consult the table rather than only the intent
 
 ## Closed since the last report
 
-- **D-006** (the screenshot-recording grant for A-003's delete confirmation) is answered and applied.
-  The reference image is recorded; A-003 is marked complete.
-- **A-004** is complete: an alarm now actually arms, notifies and re-arms itself daily, mirrored on
-  every save/delete through the `AlarmScheduler` seam.
-- **Two MAJOR defects** the Fresh-Context Review found in A-004's diff are fixed: a `MainActivity`
-  notification-tap handler that replayed on every activity recreation and could stack a duplicate
-  Alarms screen; a missing `android.permission.VIBRATE` declaration that silently dropped the
-  vibration half of the API-24/25 heads-up recipe. See `AMENDMENTS.md` A-12.
-- **`README.md`**'s feature table and package tree are brought current with A-004 (the notification
-  feature row, and the `notification/`, `receiver/`, `scheduler/` packages).
+- **A-005** is complete: alarms are re-armed on boot via a new `BootReceiver` and
+  `AlarmScheduler.rearmAll`.
+- **A-006** is code-complete (banner, ViewModel wiring, tests) but not yet marked done — blocked on
+  D-007, a new queued decision (see above).
+- **Six defects** the Fresh-Context Review found across A-005/A-006's combined diff are fixed: two
+  MAJOR (granting exact alarms back was not re-arming anything; a test suite exercised a code path
+  production had overridden away) and four MINOR (two settings deep-links landing one screen short of
+  the named switch; two silently-swallowed failures; one unbounded `goAsync()`). See `AMENDMENTS.md`
+  A-14.
+- **Two new Constraints** recorded in `.harness/knowledge/PROJECT.md`: C-14 (settings deep-links need
+  the app-specific intent) and C-15 (`HomeRequestPermission.kt`'s `requestExactAlarm` is a local
+  function, not importable).
+- **`README.md`**'s feature table and package tree are brought current with both A-005 and A-006.

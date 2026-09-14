@@ -101,4 +101,9 @@
     <string name="the_alarm_could_not_be_deleted">The alarm could not be deleted</string>
     <string name="the_alarm_could_not_be_changed">The alarm could not be changed</string>
     <string name="turn_this_alarm_on_or_off">Turn this alarm on or off</string>
+    <string name="alarms_may_not_reach_you">Alarms may not reach you</string>
+    <string name="notifications_are_turned_off">Notifications are turned off</string>
+    <string name="exact_alarms_are_not_allowed">Exact alarms are not allowed</string>
+    <string name="turn_on_notifications">Turn on notifications</string>
+    <string name="allow_exact_alarms">Allow exact alarms</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.example.skeleton.ui.fragment.alarms
 
 import com.example.skeleton.common.Outcome
+import com.example.skeleton.data.scheduler.FakeAlarmScheduler
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.repository.AlarmRepository
 import kotlinx.coroutines.CompletableDeferred
@@ -71,7 +72,7 @@ class AlarmsViewModelTest {
         // is that the ViewModel passed them straight through.
         val repository = FakeAlarmRepository(alarms = listOf(ANOTHER_ALARM, AN_ALARM))
 
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         assertEquals(listOf(2L, 1L), viewModel.uiState.value.alarms.map { alarm -> alarm.id })
         assertFalse(viewModel.uiState.value.isEmpty)
@@ -79,7 +80,7 @@ class AlarmsViewModelTest {
 
     @Test
     fun `an empty store is an empty screen, not a blank one`() = runTest {
-        val viewModel = AlarmsViewModel(alarmRepository = FakeAlarmRepository(alarms = emptyList()))
+        val viewModel = AlarmsViewModel(alarmRepository = FakeAlarmRepository(alarms = emptyList()), alarmScheduler = FakeAlarmScheduler())
 
         assertTrue(viewModel.uiState.value.isEmpty)
     }
@@ -90,7 +91,7 @@ class AlarmsViewModelTest {
         // would show a list frozen at first construction, and the alarm the user just wrote on the
         // editor would be missing when they came back.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         repository.emit(alarms = listOf(AN_ALARM, ANOTHER_ALARM))
 
@@ -105,7 +106,7 @@ class AlarmsViewModelTest {
         // question and nothing else; `deleteCount` is what says so, because "the alarm is still in
         // the list" would also be true of a delete that failed.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.askToDelete(alarmId = 1L)
 
@@ -121,7 +122,7 @@ class AlarmsViewModelTest {
         // the guard, a future screen that wired a delete straight to a row loses nothing; without
         // it, the loss would be silent and permanent.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.confirmDelete()
 
@@ -133,7 +134,7 @@ class AlarmsViewModelTest {
     @Test
     fun `backing out of the confirmation leaves the alarm alone`() = runTest {
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.askToDelete(alarmId = 1L)
 
         viewModel.dismissDelete()
@@ -153,7 +154,7 @@ class AlarmsViewModelTest {
         // would pass a one-alarm test perfectly, and the user would lose the wrong alarm — the one
         // irreversible mistake this screen can make.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM, ANOTHER_ALARM, A_THIRD_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.askToDelete(alarmId = 2L)
 
         viewModel.confirmDelete()
@@ -165,7 +166,7 @@ class AlarmsViewModelTest {
     @Test
     fun `a successful delete closes the confirmation and says so once`() = runTest {
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.askToDelete(alarmId = 1L)
 
         viewModel.confirmDelete()
@@ -187,7 +188,7 @@ class AlarmsViewModelTest {
         // being told it worked.
         val gate = CompletableDeferred<Unit>()
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM), deleteGate = gate)
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.askToDelete(alarmId = 1L)
 
         viewModel.confirmDelete()
@@ -207,7 +208,7 @@ class AlarmsViewModelTest {
             alarms = listOf(AN_ALARM),
             deleteOutcome = Outcome.Error(message = "there was no such alarm to delete"),
         )
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.askToDelete(alarmId = 1L)
 
         viewModel.confirmDelete()
@@ -225,7 +226,7 @@ class AlarmsViewModelTest {
         // whatever is at that position now — is how somebody loses an alarm they never chose. There
         // is nothing to delete, so nothing is asked of the store at all.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.askToDelete(alarmId = 404L)
 
         viewModel.confirmDelete()
@@ -241,7 +242,7 @@ class AlarmsViewModelTest {
             alarms = listOf(AN_ALARM),
             deleteOutcome = Outcome.Error(message = "the disk is gone"),
         )
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.askToDelete(alarmId = 1L)
         viewModel.confirmDelete()
         // Asserted *before* consuming, or this test proves nothing: the field starts false, so a
@@ -259,7 +260,7 @@ class AlarmsViewModelTest {
         // stops a double tap must open again, or the second alarm the user tries to remove is one
         // they can never remove.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM, ANOTHER_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.askToDelete(alarmId = 1L)
         viewModel.confirmDelete()
@@ -281,7 +282,7 @@ class AlarmsViewModelTest {
             // recomposition. Consuming back to zero is what keeps a *second* delete visible instead of
             // looking like a no-op change from 1 to 1.
             val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM, ANOTHER_ALARM))
-            val viewModel = AlarmsViewModel(alarmRepository = repository)
+            val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
             viewModel.askToDelete(alarmId = 1L)
             viewModel.confirmDelete()
             assertEquals(1, viewModel.uiState.value.deletedTrigger)
@@ -304,7 +305,7 @@ class AlarmsViewModelTest {
             // the next write files a second alarm, lose the `createdAt` and the store stamps it as
             // brand new, lose the message and the store refuses it outright.
             val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-            val viewModel = AlarmsViewModel(alarmRepository = repository)
+            val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
             viewModel.setEnabled(alarm = AN_ALARM, enabled = false)
 
@@ -322,7 +323,7 @@ class AlarmsViewModelTest {
         // Off is not gone. If switching an alarm off took it off the list, the user would have no
         // way back to it and no way to tell the two actions apart.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.setEnabled(alarm = AN_ALARM, enabled = false)
 
@@ -333,7 +334,7 @@ class AlarmsViewModelTest {
     @Test
     fun `switching an alarm back on writes it back on`() = runTest {
         val repository = FakeAlarmRepository(alarms = listOf(A_SWITCHED_OFF_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.setEnabled(alarm = A_SWITCHED_OFF_ALARM, enabled = true)
 
@@ -347,7 +348,7 @@ class AlarmsViewModelTest {
         // would touch the row — and, once alarms are scheduled, reschedule it — for a user who did
         // nothing at all.
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.setEnabled(alarm = AN_ALARM, enabled = true)
 
@@ -357,7 +358,7 @@ class AlarmsViewModelTest {
     @Test
     fun `switching an alarm never deletes it`() = runTest {
         val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM))
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.setEnabled(alarm = AN_ALARM, enabled = false)
 
@@ -373,7 +374,7 @@ class AlarmsViewModelTest {
             alarms = listOf(AN_ALARM),
             saveOutcome = Outcome.Error(message = "the disk is gone"),
         )
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
 
         viewModel.setEnabled(alarm = AN_ALARM, enabled = false)
 
@@ -389,13 +390,143 @@ class AlarmsViewModelTest {
             alarms = listOf(AN_ALARM),
             saveOutcome = Outcome.Error(message = "the disk is gone"),
         )
-        val viewModel = AlarmsViewModel(alarmRepository = repository)
+        val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
         viewModel.setEnabled(alarm = AN_ALARM, enabled = false)
         assertTrue(viewModel.uiState.value.toggleFailed)
 
         viewModel.consumeToggleFailed()
 
         assertFalse(viewModel.uiState.value.toggleFailed)
+    }
+
+    // ---------- What the operating system will let an alarm do ----------
+
+    /*
+     * --- Why these tests only ever touch the state (simple story) ---
+     *
+     * The two answers themselves come from `isNotificationGranted(context)` and
+     * `canScheduleExactAlarm(context)`, and both need a `Context`. Under this JVM test toolchain
+     * the Android classes behind them are stubs that return defaults silently rather than
+     * failing — so a test that called through to them would not be checking the device, it would
+     * be checking a stub, and it would pass just as happily against a ViewModel that had the
+     * logic backwards. That reading lives in `AlarmsFragment`, where a real `Context` exists.
+     *
+     * What is left here is the half that can be checked honestly: given the two answers, does the
+     * screen's state say the right thing. That is what puts the warning banner on screen or takes
+     * it away, so it is worth holding to.
+     */
+
+    @Test
+    fun `the screen assumes nothing is blocked until the device has been asked`() = runTest {
+        // The direction of this default is deliberate. The answers arrive from the Fragment a
+        // moment after the screen appears, so the opposite default would flash a warning at every
+        // user on every entry to the tab — including everyone with nothing wrong.
+        val viewModel = AlarmsViewModel(alarmRepository = FakeAlarmRepository(alarms = listOf(AN_ALARM)), alarmScheduler = FakeAlarmScheduler())
+
+        assertTrue(viewModel.uiState.value.notificationsGranted)
+        assertTrue(viewModel.uiState.value.exactAlarmGranted)
+    }
+
+    @Test
+    fun `one blocked permission is recorded on its own, and nothing else on the screen moves`() =
+        runTest {
+            // The two are fixed on two different system screens, so they are two separate facts.
+            // A ViewModel that collapsed them into one "permissions are fine" flag would send half
+            // the users to a screen where the switch they were told to find is not present.
+            val repository = FakeAlarmRepository(alarms = listOf(AN_ALARM, ANOTHER_ALARM))
+            val viewModel = AlarmsViewModel(alarmRepository = repository, alarmScheduler = FakeAlarmScheduler())
+
+            viewModel.setPermissionState(notificationsGranted = false, exactAlarmGranted = true)
+
+            assertFalse(viewModel.uiState.value.notificationsGranted)
+            assertTrue(viewModel.uiState.value.exactAlarmGranted)
+            // The alarms are untouched: this says nothing about the store and must ask nothing of it.
+            assertEquals(listOf(1L, 2L), viewModel.uiState.value.alarms.map { alarm -> alarm.id })
+            assertEquals(0, repository.saveCount)
+            assertEquals(0, repository.deleteCount)
+        }
+
+    @Test
+    fun `the other permission is recorded on its own too`() = runTest {
+        val viewModel = AlarmsViewModel(alarmRepository = FakeAlarmRepository(alarms = listOf(AN_ALARM)), alarmScheduler = FakeAlarmScheduler())
+
+        viewModel.setPermissionState(notificationsGranted = true, exactAlarmGranted = false)
+
+        assertTrue(viewModel.uiState.value.notificationsGranted)
+        assertFalse(viewModel.uiState.value.exactAlarmGranted)
+    }
+
+    @Test
+    fun `reading the permissions again overwrites what was there, so a fixed setting clears`() =
+        runTest {
+            // **The point of re-reading on every resume.** A user who leaves the app, switches
+            // notifications back on and comes back must find the warning gone. This is plain state
+            // and not an accumulating event: the second answer replaces the first outright.
+            val viewModel = AlarmsViewModel(alarmRepository = FakeAlarmRepository(alarms = listOf(AN_ALARM)), alarmScheduler = FakeAlarmScheduler())
+            viewModel.setPermissionState(notificationsGranted = false, exactAlarmGranted = false)
+            assertFalse(viewModel.uiState.value.notificationsGranted)
+            assertFalse(viewModel.uiState.value.exactAlarmGranted)
+
+            viewModel.setPermissionState(notificationsGranted = true, exactAlarmGranted = true)
+
+            assertTrue(viewModel.uiState.value.notificationsGranted)
+            assertTrue(viewModel.uiState.value.exactAlarmGranted)
+        }
+
+    // ---------- Getting exact alarms back re-arms everything ----------
+
+    @Test
+    fun `granting exact alarms after they were refused re-arms every alarm on screen`() = runTest {
+        // **The bug this guards against.** From Android 12 the system cancels every exact alarm the
+        // app has pending the moment this permission is revoked — so by the time it is granted back,
+        // nothing is actually armed, even though every switch still reads ON and the banner is about
+        // to disappear as if the problem were solved. Something has to put them all back, and this
+        // is the only moment that can happen: the app is not told separately, and there is no other
+        // signal to hang it on.
+        val scheduler = FakeAlarmScheduler()
+        val viewModel = AlarmsViewModel(
+            alarmRepository = FakeAlarmRepository(alarms = listOf(AN_ALARM, ANOTHER_ALARM)),
+            alarmScheduler = scheduler,
+        )
+        viewModel.setPermissionState(notificationsGranted = true, exactAlarmGranted = false)
+
+        viewModel.setPermissionState(notificationsGranted = true, exactAlarmGranted = true)
+
+        assertEquals(listOf(1L, 2L), scheduler.scheduled.map { alarm -> alarm.id })
+    }
+
+    @Test
+    fun `exact alarms already granted on the previous read re-arms nothing`() = runTest {
+        // The default state is "granted" (see the test above this section), so without this guard
+        // every single healthy resume of this screen would re-arm the whole list for a permission
+        // that was never touched.
+        val scheduler = FakeAlarmScheduler()
+        val viewModel = AlarmsViewModel(
+            alarmRepository = FakeAlarmRepository(alarms = listOf(AN_ALARM)),
+            alarmScheduler = scheduler,
+        )
+
+        viewModel.setPermissionState(notificationsGranted = true, exactAlarmGranted = true)
+        viewModel.setPermissionState(notificationsGranted = true, exactAlarmGranted = true)
+
+        assertTrue(scheduler.scheduled.isEmpty())
+    }
+
+    @Test
+    fun `notifications being granted never re-arms anything`() = runTest {
+        // A different fix for a different problem: an alarm with notifications blocked still fires
+        // on the system's clock, it just cannot show anything when it does. Re-arming here would be
+        // solving a problem that was never broken.
+        val scheduler = FakeAlarmScheduler()
+        val viewModel = AlarmsViewModel(
+            alarmRepository = FakeAlarmRepository(alarms = listOf(AN_ALARM)),
+            alarmScheduler = scheduler,
+        )
+        viewModel.setPermissionState(notificationsGranted = false, exactAlarmGranted = true)
+
+        viewModel.setPermissionState(notificationsGranted = true, exactAlarmGranted = true)
+
+        assertTrue(scheduler.scheduled.isEmpty())
     }
 
     private companion object {

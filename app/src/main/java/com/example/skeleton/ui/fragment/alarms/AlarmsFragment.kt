@@ -1,6 +1,13 @@
 package com.example.skeleton.ui.fragment.alarms
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,9 +23,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
@@ -30,6 +40,9 @@ import com.example.skeleton.ui.fragment.alarm_editor.AlarmEditorFragment
 import com.example.skeleton.ui.fragment.alarms.component.AlarmDeleteConfirmSheet
 import com.example.skeleton.ui.fragment.alarms.component.AlarmRow
 import com.example.skeleton.ui.fragment.alarms.component.AlarmsEmptyState
+import com.example.skeleton.ui.fragment.alarms.component.AlarmsPermissionNotice
+import com.example.skeleton.ui.fragment.home.component.canScheduleExactAlarm
+import com.example.skeleton.ui.fragment.home.component.isNotificationGranted
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -62,6 +75,12 @@ private val ALARM_LIST_BOTTOM_PADDING = 56.dp + 16.dp + 16.dp
  * answer both live in `AlarmsViewModel`, so the store stays unreachable from a single tap by
  * construction rather than by the layout being careful.
  *
+ * It also answers the one question the list cannot: **whether the operating system will actually
+ * let these alarms fire.** Notifications being off, or exact alarms not being permitted, makes every
+ * row on this screen a lie — they still read as armed. Both are read here, where a `Context` exists,
+ * on every resume rather than once, and handed to the ViewModel as plain state; the warning itself
+ * is [AlarmsPermissionNotice], drawn above the list.
+ *
  * Thin, like every Fragment here: it owns the ViewModel, the navigation and the messages, and hands
  * the drawing to [AlarmsLayout].
  *
@@ -75,6 +94,8 @@ class AlarmsFragment : CoreFragment() {
         super.ComposeView()
 
         val uiState by viewModel.uiState.collectAsState()
+        val context = LocalContext.current
+        val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
 
         AlarmsLayout(
             uiState = uiState,
@@ -84,7 +105,31 @@ class AlarmsFragment : CoreFragment() {
                 viewModel.setEnabled(alarm = alarm, enabled = enabled)
             },
             onAskToDelete = { alarm -> viewModel.askToDelete(alarmId = alarm.id) },
+            // `context` from the composition rather than `requireContext()`: a tap arriving while
+            // this Fragment is on its way off screen would find `requireContext()` throwing, and
+            // the composition's own context cannot detach out from under the lambda that captured
+            // it.
+            onOpenNotificationSettings = { openNotificationSettings(context = context) },
+            onRequestExactAlarm = { requestExactAlarmPermission(context = context) },
         )
+
+        // **Every resume, not once at startup.** The whole point of the warning is that the user
+        // can go and fix it — and fixing either of these means leaving the app for a system screen
+        // and coming back. Read once, the banner would still be sitting there accusing the user of
+        // a problem they have just solved, and nothing short of killing the app would clear it.
+        //
+        // The reading happens here rather than in the ViewModel because both answers need a
+        // `Context`. `currentStateFlow` is the same mechanism `HomeRequestPermission` uses for the
+        // same reason; keying the effect on the state value means it re-runs on each transition
+        // rather than only on the first composition.
+        LaunchedEffect(lifecycleState) {
+            if (lifecycleState != Lifecycle.State.RESUMED) return@LaunchedEffect
+
+            viewModel.setPermissionState(
+                notificationsGranted = isNotificationGranted(context),
+                exactAlarmGranted = canScheduleExactAlarm(context),
+            )
+        }
 
         // Overlays are siblings of the layout call, never children of it — that is what keeps
         // `AlarmsLayout` previewable with nothing but an `AlarmsUiState`. There is one overlay on
@@ -163,6 +208,81 @@ class AlarmsFragment : CoreFragment() {
             bundle = AlarmEditorFragment.argumentsFor(alarmId = alarmId),
         )
     }
+
+    /**
+     * Opens this app's own notification settings, where notifications are switched back on.
+     *
+     * **Not [openAppSettings]**, deliberately, even though that helper exists and is imported for
+     * exactly this purpose by the Home screen's permission flow — it opens the app's general "App
+     * info" page, one tap short of the notification switch itself. The banner already told the user
+     * which switch is wrong; landing them one screen away from it undoes that.
+     * `ACTION_APP_NOTIFICATION_SETTINGS` with [Settings.EXTRA_APP_PACKAGE] is the one that opens this
+     * app's notification page directly.
+     *
+     * **Not routed through `safeNavigate`**: this leaves the app entirely. It is not a destination
+     * in the navigation graph and the back stack knows nothing about it.
+     *
+     * @param context used to name this app's package in the settings intent.
+     * @author Phong-Kaster
+     */
+    private fun openNotificationSettings(context: Context) {
+        // A manufacturer's ROM that does not carry this screen would otherwise turn a warning
+        // banner into a crash — logged, not silent, because a button that does nothing and leaves
+        // no trace is worse to debug than one that visibly failed.
+        runCatching {
+            context.startActivity(
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+            )
+        }.onFailure { throwable ->
+            Log.w(TAG, "could not open the notification settings screen", throwable)
+        }
+    }
+
+    /**
+     * Opens this app's own entry in Android's "Alarms & reminders" screen, where exact alarms are
+     * allowed.
+     *
+     * **A different screen from [openNotificationSettings], on purpose.** These are two separate
+     * permissions living in two separate places; sending a user to the app's notification settings
+     * to look for "Alarms & reminders" would be sending them somewhere the switch is not.
+     *
+     * **The `package:` data is not optional.** Without it, `ACTION_REQUEST_SCHEDULE_EXACT_ALARM`
+     * opens the system-wide list of every app that can be granted this permission, and the user has
+     * to find this app in that list after already being told which switch to flip — the intent
+     * *asks* for this app by data URI rather than by extra, which is the platform's own convention
+     * for "this action, about this app".
+     *
+     * The few duplicated lines are deliberate. `HomeRequestPermission.kt` has a `requestExactAlarm`
+     * that does the same job, but it is declared *inside* that composable's body — a local
+     * function, which cannot be imported or called from here.
+     *
+     * Before Android 12 there is no such permission and no such screen: every app may schedule
+     * exact alarms, `canScheduleExactAlarm` returns true there, so this is never reached on those
+     * devices and returns immediately if it somehow is.
+     *
+     * @param context used to start the settings screen.
+     * @author Phong-Kaster
+     */
+    private fun requestExactAlarmPermission(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+        // Wrapped, not because the screen is usually missing, but because a manufacturer's ROM that
+        // does not carry it would otherwise turn a warning banner into a crash.
+        runCatching {
+            context.startActivity(
+                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                    .setData(Uri.parse("package:${context.packageName}")),
+            )
+        }.onFailure { throwable ->
+            Log.w(TAG, "could not open the exact-alarm settings screen", throwable)
+        }
+    }
+
+    companion object {
+
+        private const val TAG = "AlarmsFragment"
+    }
 }
 
 /**
@@ -186,6 +306,9 @@ class AlarmsFragment : CoreFragment() {
  * @param onToggleAlarm the user moved a row's switch. True means "arm this alarm".
  * @param onAskToDelete the user tapped a row's bin. It opens a confirmation and nothing else — see
  *   `AlarmsViewModel.askToDelete()`.
+ * @param onOpenNotificationSettings the user tapped the warning banner's notification fix.
+ * @param onRequestExactAlarm the user tapped the warning banner's exact-alarm fix. A separate
+ *   lambda from the one above because the two lead to two different system screens.
  * @author Phong-Kaster
  */
 @Composable
@@ -195,6 +318,8 @@ private fun AlarmsLayout(
     onOpenAlarm: (Alarm) -> Unit = {},
     onToggleAlarm: (Alarm, Boolean) -> Unit = { _, _ -> },
     onAskToDelete: (Alarm) -> Unit = {},
+    onOpenNotificationSettings: () -> Unit = {},
+    onRequestExactAlarm: () -> Unit = {},
 ) {
     CoreLayout(
         modifier = Modifier,
@@ -222,15 +347,32 @@ private fun AlarmsLayout(
             )
         },
         content = {
-            if (uiState.isEmpty) {
-                AlarmsEmptyState()
-            } else {
-                AlarmsList(
-                    alarms = uiState.alarms,
-                    onOpenAlarm = onOpenAlarm,
-                    onToggleAlarm = onToggleAlarm,
-                    onAskToDelete = onAskToDelete,
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Part of the screen's ordinary layout, above the rows — not an overlay like the
+                // delete confirmation. The user must be able to read their alarms *and* the warning
+                // at the same time; a popup that has to be dismissed first would teach them to
+                // dismiss it without reading it. It draws nothing at all when both permissions are
+                // in order, so on a healthy device this `Column` has exactly one child.
+                AlarmsPermissionNotice(
+                    notificationsGranted = uiState.notificationsGranted,
+                    exactAlarmGranted = uiState.exactAlarmGranted,
+                    onOpenNotificationSettings = onOpenNotificationSettings,
+                    onRequestExactAlarm = onRequestExactAlarm,
+                    // The same 16dp side margin the rows below give themselves, so the banner and
+                    // the alarms line up down both edges.
+                    modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
                 )
+
+                if (uiState.isEmpty) {
+                    AlarmsEmptyState()
+                } else {
+                    AlarmsList(
+                        alarms = uiState.alarms,
+                        onOpenAlarm = onOpenAlarm,
+                        onToggleAlarm = onToggleAlarm,
+                        onAskToDelete = onAskToDelete,
+                    )
+                }
             }
         },
     )
@@ -335,6 +477,46 @@ private fun AlarmsLayoutPopulatedPreview() {
                             createdAt = 1_772_900_000_000L,
                         ),
                     ),
+                ),
+            )
+        },
+    )
+}
+
+/**
+ * The same screen on the day the operating system will not let any of these alarms fire.
+ *
+ * Worth its own picture because the failure is invisible in the two previews above: the rows there
+ * look armed, and these look identical to them. The entire difference is the banner — which is the
+ * reason the banner exists, since the list itself cannot tell the two situations apart.
+ */
+@Preview(name = "Alarms - permissions missing", widthDp = 360, heightDp = 780)
+@Composable
+private fun AlarmsLayoutPermissionsMissingPreview() {
+    MyApplicationTheme(
+        content = {
+            AlarmsLayout(
+                uiState = AlarmsUiState(
+                    alarms = listOf(
+                        Alarm(
+                            id = 1L,
+                            message = "Take the bread out of the freezer",
+                            hourOfDay = 7,
+                            minute = 30,
+                            enabled = true,
+                            createdAt = 1_773_000_000_000L,
+                        ),
+                        Alarm(
+                            id = 2L,
+                            message = "Leave for the dentist",
+                            hourOfDay = 14,
+                            minute = 5,
+                            enabled = true,
+                            createdAt = 1_772_950_000_000L,
+                        ),
+                    ),
+                    notificationsGranted = false,
+                    exactAlarmGranted = false,
                 ),
             )
         },

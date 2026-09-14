@@ -6,6 +6,49 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 7 — 2026-09-14 — Phase 5 (A-005, A-006) dispatched and reviewed; A-005 completed; A-006 code-complete, blocked on D-007
+
+- **Phase:** 5 — A-005 and A-006, dispatched as two parallel Workers with disjoint Declared File Scopes
+  (verified against `git status` before either was trusted — the union matched exactly, no overlap).
+- **Recover (§6.1):** working tree was clean on entry; no debris to salvage.
+- **A-005 Worker** (boot re-arm): added `AlarmScheduler.rearmAll` with a **default body** so
+  out-of-scope fakes (`FakeAlarmScheduler`, `BrokenAlarmScheduler`) kept compiling untouched; a new
+  `BootReceiver` (`goAsync()` + coroutine reading `alarmRepository.alarmsFlow.first()`, then
+  `rearmAll`); a new `RearmAllTest` (5 tests) against the real default. Initially **overrode**
+  `rearmAll` in `AlarmManagerAlarmScheduler` for a minor efficiency gain — removed by the
+  Fresh-Context Review (see below).
+- **A-006 Worker** (permission notice): a new `AlarmsPermissionNotice` banner; `AlarmsUiState` /
+  `AlarmsViewModel` gained the permission state and `setPermissionState`; `AlarmsFragment` re-reads on
+  every resume and wires two fix buttons; 4 new `AlarmsViewModelTest` cases. Correctly avoided the
+  `requestExactAlarm()` trap (a local function in `HomeRequestPermission.kt`, not importable) by
+  writing its own small version — independently confirmed by both this Worker and A-005's, worth
+  recording as Constraint C-15.
+- **Iteration wiring (§6.6):** `AndroidManifest.xml` (`RECEIVE_BOOT_COMPLETED` + exported
+  `BootReceiver` receiver), both `strings.xml` (5 keys), `AlarmsScreenshotTest.kt`
+  (`AlarmsPermissionNoticeCase`, `heightDp = 260`), `README.md` (feature table + package tree).
+- **Build/test/lint (§6.7):** `assembleDebug` + `testDebugUnitTest` + `lintDebug` → `BUILD SUCCESSFUL`,
+  251 tests (0 failures, up from 239), lint 0 errors / 72 warnings (3 new, all pre-existing tolerated
+  categories). `validateDebugScreenshotTest`: 22/23 green, 1 expected failure (no reference image yet
+  for the brand-new `AlarmsPermissionNoticeCase` — queued as D-007, not treated as a defect).
+- **Fresh-Context Review (§6.8):** no Constraint violation. Six findings, all fixed this checkpoint —
+  two MAJOR (granting exact alarms back re-armed nothing; `RearmAllTest` exercised a code path
+  production had overridden away) and four MINOR (two settings deep-links one screen short; two
+  silent failures; one unbounded `goAsync()`). Full detail in `AMENDMENTS.md` A-14. One of my own
+  fixes (the re-arm call) initially used `Dispatchers.IO` explicitly and broke a test by escaping the
+  test's unconfined dispatcher — caught immediately by re-running the test suite, fixed by matching
+  this ViewModel's own established convention (no explicit dispatcher on `viewModelScope.launch` for
+  a write that delegates to an already-dispatcher-safe seam).
+- **Reconcile (§6.9):** two Tier-1 amendments logged (A-13 wiring, A-14 review fixes). One Tier-2
+  decision queued (D-007, capability grant) — blocks A-006's completion and, transitively, A-007's
+  selectability; does not block anything else, and nothing else was executable this Phase regardless.
+  Two Constraints added to `.harness/knowledge/PROJECT.md` (C-14 settings deep-link specificity, C-15
+  the `requestExactAlarm` trap).
+- **Persist:** `STATE.md`, `RESUME.md`, `TASKS/A-005.md`, `TASKS/A-006.md`, `AMENDMENTS.md`,
+  `ESCALATION.md`, `.harness/knowledge/PROJECT.md`, `.harness/ISSUES.md`, `README.md` all updated in
+  this checkpoint's commit alongside the code.
+- **Report:** `ESCALATE` — A-006's completion and A-007's selectability both wait on D-007, and no
+  other executable task exists in this run.
+
 ### Iteration 6 — 2026-09-14 — Recovered a crashed invocation; D-006 applied and A-003 completed; Phase 4 (A-004) completed and reviewed
 
 - **Phase:** 4 — A-004 alone (the only executable task at Orient time, once D-006's consumption was

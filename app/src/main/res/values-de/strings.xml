@@ -88,4 +88,9 @@
     <string name="the_alarm_could_not_be_deleted">Der Wecker konnte nicht gelöscht werden</string>
     <string name="the_alarm_could_not_be_changed">Der Wecker konnte nicht geändert werden</string>
     <string name="turn_this_alarm_on_or_off">Diesen Wecker ein- oder ausschalten</string>
+    <string name="alarms_may_not_reach_you">Wecker erreichen dich möglicherweise nicht</string>
+    <string name="notifications_are_turned_off">Benachrichtigungen sind ausgeschaltet</string>
+    <string name="exact_alarms_are_not_allowed">Exakte Alarme sind nicht erlaubt</string>
+    <string name="turn_on_notifications">Benachrichtigungen einschalten</string>
+    <string name="allow_exact_alarms">Exakte Alarme erlauben</string>
 </resources>

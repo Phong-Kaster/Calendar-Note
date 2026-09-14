@@ -8,12 +8,9 @@
 - **Stage:** executing
   <!-- "Stage" is the run's lifecycle position. A "Phase" is a group of tasks. Do not conflate them. -->
 - **Loop Branch:** loop/calendar-note-app
-- **Next Phase:** **A-005 and A-006**, both depending only on A-004 (now complete) and nothing else.
-  Declared File Scopes are disjoint (A-005: `data/receiver/BootReceiver.kt`,
-  `test/data/scheduler/RearmAllTest.kt`, plus MODIFY `domain/scheduler/AlarmScheduler.kt` and
-  `data/scheduler/AlarmManagerAlarmScheduler.kt`; A-006: the `ui/fragment/alarms/` screen quartet and
-  its test only) — verified by reading both task files this iteration, not assumed. A-007 depends on
-  all six and stays unreachable until both land.
+- **Next Phase:** none executable. A-005 is complete. A-006 is code-complete and blocked only on D-007
+  (a screenshot reference image, queued this iteration). A-007 depends on both A-005 and A-006 and stays
+  unreachable until A-006's completion is unblocked. No other task exists in this run.
 - **DONE-candidate:** no
 
 ## Progress
@@ -24,9 +21,9 @@
 | A-002 | **complete** (iteration 4) | `domain/model/Alarm*`, `domain/repository/AlarmRepository.kt`, alarm files under `data/**`, `ui/fragment/alarm_editor/**`, `ui/fragment/alarms/component/AlarmRow.kt`, own tests | See `TASKS/A-002.md` § Evidence |
 | A-003 | **complete** (iteration 6) | the alarm/alarms/data files A-002 creates, plus `AlarmDeleteConfirmSheet.kt` and tests | See `TASKS/A-003.md` § Evidence |
 | A-004 | **complete** (iteration 6) | `domain/scheduler/`, `data/scheduler/`, `data/receiver/AlarmReceiver.kt`, `data/notification/`, `res/drawable/ic_notification_alarm.xml`, `AlarmRepositoryImpl.kt`, own tests | See `TASKS/A-004.md` § Evidence |
-| A-005 | pending | `data/receiver/BootReceiver.kt`, `AlarmScheduler.kt`, `AlarmManagerAlarmScheduler.kt`, own test | – |
-| A-006 | pending | `ui/fragment/alarms/component/AlarmsPermissionNotice.kt` plus the alarms screen trio and its test | – |
-| A-007 | pending | `.harness/knowledge/PROJECT.md` | – |
+| A-005 | **complete** (iteration 7) | `data/receiver/BootReceiver.kt`, `AlarmScheduler.kt`, `AlarmManagerAlarmScheduler.kt`, own test | See `TASKS/A-005.md` § Evidence |
+| A-006 | pending — code complete, blocked on D-007 | `ui/fragment/alarms/component/AlarmsPermissionNotice.kt` plus the alarms screen trio and its test | See `TASKS/A-006.md` § Evidence |
+| A-007 | pending — unreachable | `.harness/knowledge/PROJECT.md` | – |
 
 ## Assumptions
 
@@ -47,6 +44,15 @@
 - **D-005 is resolved, not outstanding.** `fallbackToDestructiveMigration(false)` was removed from
   `DatabaseModule.kt` this iteration, restoring Room's throw-on-missing-migration default. Constraint C-13
   now records the resolved state; see `AMENDMENTS.md` A-9.
+- **Phase 5 (A-005, A-006) landed via two parallel Workers with disjoint scope, verified against
+  `git status` before either was trusted.** A Fresh-Context Review found two MAJOR and four MINOR
+  defects across both — none inside either Worker's own correctness for the files it alone touched,
+  all at the integration seam (the exact-alarm grant not re-arming; a test exercising a code path
+  production didn't run; two settings deep-links landing one screen short; two silent failures; one
+  unbounded `goAsync()`). All six fixed this checkpoint by the Iteration; see `AMENDMENTS.md` A-14 and
+  Constraints C-14/C-15 in `.harness/knowledge/PROJECT.md`. A-005 is complete; A-006 is code-complete
+  and blocked only on D-007, a screenshot capability grant for its one brand-new preview case — the
+  same recurring situation as D-003/D-004/D-006.
 - **A-001's Phase 1 gained an Iteration-owned file the original plan omitted**: `AlarmsScreenshotTest.kt`,
   required by A-001's own acceptance criteria (a `@PreviewTest` pinning the empty state). Logged as
   `AMENDMENTS.md` A-5. A second amendment, A-6, moved AS-5's hide-the-centre-button logic onto
@@ -84,6 +90,10 @@ pre-filled; the delete control is findable and its confirming button unmistakabl
 correctly at a glance) and A-004's (22, 23 — the alarm actually fires as a popup with the user's
 message and repeats the next day; tapping it opens Alarms without stacking a second copy) join the
 same ready pool.
+
+**A-005 is now complete.** Its `human` criterion (32 — an alarm set before a reboot still arrives
+after it) joins the pool too. A-006 is code-complete but not yet marked done — its own `human`
+criterion (31) will join once D-007 unblocks its completion.
 
 All of these are deliberately **not** being requested yet. A Human Verification Request is raised once
 at the end (§11), not per phase — batching them costs the human one sitting instead of several, and

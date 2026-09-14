@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 import com.android.tools.screenshot.PreviewTest
 import com.example.skeleton.ui.fragment.alarms.component.AlarmDeleteConfirmContent
 import com.example.skeleton.ui.fragment.alarms.component.AlarmsEmptyState
+import com.example.skeleton.ui.fragment.alarms.component.AlarmsPermissionNotice
 
 /*
  * --- What this file is for (simple story) ---
@@ -80,6 +81,37 @@ private fun AlarmDeleteConfirmationCase() {
         ground = ScreenshotGround.Surface,
         content = {
             AlarmDeleteConfirmContent()
+        },
+    )
+}
+
+/**
+ * The one state the alarm list cannot show by itself: alarms that read as armed and will not
+ * fire, because the operating system will not let them.
+ *
+ * DoD criterion 31 ends the same way criterion 28 does — in a sentence no build, test or lint
+ * command could ever check, "the screen says so and offers the fix" — so a rendered picture,
+ * agreed to once by a person, is the only evidence that clause can have.
+ *
+ * Both conditions failing at once, because that is the tallest the banner ever gets (C-05): a
+ * frame sized for one line would silently crop the second the day somebody widens it, and record
+ * the missing line as never having been written rather than as clipped.
+ *
+ * `heightDp = 260` for a banner measured at 222dp plus `ScreenshotScaffold`'s 24dp on top and
+ * bottom (12dp each) — reported by the task that wrote this component, not guessed here.
+ *
+ * @author Phong-Kaster
+ */
+@PreviewTest
+@Preview(name = "Alarms - permission notice", widthDp = 360, heightDp = 260)
+@Composable
+private fun AlarmsPermissionNoticeCase() {
+    ScreenshotScaffold(
+        content = {
+            AlarmsPermissionNotice(
+                notificationsGranted = false,
+                exactAlarmGranted = false,
+            )
         },
     )
 }
