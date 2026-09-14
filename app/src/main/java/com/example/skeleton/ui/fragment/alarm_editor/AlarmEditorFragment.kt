@@ -25,6 +25,7 @@ import androidx.core.os.bundleOf
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.ui.component.CoreTopBar4
 import com.example.skeleton.ui.fragment.alarm_editor.component.AlarmEditor
@@ -32,6 +33,7 @@ import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.theme.customizedTextStyle
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigateUp
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.time.DayOfWeek
 
 /**
  * The alarm editor: write a new alarm, or edit one that already exists.
@@ -77,6 +79,8 @@ class AlarmEditorFragment : CoreFragment() {
             onTimeChange = { hourOfDay, minute ->
                 viewModel.setTime(hourOfDay = hourOfDay, minute = minute)
             },
+            onRepeatModeChange = { repeatMode -> viewModel.setRepeatMode(repeatMode = repeatMode) },
+            onToggleRepeatDay = { day -> viewModel.toggleRepeatDay(day = day) },
             onSave = { viewModel.save() },
             onBack = { safeNavigateUp() },
         )
@@ -168,6 +172,8 @@ class AlarmEditorFragment : CoreFragment() {
  * @param uiState what to draw.
  * @param onMessageChange forwarded from the message field.
  * @param onTimeChange forwarded from the time control.
+ * @param onRepeatModeChange forwarded from the repeat-option row.
+ * @param onToggleRepeatDay forwarded from the Custom weekday row.
  * @param onSave the user asked to keep the alarm.
  * @param onBack the user asked to leave without keeping it.
  * @author Phong-Kaster
@@ -177,6 +183,8 @@ private fun AlarmEditorLayout(
     uiState: AlarmEditorUiState,
     onMessageChange: (String) -> Unit = {},
     onTimeChange: (hourOfDay: Int, minute: Int) -> Unit = { _, _ -> },
+    onRepeatModeChange: (AlarmRepeatMode) -> Unit = {},
+    onToggleRepeatDay: (DayOfWeek) -> Unit = {},
     onSave: () -> Unit = {},
     onBack: () -> Unit = {},
 ) {
@@ -222,8 +230,12 @@ private fun AlarmEditorLayout(
                 message = uiState.message,
                 hourOfDay = uiState.hourOfDay,
                 minute = uiState.minute,
+                repeatMode = uiState.repeatMode,
+                repeatDays = uiState.repeatDays,
                 onMessageChange = onMessageChange,
                 onTimeChange = onTimeChange,
+                onRepeatModeChange = onRepeatModeChange,
+                onToggleRepeatDay = onToggleRepeatDay,
                 modifier = Modifier.fillMaxSize(),
             )
         },

@@ -1,6 +1,8 @@
 package com.example.skeleton.ui.fragment.alarm_editor
 
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.domain.model.Alarm
+import java.time.DayOfWeek
 
 /**
  * Everything the alarm editor needs to draw itself.
@@ -18,6 +20,10 @@ import com.example.skeleton.domain.model.Alarm
  *   [saveRefusedBlank].
  * @param hourOfDay the hour the alarm is set for, 0–23.
  * @param minute the minute past that hour, 0–59.
+ * @param repeatMode whether the alarm being edited fires once, every day, or only on [repeatDays].
+ * @param repeatDays which weekdays are ticked while [repeatMode] is [AlarmRepeatMode.CUSTOM].
+ *   Carried even outside Custom — switching away and back shows the same days rather than an editor
+ *   that has forgotten what was ticked.
  * @param isLoading true while an **existing** alarm is being read out of the store. A brand-new
  *   alarm is never loading: there is nothing to read.
  *
@@ -59,6 +65,8 @@ data class AlarmEditorUiState(
     val message: String = "",
     val hourOfDay: Int = Alarm.DEFAULT_HOUR_OF_DAY,
     val minute: Int = Alarm.DEFAULT_MINUTE,
+    val repeatMode: AlarmRepeatMode = AlarmRepeatMode.DAILY,
+    val repeatDays: Set<DayOfWeek> = emptySet(),
 
     // --- UI control ---
     val isLoading: Boolean = false,

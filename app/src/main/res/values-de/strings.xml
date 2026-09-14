@@ -93,4 +93,8 @@
     <string name="exact_alarms_are_not_allowed">Exakte Alarme sind nicht erlaubt</string>
     <string name="turn_on_notifications">Benachrichtigungen einschalten</string>
     <string name="allow_exact_alarms">Exakte Alarme erlauben</string>
+    <string name="repeat">Wiederholen</string>
+    <string name="every_day">Täglich</string>
+    <string name="one_time">Einmalig</string>
+    <string name="custom">Benutzerdefiniert</string>
 </resources>

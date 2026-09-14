@@ -38,12 +38,13 @@ Two things at once:
 | Refuse — and say why — when a note would be dated in the future | ✅ built |
 | Alarms as a fourth bottom-bar tab, opening on an explicit empty state | ✅ built |
 | Write an alarm — a message and a time — save it, and see it in the list | ✅ built |
+| Pick how an alarm repeats: every day, one time only, or a chosen set of weekdays | ✅ built |
 | Alarms survive the app being killed, and are listed earliest time of day first | ✅ built |
 | Refuse — and say why — when an alarm would be saved with nothing written on it | ✅ built |
 | Re-open an alarm from its row, change it, and save it back to the same row | ✅ built |
 | Switch an alarm off or on from its row, without opening it | ✅ built |
 | Delete an alarm, behind a confirmation step | ✅ built |
-| Have an alarm actually go off, as a heads-up notification, and repeat the next day | ✅ built |
+| Have an alarm actually go off, as a heads-up notification, honouring its repeat option | ✅ built |
 | Alarms still fire after the phone is restarted | ✅ built |
 | When the OS will not let an alarm fire, the Alarms screen says so and offers the fix | ✅ built |
 
@@ -55,11 +56,13 @@ Two things at once:
 > two of its seven languages have translations. The **German bottom-bar label** truncates
 > ("Einstell…") — a known defect, filed in `knowledge/ISSUES.md` and pinned by a reference image so
 > it cannot get quietly worse. **Alarms is complete**: an alarm can be written, saved, listed,
-> reopened and changed, switched off or on, deleted behind a confirmation, and — at the time set —
-> arrives as a heads-up notification carrying its message, then repeats the next day with no further
-> action from the user; it survives a restart of the phone; and when the operating system will not
-> let an alarm fire at all (notifications off, or exact alarms refused), the screen says so and offers
-> the fix, clearing itself once the setting is corrected. What no command in this repository can
+> reopened and changed, switched off or on, deleted behind a confirmation, given a repeat option —
+> every day, once only, or a chosen set of weekdays — and, at the time set, arrives as a heads-up
+> notification carrying its message, then re-arms itself for its next occurrence with no further
+> action from the user (unless it was set to fire only once); it survives a restart of the phone; and
+> when the operating system will not let an alarm fire at all (notifications off, or exact alarms
+> refused), the screen says so and offers the fix, clearing itself once the setting is corrected. What
+> no command in this repository can
 > check — whether a real phone actually pops the banner up, whether tapping it opens the Alarms list
 > without stacking a second copy of the app, and whether an alarm set before a reboot really does
 > survive one — is left for a person; see the Human Verification Request when this run finishes.
@@ -238,9 +241,10 @@ com/example/skeleton/
 │       └── AlarmManagerAlarmScheduler.kt   #   The one real AlarmScheduler; talks to AlarmManager, never tested directly
 ├── domain/                                 # What the app is about, in plain Kotlin. Android-free by rule.
 │   ├── enums/
-│   │   └── BottomBarDestination.kt         #   Home, Calendar, Setting, Alarms — declaration order is tab order
+│   │   ├── AlarmRepeatMode.kt              #   ONE_TIME, DAILY, CUSTOM — decides both the next-fire math and the re-arm
+│   │   └── BottomBarDestination.kt         #   Home, Calendar, Alarms, Setting — declaration order is tab order
 │   ├── model/                              #   Models the UI and repositories agree on
-│   │   ├── Alarm.kt                        #     An alarm: a message and a time of day
+│   │   ├── Alarm.kt                        #     An alarm: a message, a time of day, and how it repeats
 │   │   ├── BlankAlarmMessageException.kt   #     The "an alarm must say something" rule saying no, carried as a value
 │   │   ├── CalendarMonth.kt                #     One month laid out as a Sunday-first grid of squares
 │   │   ├── FutureDateRefusedException.kt   #     The no-future-dates rule saying no, carried as a value
@@ -254,8 +258,9 @@ com/example/skeleton/
 │   │   ├── SettingRepository.kt
 │   │   └── UserActionRepository.kt
 │   └── scheduler/                          #   The seam that makes "when does this go off" and "arm/cancel it" testable
+│       ├── AlarmRepeatDaysBitmask.kt       #     Set<DayOfWeek> <-> Int, so an Intent extra can carry a custom alarm's days
 │       ├── AlarmScheduler.kt               #     Interface: schedule, cancel, rearmAll (default: schedule in a loop)
-│       └── NextFireTime.kt                 #     Pure arithmetic: next occurrence of hour:minute against a Clock
+│       └── NextFireTime.kt                 #     Pure arithmetic: next occurrence, aware of ONE_TIME/DAILY/CUSTOM
 ├── injection/                              # Koin modules. AppModule pulls the rest together.
 │   ├── AppModule.kt
 │   ├── DatabaseModule.kt
@@ -279,7 +284,7 @@ com/example/skeleton/
 │   ├── fragment/                           #   One folder per screen: Fragment + UiState + ViewModel + component/
 │   │   ├── alarm_editor/                   #     Write one alarm: a message, a time, and Save in the top bar
 │   │   │   ├── component/
-│   │   │   │   └── AlarmEditor.kt          #       The message field and the time control
+│   │   │   │   └── AlarmEditor.kt          #       The message field, the time control, and the repeat section
 │   │   │   ├── AlarmEditorFragment.kt      #       Owns argumentsFor(alarmId) — the only place that key name lives
 │   │   │   ├── AlarmEditorUiState.kt
 │   │   │   └── AlarmEditorViewModel.kt

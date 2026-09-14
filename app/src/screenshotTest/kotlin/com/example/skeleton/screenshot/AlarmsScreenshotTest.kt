@@ -21,9 +21,8 @@ import com.example.skeleton.ui.fragment.alarms.component.AlarmsPermissionNotice
  *
  * This renders AlarmsEmptyState directly, the same way HomeScreenshotTest renders HomeNoteList
  * rather than HomeFragment's whole screen — the component under test has no NavController
- * dependency, so nothing here needs one and nothing here draws a bottom bar that would misreport
- * AS-5's hidden centre "+" (that decision lives in CoreBottomBar/BottomBarDestination and is
- * outside what this component renders).
+ * dependency, so nothing here needs one and nothing here draws a bottom bar, which is outside
+ * what this component renders.
  *
  * --- What this does NOT prove ---
  *

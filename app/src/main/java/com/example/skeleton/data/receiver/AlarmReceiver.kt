@@ -5,21 +5,29 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.example.skeleton.data.notification.AlarmNotifier
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.scheduler.AlarmScheduler
+import com.example.skeleton.domain.scheduler.toRepeatDaySet
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 /**
  * The doorbell. The system rings it at the moment an alarm is due, and this class does two things:
- * shows the notification, then **arms tomorrow's**.
+ * shows the notification, then — unless the alarm is [AlarmRepeatMode.ONE_TIME] — **arms its next
+ * occurrence**.
  *
- * **That second half is the entire daily repeat, and it is easy to miss.** The alarm was armed with
- * `setExactAndAllowWhileIdle`, which fires **once** and is then finished — there is no repeating
- * alarm anywhere in this feature. Nothing at all would happen tomorrow unless this receiver asks for
- * the next occurrence right here, every single time it fires. Delete the last line of [onReceive]
- * and the app still works perfectly on the first day and is silent forever after, which is a bug
- * nobody notices until the following morning.
+ * **That second half is the entire repeat, daily or custom, and it is easy to miss.** The alarm was
+ * armed with `setExactAndAllowWhileIdle`, which fires **once** and is then finished — there is no
+ * repeating alarm anywhere in this feature. Nothing at all would happen again unless this receiver
+ * asks for the next occurrence right here, every single time it fires. Delete the re-arm call in
+ * [onReceive] and the app still works perfectly the first time an alarm goes off and is silent
+ * forever after, which is a bug nobody notices until the following morning.
+ *
+ * **[AlarmRepeatMode.ONE_TIME] is the one case that must *not* re-arm.** Its next occurrence would
+ * otherwise be computed exactly like a daily alarm's — [com.example.skeleton.domain.scheduler.nextFireTime]
+ * does not know the difference on its own — so the guard has to live here, the one place that knows
+ * an alarm just fired rather than being newly saved.
  *
  * **Why the alarm is rebuilt out of the intent instead of read back from the database.** `onReceive`
  * runs on the main thread and has only a few seconds to live; reading Room from it means
@@ -72,6 +80,18 @@ class AlarmReceiver : BroadcastReceiver(), KoinComponent {
             Log.e(TAG, "showing alarm ${alarm.id} failed", e)
         }
 
+        // A one-time alarm has no next occurrence — asking `alarmScheduler.schedule` for one would
+        // silently turn it back into a daily alarm, computing tomorrow's instant exactly as it would
+        // for `DAILY`. So this is the one case that stops here.
+        //
+        // The alarm's `enabled` flag is left as it was — still true, still reading ON in the list —
+        // even though nothing is armed for it any more. Fixing that would mean writing to Room from
+        // here, and this class's own KDoc explains why that is not done: `onReceive` has only seconds
+        // to live and reading or writing the database from it means `goAsync()` and a coroutine, real
+        // machinery this feature does not carry. The next edit or delete of the alarm corrects the
+        // schedule either way.
+        if (alarm.repeatMode == AlarmRepeatMode.ONE_TIME) return
+
         try {
             alarmScheduler.schedule(alarm = alarm)
         } catch (e: Exception) {
@@ -90,6 +110,16 @@ class AlarmReceiver : BroadcastReceiver(), KoinComponent {
         val id = getLongExtra(EXTRA_ALARM_ID, Alarm.UNSAVED_ID)
         if (id == Alarm.UNSAVED_ID) return null
 
+        // `valueOf` rather than a safe lookup: the extra was written by `AlarmManagerAlarmScheduler`
+        // in the same app version, from `AlarmRepeatMode.name`, so an unrecognised value here would
+        // mean the two have drifted apart — a bug worth a crash log, not a silent fallback that hides
+        // it. `DAILY` is still supplied to `getStringExtra`'s default, for the one intent this app
+        // will ever see without the extra at all: one already pending from before this field existed,
+        // delivered after an app update replaces the receiver mid-flight.
+        val repeatMode = AlarmRepeatMode.valueOf(
+            getStringExtra(EXTRA_ALARM_REPEAT_MODE) ?: AlarmRepeatMode.DAILY.name,
+        )
+
         return Alarm(
             id = id,
             message = getStringExtra(EXTRA_ALARM_MESSAGE).orEmpty(),
@@ -97,6 +127,8 @@ class AlarmReceiver : BroadcastReceiver(), KoinComponent {
             minute = getIntExtra(EXTRA_ALARM_MINUTE, Alarm.DEFAULT_MINUTE),
             // It fired, so it was armed. The re-arm below depends on this being true.
             enabled = true,
+            repeatMode = repeatMode,
+            repeatDays = getIntExtra(EXTRA_ALARM_REPEAT_DAYS, 0).toRepeatDaySet(),
             // A placeholder, and never written anywhere. See the class KDoc.
             createdAt = Alarm.UNSAVED_AT,
         )
@@ -129,5 +161,18 @@ class AlarmReceiver : BroadcastReceiver(), KoinComponent {
 
         /** The minute past the hour, 0–59, as an `Int`. Needed to arm the next occurrence. */
         const val EXTRA_ALARM_MINUTE = "com.example.skeleton.extra.ALARM_MINUTE"
+
+        /**
+         * [AlarmRepeatMode.name], as a `String`. Decides whether this receiver re-arms at all after
+         * notifying — see [onReceive].
+         */
+        const val EXTRA_ALARM_REPEAT_MODE = "com.example.skeleton.extra.ALARM_REPEAT_MODE"
+
+        /**
+         * Which weekdays a [AlarmRepeatMode.CUSTOM] alarm repeats on, packed by
+         * [com.example.skeleton.domain.scheduler.toRepeatDaysBitmask], as an `Int`. Ignored for every
+         * other [AlarmRepeatMode].
+         */
+        const val EXTRA_ALARM_REPEAT_DAYS = "com.example.skeleton.extra.ALARM_REPEAT_DAYS"
     }
 }

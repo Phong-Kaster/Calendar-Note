@@ -93,3 +93,30 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         )
     }
 }
+
+/**
+ * Adds `repeatMode` and `repeatDays` to the `alarms` table when upgrading a database that was
+ * created at version 4.
+ *
+ * **`ADD COLUMN` here, not a rebuilt `CREATE TABLE`** — unlike [MIGRATION_2_3] and [MIGRATION_3_4],
+ * which add a whole new table. An existing `alarms` row already has an id, a message, a time and an
+ * enabled flag; only these two columns are missing, and SQLite can add a `NOT NULL` column to a
+ * populated table in one statement as long as it also states a default for the rows already there —
+ * which is exactly what `DEFAULT 'DAILY'` and `DEFAULT 0` do below.
+ *
+ * **Both defaults must equal `AlarmEntity`'s own `@ColumnInfo(defaultValue = …)`, character for
+ * character.** Room's runtime check at launch compares this migration's resulting schema against the
+ * `CREATE TABLE` a *fresh* install would run from `AlarmEntity` — including the default clause, not
+ * only the column's name, type and nullability — and the two must agree or the app refuses to open
+ * the database. `DAILY` is the repeat mode every alarm already had before this column existed, so a
+ * migrated row keeps repeating exactly as it did; `0` is the empty weekday set, meaningless for
+ * anything but `CUSTOM`.
+ *
+ * @author Phong-Kaster
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `alarms` ADD COLUMN `repeatMode` TEXT NOT NULL DEFAULT 'DAILY'")
+        db.execSQL("ALTER TABLE `alarms` ADD COLUMN `repeatDays` INTEGER NOT NULL DEFAULT 0")
+    }
+}

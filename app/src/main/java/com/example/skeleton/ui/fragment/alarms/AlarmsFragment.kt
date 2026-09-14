@@ -43,9 +43,11 @@ import com.example.skeleton.ui.fragment.alarms.component.AlarmsEmptyState
 import com.example.skeleton.ui.fragment.alarms.component.AlarmsPermissionNotice
 import com.example.skeleton.ui.fragment.home.component.canScheduleExactAlarm
 import com.example.skeleton.ui.fragment.home.component.isNotificationGranted
+import com.example.skeleton.ui.fragment.note.NoteFragment
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.time.LocalDate
 
 /**
  * How much empty space the alarm list keeps below its last row.
@@ -99,6 +101,12 @@ class AlarmsFragment : CoreFragment() {
 
         AlarmsLayout(
             uiState = uiState,
+            onCreateNote = {
+                safeNavigate(
+                    destination = R.id.toNote,
+                    bundle = NoteFragment.argumentsFor(date = LocalDate.now()),
+                )
+            },
             onCreateAlarm = { openAlarmEditor() },
             onOpenAlarm = { alarm -> openAlarmEditor(alarmId = alarm.id) },
             onToggleAlarm = { alarm, enabled ->
@@ -292,15 +300,13 @@ class AlarmsFragment : CoreFragment() {
  * Pure UI. It takes state and callbacks and nothing else, which is what lets the previews below
  * render the whole screen with no ViewModel, no Koin and no database behind them.
  *
- * **`onCreateNote = {}` on the bottom bar is a deliberate no-op and not an oversight.**
- * `CoreBottomBar` refuses a default for that lambda precisely so nobody ships the app's create
- * action as a dead button — but this destination sets `hidesCreateButton`, so the shared centre "+"
- * is not drawn here at all and there is no button for the empty lambda to disappoint. Alarms has its
- * own create action instead, and it is the floating button below: an alarm is not a note, and one
- * button that made either depending on which tab you were standing on would be a button whose
- * meaning you have to remember.
+ * **The bottom bar's centre "+" writes a note here too, same as every other top-level screen.** It
+ * is not the same action as the floating button below: an alarm is not a note, and this screen
+ * carries two create affordances on purpose — one for each of the two things this app lets you
+ * write, so the meaning of each never depends on which tab you happened to be standing on.
  *
  * @param uiState what to draw.
+ * @param onCreateNote the user tapped the bottom bar's centre action button.
  * @param onCreateAlarm the user wants to write a new alarm.
  * @param onOpenAlarm the user tapped a row and wants that alarm opened.
  * @param onToggleAlarm the user moved a row's switch. True means "arm this alarm".
@@ -314,6 +320,7 @@ class AlarmsFragment : CoreFragment() {
 @Composable
 private fun AlarmsLayout(
     uiState: AlarmsUiState,
+    onCreateNote: () -> Unit = {},
     onCreateAlarm: () -> Unit = {},
     onOpenAlarm: (Alarm) -> Unit = {},
     onToggleAlarm: (Alarm, Boolean) -> Unit = { _, _ -> },
@@ -324,7 +331,7 @@ private fun AlarmsLayout(
     CoreLayout(
         modifier = Modifier,
         topBar = { CoreTopBar(title = stringResource(R.string.alarms)) },
-        bottomBar = { CoreBottomBar(onCreateNote = {}) },
+        bottomBar = { CoreBottomBar(onCreateNote = onCreateNote) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCreateAlarm,

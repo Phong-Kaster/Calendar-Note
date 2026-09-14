@@ -22,7 +22,7 @@ import com.example.skeleton.data.database.local.entity.UserActionEntity
  * them crashes the app at launch for anybody who already had the previous version installed.
  *
  * Version history: 1 = user actions only, 2 = the demo posts table, 3 = the notes table,
- * 4 = the alarms table.
+ * 4 = the alarms table, 5 = an alarm's repeat mode and custom weekdays.
  *
  * @author Phong-Kaster
  */
@@ -33,7 +33,7 @@ import com.example.skeleton.data.database.local.entity.UserActionEntity
         NoteEntity::class,
         AlarmEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(

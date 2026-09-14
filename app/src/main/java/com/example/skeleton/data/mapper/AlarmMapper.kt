@@ -1,16 +1,18 @@
 package com.example.skeleton.data.mapper
 
 import com.example.skeleton.data.database.local.entity.AlarmEntity
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.domain.model.Alarm
+import com.example.skeleton.domain.scheduler.toRepeatDaySet
+import com.example.skeleton.domain.scheduler.toRepeatDaysBitmask
 
 /*
  * --- The only place a stored alarm becomes a real alarm (simple story) ---
  *
- * Today the two shapes hold the same fields, so both functions are a straight copy across. That is
- * not a reason to skip the file: the moment the database and the domain disagree about anything —
- * a stored minute-of-day against an hour and a minute, say — this is the one place the translation
- * goes, and nothing else in the app (not the DAO, not the repository, not a screen) is allowed to
- * do it by hand.
+ * Most fields are a straight copy across, but `repeatMode` and `repeatDays` are not — the table
+ * stores an enum as its bare `String` name and a set of weekdays as one packed `Int`, because SQLite
+ * has neither shape natively. This is the one place that translation goes, and nothing else in the
+ * app (not the DAO, not the repository, not a screen) is allowed to do it by hand.
  *
  * Both directions live here, together, so they can never drift apart.
  */
@@ -27,6 +29,8 @@ fun AlarmEntity.toDomain(): Alarm {
         hourOfDay = hourOfDay,
         minute = minute,
         enabled = enabled,
+        repeatMode = AlarmRepeatMode.valueOf(repeatMode),
+        repeatDays = repeatDays.toRepeatDaySet(),
         createdAt = createdAt,
     )
 }
@@ -43,6 +47,8 @@ fun Alarm.toEntity(): AlarmEntity {
         hourOfDay = hourOfDay,
         minute = minute,
         enabled = enabled,
+        repeatMode = repeatMode.name,
+        repeatDays = repeatDays.toRepeatDaysBitmask(),
         createdAt = createdAt,
     )
 }

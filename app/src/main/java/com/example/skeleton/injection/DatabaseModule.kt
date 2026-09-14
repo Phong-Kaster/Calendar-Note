@@ -5,6 +5,7 @@ import com.example.skeleton.data.database.local.AppDatabase
 import com.example.skeleton.data.database.local.MIGRATION_1_2
 import com.example.skeleton.data.database.local.MIGRATION_2_3
 import com.example.skeleton.data.database.local.MIGRATION_3_4
+import com.example.skeleton.data.database.local.MIGRATION_4_5
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
@@ -26,7 +27,7 @@ val databaseModule = module {
             AppDatabase::class.java,
             "app_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 

@@ -1,6 +1,8 @@
 package com.example.skeleton.domain.scheduler
 
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import java.time.Clock
+import java.time.DayOfWeek
 import java.time.LocalDateTime
 
 /**
@@ -30,26 +32,68 @@ import java.time.LocalDateTime
  * that same instant. That is the right way round. An alarm the user has already missed by a
  * millisecond is not one they want shouting at them while their finger is still on the button.
  *
+ * **[AlarmRepeatMode.CUSTOM] is a different question, answered below the shared rule.** [repeatMode]
+ * defaults to [AlarmRepeatMode.DAILY] and [repeatDays] to empty, so every call site written before
+ * this parameter existed keeps behaving exactly as it did — [ONE_TIME][AlarmRepeatMode.ONE_TIME] and
+ * [DAILY][AlarmRepeatMode.DAILY] both answer "the next occurrence of this time of day", because the
+ * *first* occurrence of a one-time alarm is found the same way a daily one's is; the difference
+ * between the two is entirely in whether `AlarmReceiver` asks this function again after it fires.
+ *
+ * Under [AlarmRepeatMode.CUSTOM], the answer must additionally land on a day whose [DayOfWeek] is in
+ * [repeatDays]. If [repeatDays] is empty there is no such day, and the answer is `null` — an alarm
+ * the user switched to Custom before ticking anything is saved and shown as armed, but nothing is
+ * scheduled for it until at least one weekday is picked; see [AlarmRepeatMode.CUSTOM]'s own KDoc.
+ *
  * @param hourOfDay the hour the alarm is set for, 0–23.
  * @param minute the minute past that hour, 0–59.
+ * @param repeatMode how often the alarm repeats. Defaults to [AlarmRepeatMode.DAILY].
+ * @param repeatDays which weekdays qualify under [AlarmRepeatMode.CUSTOM]. Ignored otherwise.
  * @param clock where "now" comes from. A parameter and never `Clock.systemDefaultZone()` read
  *   inside, because every promise above is only checkable if a test can decide what time it is.
- * @return the next date and time the alarm should go off, in the clock's own time zone.
+ * @return the next date and time the alarm should go off, in the clock's own time zone; `null` when
+ *   [repeatMode] is [AlarmRepeatMode.CUSTOM] and [repeatDays] is empty.
  * @author Phong-Kaster
  */
-fun nextFireTime(hourOfDay: Int, minute: Int, clock: Clock): LocalDateTime {
+fun nextFireTime(
+    hourOfDay: Int,
+    minute: Int,
+    repeatMode: AlarmRepeatMode = AlarmRepeatMode.DAILY,
+    repeatDays: Set<DayOfWeek> = emptySet(),
+    clock: Clock,
+): LocalDateTime? {
     val now = LocalDateTime.now(clock)
     val todayAtThatTime = now.toLocalDate().atTime(hourOfDay, minute)
 
-    // `isAfter`, not `!isBefore`. The difference is only the single instant where the two are
-    // equal — and that single instant is the one the receiver re-arms from. See the story above.
-    if (todayAtThatTime.isAfter(now)) return todayAtThatTime
+    if (repeatMode != AlarmRepeatMode.CUSTOM) {
+        // `isAfter`, not `!isBefore`. The difference is only the single instant where the two are
+        // equal — and that single instant is the one the receiver re-arms from. See the story above.
+        if (todayAtThatTime.isAfter(now)) return todayAtThatTime
 
-    // `plusDays(1)` and not `plusHours(24)`. They are the same number of hours on almost every day
-    // of the year and a different number on the two days a clock changes — and what the user asked
-    // for is "at seven every morning", not "every twenty-four hours". `plusDays` keeps the
-    // wall-clock time; `plusHours(24)` would drift the alarm by an hour each spring and autumn.
-    return todayAtThatTime.plusDays(1L)
+        // `plusDays(1)` and not `plusHours(24)`. They are the same number of hours on almost every
+        // day of the year and a different number on the two days a clock changes — and what the
+        // user asked for is "at seven every morning", not "every twenty-four hours". `plusDays`
+        // keeps the wall-clock time; `plusHours(24)` would drift the alarm by an hour each spring
+        // and autumn.
+        return todayAtThatTime.plusDays(1L)
+    }
+
+    if (repeatDays.isEmpty()) return null
+
+    // Walk forward one day at a time, today included, up to and including a full week out. Eight
+    // candidates and not seven: today's weekday can be in `repeatDays` while today's time of day has
+    // already gone, and the correct answer then is the *same* weekday next week — offset 7, one past
+    // a bare week of offsets 0..6.
+    for (offset in 0..7L) {
+        val candidate = now.toLocalDate().plusDays(offset).atTime(hourOfDay, minute)
+        if (candidate.dayOfWeek !in repeatDays) continue
+        if (candidate.isAfter(now)) return candidate
+    }
+
+    // Unreachable: with `repeatDays` non-empty, some weekday within the next seven days always
+    // matches, and the loop above always finds an `isAfter(now)` candidate at or before offset 7.
+    // Kept as a typed `null` rather than an `error()` so a future change to the loop fails safe —
+    // "nothing scheduled" rather than a crash inside a repository write.
+    return null
 }
 
 /**
@@ -67,12 +111,26 @@ fun nextFireTime(hourOfDay: Int, minute: Int, clock: Clock): LocalDateTime {
  *
  * @param hourOfDay the hour the alarm is set for, 0–23.
  * @param minute the minute past that hour, 0–59.
+ * @param repeatMode how often the alarm repeats. Defaults to [AlarmRepeatMode.DAILY].
+ * @param repeatDays which weekdays qualify under [AlarmRepeatMode.CUSTOM]. Ignored otherwise.
  * @param clock where "now" and the time zone both come from.
- * @return the next fire instant as epoch milliseconds.
+ * @return the next fire instant as epoch milliseconds, or `null` exactly when [nextFireTime] does.
  * @author Phong-Kaster
  */
-fun nextFireTimeMillis(hourOfDay: Int, minute: Int, clock: Clock): Long =
-    nextFireTime(hourOfDay = hourOfDay, minute = minute, clock = clock)
-        .atZone(clock.zone)
-        .toInstant()
-        .toEpochMilli()
+fun nextFireTimeMillis(
+    hourOfDay: Int,
+    minute: Int,
+    repeatMode: AlarmRepeatMode = AlarmRepeatMode.DAILY,
+    repeatDays: Set<DayOfWeek> = emptySet(),
+    clock: Clock,
+): Long? =
+    nextFireTime(
+        hourOfDay = hourOfDay,
+        minute = minute,
+        repeatMode = repeatMode,
+        repeatDays = repeatDays,
+        clock = clock,
+    )
+        ?.atZone(clock.zone)
+        ?.toInstant()
+        ?.toEpochMilli()

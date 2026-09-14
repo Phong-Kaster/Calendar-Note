@@ -1,9 +1,11 @@
 package com.example.skeleton.ui.fragment.alarm_editor
 
 import com.example.skeleton.common.Outcome
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.model.BlankAlarmMessageException
 import com.example.skeleton.domain.repository.AlarmRepository
+import java.time.DayOfWeek
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -450,6 +452,118 @@ class AlarmEditorViewModelTest {
         assertEquals(2, repository.saveCount)
     }
 
+    // ---------- Repeat ----------
+
+    @Test
+    fun `a new alarm opens on the daily repeat, matching what every alarm did before this field existed`() =
+        runTest {
+            val viewModel = AlarmEditorViewModel(alarmRepository = FakeAlarmRepository())
+
+            viewModel.openAlarm(alarmId = Alarm.UNSAVED_ID)
+
+            assertEquals(AlarmRepeatMode.DAILY, viewModel.uiState.value.repeatMode)
+            assertEquals(emptySet<DayOfWeek>(), viewModel.uiState.value.repeatDays)
+        }
+
+    @Test
+    fun `opening a stored alarm shows the repeat option and weekdays it was saved with`() = runTest {
+        val repository = FakeAlarmRepository(stored = A_CUSTOM_REPEAT_ALARM)
+        val viewModel = AlarmEditorViewModel(alarmRepository = repository)
+
+        viewModel.openAlarm(alarmId = 9L)
+
+        assertEquals(AlarmRepeatMode.CUSTOM, viewModel.uiState.value.repeatMode)
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), viewModel.uiState.value.repeatDays)
+    }
+
+    @Test
+    fun `picking a repeat option mirrors it into the screen state`() = runTest {
+        val viewModel = AlarmEditorViewModel(alarmRepository = FakeAlarmRepository())
+        viewModel.openAlarm(alarmId = Alarm.UNSAVED_ID)
+
+        viewModel.setRepeatMode(repeatMode = AlarmRepeatMode.ONE_TIME)
+
+        assertEquals(AlarmRepeatMode.ONE_TIME, viewModel.uiState.value.repeatMode)
+    }
+
+    @Test
+    fun `switching away from custom does not clear the weekdays already ticked`() = runTest {
+        // Alarm.repeatDays is carried regardless of repeatMode on purpose — switching back to
+        // Custom later must show the same ticks, not an editor that has forgotten them.
+        val viewModel = AlarmEditorViewModel(alarmRepository = FakeAlarmRepository())
+        viewModel.openAlarm(alarmId = Alarm.UNSAVED_ID)
+        viewModel.setRepeatMode(repeatMode = AlarmRepeatMode.CUSTOM)
+        viewModel.toggleRepeatDay(day = DayOfWeek.TUESDAY)
+
+        viewModel.setRepeatMode(repeatMode = AlarmRepeatMode.DAILY)
+
+        assertEquals(setOf(DayOfWeek.TUESDAY), viewModel.uiState.value.repeatDays)
+    }
+
+    @Test
+    fun `tapping a weekday twice ticks it and then unticks it`() = runTest {
+        val viewModel = AlarmEditorViewModel(alarmRepository = FakeAlarmRepository())
+        viewModel.openAlarm(alarmId = Alarm.UNSAVED_ID)
+
+        viewModel.toggleRepeatDay(day = DayOfWeek.FRIDAY)
+        assertEquals(setOf(DayOfWeek.FRIDAY), viewModel.uiState.value.repeatDays)
+
+        viewModel.toggleRepeatDay(day = DayOfWeek.FRIDAY)
+        assertEquals(emptySet<DayOfWeek>(), viewModel.uiState.value.repeatDays)
+    }
+
+    @Test
+    fun `toggling one weekday leaves the others exactly as they were`() = runTest {
+        val viewModel = AlarmEditorViewModel(alarmRepository = FakeAlarmRepository())
+        viewModel.openAlarm(alarmId = Alarm.UNSAVED_ID)
+        viewModel.toggleRepeatDay(day = DayOfWeek.MONDAY)
+        viewModel.toggleRepeatDay(day = DayOfWeek.WEDNESDAY)
+
+        viewModel.toggleRepeatDay(day = DayOfWeek.FRIDAY)
+
+        assertEquals(
+            setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+            viewModel.uiState.value.repeatDays,
+        )
+    }
+
+    @Test
+    fun `saving hands the store the repeat option and weekdays currently on screen`() = runTest {
+        val repository = FakeAlarmRepository()
+        val viewModel = AlarmEditorViewModel(alarmRepository = repository)
+        viewModel.openAlarm(alarmId = Alarm.UNSAVED_ID)
+        viewModel.setMessage(value = "Take the bins out")
+
+        viewModel.setRepeatMode(repeatMode = AlarmRepeatMode.CUSTOM)
+        viewModel.toggleRepeatDay(day = DayOfWeek.MONDAY)
+        viewModel.toggleRepeatDay(day = DayOfWeek.THURSDAY)
+        viewModel.save()
+
+        val saved = repository.savedAlarm!!
+        assertEquals(AlarmRepeatMode.CUSTOM, saved.repeatMode)
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), saved.repeatDays)
+    }
+
+    @Test
+    fun `saving a one-time alarm carries no weekdays even if some were ticked before switching`() =
+        runTest {
+            val repository = FakeAlarmRepository()
+            val viewModel = AlarmEditorViewModel(alarmRepository = repository)
+            viewModel.openAlarm(alarmId = Alarm.UNSAVED_ID)
+            viewModel.setMessage(value = "Catch the early train")
+            viewModel.setRepeatMode(repeatMode = AlarmRepeatMode.CUSTOM)
+            viewModel.toggleRepeatDay(day = DayOfWeek.TUESDAY)
+
+            viewModel.setRepeatMode(repeatMode = AlarmRepeatMode.ONE_TIME)
+            viewModel.save()
+
+            val saved = repository.savedAlarm!!
+            assertEquals(AlarmRepeatMode.ONE_TIME, saved.repeatMode)
+            // Carried, not cleared — see the "does not clear" test above. `ONE_TIME` simply never
+            // reads this set, the same way `AlarmRepeatMode.CUSTOM`'s own KDoc explains.
+            assertEquals(setOf(DayOfWeek.TUESDAY), saved.repeatDays)
+        }
+
     private companion object {
 
         /** An alarm that already exists in the store, with row id 7, set for half past nine. */
@@ -475,6 +589,18 @@ class AlarmEditorViewModelTest {
             minute = 5,
             enabled = false,
             createdAt = 2_000L,
+        )
+
+        /** A stored alarm saved with `CUSTOM` repeat, ticked for Monday and Thursday. */
+        private val A_CUSTOM_REPEAT_ALARM = Alarm(
+            id = 9L,
+            message = "Take the bins out",
+            hourOfDay = 7,
+            minute = 0,
+            enabled = true,
+            repeatMode = AlarmRepeatMode.CUSTOM,
+            repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY),
+            createdAt = 3_000L,
         )
     }
 }

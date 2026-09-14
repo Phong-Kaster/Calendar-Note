@@ -2,12 +2,21 @@
 
 package com.example.skeleton.ui.fragment.alarm_editor.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -17,18 +26,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.skeleton.R
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.theme.customizedTextStyle
+import java.time.DayOfWeek
 
 /*
  * --- Why the time control is handed its numbers exactly once (simple story) ---
@@ -65,8 +80,13 @@ import com.example.skeleton.ui.theme.customizedTextStyle
  * @param hourOfDay the hour the alarm is set for, 0–23. Read at first composition; see the note
  *   above.
  * @param minute the minute past the hour, 0–59. Read at first composition.
+ * @param repeatMode whether the alarm fires once, every day, or only on [repeatDays].
+ * @param repeatDays which weekdays are ticked. Drawn only while [repeatMode] is
+ *   [AlarmRepeatMode.CUSTOM].
  * @param onMessageChange called on every keystroke in the message field.
  * @param onTimeChange called whenever the picked time changes.
+ * @param onRepeatModeChange called when the user picks a different repeat option.
+ * @param onToggleRepeatDay called when the user taps one weekday in the Custom row.
  * @param modifier applied to the scrolling container.
  * @author Phong-Kaster
  */
@@ -75,8 +95,12 @@ fun AlarmEditor(
     message: String,
     hourOfDay: Int,
     minute: Int,
+    repeatMode: AlarmRepeatMode = AlarmRepeatMode.DAILY,
+    repeatDays: Set<DayOfWeek> = emptySet(),
     onMessageChange: (String) -> Unit = {},
     onTimeChange: (hourOfDay: Int, minute: Int) -> Unit = { _, _ -> },
+    onRepeatModeChange: (AlarmRepeatMode) -> Unit = {},
+    onToggleRepeatDay: (DayOfWeek) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     // `is24Hour` is deliberately left at its default, which follows the *device's* clock setting.
@@ -121,8 +145,171 @@ fun AlarmEditor(
         )
 
         TimeInput(state = timePickerState)
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+        Text(
+            text = stringResource(R.string.repeat),
+            style = customizedTextStyle(
+                fontSize = 12,
+                fontWeight = 500,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+        )
+
+        AlarmRepeatModeRow(
+            repeatMode = repeatMode,
+            onRepeatModeChange = onRepeatModeChange,
+        )
+
+        // Drawn only under Custom: the row of weekday toggles means nothing under Every day or
+        // One-time, and showing it regardless would let a user tick days that are then silently
+        // ignored — the same trap a disabled-but-visible control always is.
+        if (repeatMode == AlarmRepeatMode.CUSTOM) {
+            AlarmRepeatWeekdaysRow(
+                repeatDays = repeatDays,
+                onToggleDay = onToggleRepeatDay,
+            )
+        }
     }
 }
+
+/**
+ * The three ways an alarm can repeat, drawn as one row of equally-sized pills.
+ *
+ * @param repeatMode which option is currently picked.
+ * @param onRepeatModeChange the user tapped a different option.
+ * @param modifier applied to the row.
+ * @author Phong-Kaster
+ */
+@Composable
+private fun AlarmRepeatModeRow(
+    repeatMode: AlarmRepeatMode,
+    onRepeatModeChange: (AlarmRepeatMode) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        REPEAT_MODE_OPTIONS.forEach { (mode, labelId) ->
+            val selected = mode == repeatMode
+            val label = stringResource(labelId)
+            val optionModifier = if (selected) {
+                Modifier.background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(12.dp),
+                )
+            } else {
+                Modifier.border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(12.dp),
+                )
+            }
+
+            Text(
+                text = label,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                style = customizedTextStyle(
+                    fontSize = 13,
+                    fontWeight = 600,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(optionModifier)
+                    .clickable(
+                        onClickLabel = label,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = true),
+                        onClick = { onRepeatModeChange(mode) },
+                    )
+                    .padding(vertical = 10.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The seven weekdays a `CUSTOM` alarm can repeat on, one round toggle each, Sunday first — the same
+ * order the calendar grid's own column headers use.
+ *
+ * @param repeatDays which days are currently ticked.
+ * @param onToggleDay the user tapped one day.
+ * @param modifier applied to the row.
+ * @author Phong-Kaster
+ */
+@Composable
+private fun AlarmRepeatWeekdaysRow(
+    repeatDays: Set<DayOfWeek>,
+    onToggleDay: (DayOfWeek) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        WEEKDAY_OPTIONS.forEach { (day, labelId) ->
+            val selected = day in repeatDays
+            val label = stringResource(labelId)
+            val optionModifier = if (selected) {
+                Modifier.background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
+            } else {
+                Modifier.border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = CircleShape,
+                )
+            }
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .then(optionModifier)
+                    .clickable(
+                        onClickLabel = label,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = false),
+                        onClick = { onToggleDay(day) },
+                    ),
+            ) {
+                Text(
+                    text = label,
+                    maxLines = 1,
+                    style = customizedTextStyle(
+                        fontSize = 12,
+                        fontWeight = 600,
+                        color = if (selected) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+/** [AlarmRepeatMode] paired with the label each option shows, in the order they are drawn. */
+private val REPEAT_MODE_OPTIONS: List<Pair<AlarmRepeatMode, Int>> = listOf(
+    AlarmRepeatMode.DAILY to R.string.every_day,
+    AlarmRepeatMode.ONE_TIME to R.string.one_time,
+    AlarmRepeatMode.CUSTOM to R.string.custom,
+)
+
+/** Every [DayOfWeek] paired with its short label, Sunday first — see [AlarmRepeatWeekdaysRow]. */
+private val WEEKDAY_OPTIONS: List<Pair<DayOfWeek, Int>> = listOf(
+    DayOfWeek.SUNDAY to R.string.weekday_short_sun,
+    DayOfWeek.MONDAY to R.string.weekday_short_mon,
+    DayOfWeek.TUESDAY to R.string.weekday_short_tue,
+    DayOfWeek.WEDNESDAY to R.string.weekday_short_wed,
+    DayOfWeek.THURSDAY to R.string.weekday_short_thu,
+    DayOfWeek.FRIDAY to R.string.weekday_short_fri,
+    DayOfWeek.SATURDAY to R.string.weekday_short_sat,
+)
 
 /**
  * The one field of the editor: what this alarm is about.
@@ -165,7 +352,7 @@ private fun AlarmMessageField(
     )
 }
 
-@Preview(name = "Alarm editor - empty", widthDp = 360, heightDp = 320)
+@Preview(name = "Alarm editor - empty", widthDp = 360, heightDp = 480)
 @Composable
 private fun AlarmEditorEmptyPreview() {
     MyApplicationTheme {
@@ -177,7 +364,7 @@ private fun AlarmEditorEmptyPreview() {
     }
 }
 
-@Preview(name = "Alarm editor - written", widthDp = 360, heightDp = 320)
+@Preview(name = "Alarm editor - written", widthDp = 360, heightDp = 480)
 @Composable
 private fun AlarmEditorWrittenPreview() {
     MyApplicationTheme {
@@ -185,6 +372,20 @@ private fun AlarmEditorWrittenPreview() {
             message = "Take the bread out of the freezer",
             hourOfDay = 21,
             minute = 30,
+        )
+    }
+}
+
+@Preview(name = "Alarm editor - custom repeat", widthDp = 360, heightDp = 520)
+@Composable
+private fun AlarmEditorCustomRepeatPreview() {
+    MyApplicationTheme {
+        AlarmEditor(
+            message = "Take the bins out",
+            hourOfDay = 7,
+            minute = 0,
+            repeatMode = AlarmRepeatMode.CUSTOM,
+            repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY),
         )
     }
 }

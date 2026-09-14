@@ -1,5 +1,8 @@
 package com.example.skeleton.domain.model
 
+import com.example.skeleton.domain.enums.AlarmRepeatMode
+import java.time.DayOfWeek
+
 /**
  * One alarm the user set.
  *
@@ -25,6 +28,11 @@ package com.example.skeleton.domain.model
  * @param minute the minute past that hour, 0–59.
  * @param enabled whether the alarm is armed. True for a brand-new alarm — a user who just wrote one
  *   meant it.
+ * @param repeatMode whether this alarm fires once, every day, or only on [repeatDays].
+ * @param repeatDays which weekdays this alarm fires on. Read only while [repeatMode] is
+ *   [AlarmRepeatMode.CUSTOM]; ignored otherwise, the same way [minute] would be ignored on a clock
+ *   with its hand torn off — carried regardless, so switching back to Custom later shows the days
+ *   last picked rather than an editor that has forgotten them.
  * @param createdAt when the alarm was first saved, in epoch milliseconds. [UNSAVED_AT] until the
  *   store stamps it.
  * @author Phong-Kaster
@@ -35,6 +43,8 @@ data class Alarm(
     val hourOfDay: Int,
     val minute: Int,
     val enabled: Boolean = true,
+    val repeatMode: AlarmRepeatMode = AlarmRepeatMode.DAILY,
+    val repeatDays: Set<DayOfWeek> = emptySet(),
     val createdAt: Long,
 ) {
 
@@ -83,18 +93,23 @@ data class Alarm(
          *   or the editor could not open at all.
          * @param hourOfDay the hour to start on; defaults to [DEFAULT_HOUR_OF_DAY].
          * @param minute the minute to start on; defaults to [DEFAULT_MINUTE].
+         * @param repeatMode how often to start the draft repeating; defaults to
+         *   [AlarmRepeatMode.DAILY], matching what every alarm did before this field existed.
          * @author Phong-Kaster
          */
         fun draft(
             message: String = "",
             hourOfDay: Int = DEFAULT_HOUR_OF_DAY,
             minute: Int = DEFAULT_MINUTE,
+            repeatMode: AlarmRepeatMode = AlarmRepeatMode.DAILY,
         ): Alarm = Alarm(
             id = UNSAVED_ID,
             message = message,
             hourOfDay = hourOfDay,
             minute = minute,
             enabled = true,
+            repeatMode = repeatMode,
+            repeatDays = emptySet(),
             createdAt = UNSAVED_AT,
         )
     }

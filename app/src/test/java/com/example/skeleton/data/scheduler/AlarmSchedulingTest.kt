@@ -1,5 +1,6 @@
 package com.example.skeleton.data.scheduler
 
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.scheduler.AlarmScheduler
 import com.example.skeleton.domain.scheduler.nextFireTimeMillis
@@ -7,6 +8,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Clock
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -78,7 +80,9 @@ class AlarmSchedulingTest {
 
         assertEquals(
             ScheduleDecision.Arm(
-                triggerAtMillis = nextFireTimeMillis(hourOfDay = 21, minute = 30, clock = CLOCK),
+                // Not null: the default `repeatMode` here is `DAILY`, which always has a next
+                // occurrence — only `CUSTOM` with no weekdays picked can answer `null`.
+                triggerAtMillis = nextFireTimeMillis(hourOfDay = 21, minute = 30, clock = CLOCK)!!,
                 exact = true,
             ),
             decision,
@@ -115,7 +119,8 @@ class AlarmSchedulingTest {
 
         assertEquals(
             ScheduleDecision.Arm(
-                triggerAtMillis = nextFireTimeMillis(hourOfDay = 21, minute = 30, clock = CLOCK),
+                // Not null — see the same guard in the exact-alarm case above.
+                triggerAtMillis = nextFireTimeMillis(hourOfDay = 21, minute = 30, clock = CLOCK)!!,
                 exact = false,
             ),
             decision,
@@ -130,6 +135,47 @@ class AlarmSchedulingTest {
         assertEquals(
             (exact as ScheduleDecision.Arm).triggerAtMillis,
             (inexact as ScheduleDecision.Arm).triggerAtMillis,
+        )
+    }
+
+    // ---------- Custom weekdays ----------
+
+    @Test
+    fun `a switched-on custom alarm with no weekday picked is cancelled, not armed`() {
+        // The third path to Cancel, alongside "unsaved" and "switched off": a Custom alarm nobody
+        // has ticked a day for has nothing for the system to arm, and whatever was pending for this
+        // id before must not keep ticking.
+        val decision = scheduleDecision(
+            alarm = alarm(id = 5L, repeatMode = AlarmRepeatMode.CUSTOM, repeatDays = emptySet()),
+            canScheduleExactAlarms = true,
+            clock = CLOCK,
+        )
+
+        assertEquals(ScheduleDecision.Cancel, decision)
+    }
+
+    @Test
+    fun `a switched-on custom alarm with a weekday picked is armed for its next occurrence`() {
+        val repeatDays = setOf(DayOfWeek.MONDAY)
+
+        val decision = scheduleDecision(
+            alarm = alarm(id = 5L, hourOfDay = 7, minute = 0, repeatMode = AlarmRepeatMode.CUSTOM, repeatDays = repeatDays),
+            canScheduleExactAlarms = true,
+            clock = CLOCK,
+        )
+
+        assertEquals(
+            ScheduleDecision.Arm(
+                triggerAtMillis = nextFireTimeMillis(
+                    hourOfDay = 7,
+                    minute = 0,
+                    repeatMode = AlarmRepeatMode.CUSTOM,
+                    repeatDays = repeatDays,
+                    clock = CLOCK,
+                )!!,
+                exact = true,
+            ),
+            decision,
         )
     }
 
@@ -152,12 +198,16 @@ class AlarmSchedulingTest {
         hourOfDay: Int = 8,
         minute: Int = 0,
         enabled: Boolean = true,
+        repeatMode: AlarmRepeatMode = AlarmRepeatMode.DAILY,
+        repeatDays: Set<DayOfWeek> = emptySet(),
     ): Alarm = Alarm(
         id = id,
         message = "Take the bread out of the freezer",
         hourOfDay = hourOfDay,
         minute = minute,
         enabled = enabled,
+        repeatMode = repeatMode,
+        repeatDays = repeatDays,
         createdAt = 1_000L,
     )
 

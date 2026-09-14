@@ -66,9 +66,9 @@ import com.example.skeleton.ui.util.NavigationUtil
  * screens one slot on the right is left empty on purpose: the alternative — dividing the width
  * between the tabs alone — slides the app's primary action off-centre, which reads as a mistake
  * rather than as a layout. Adding a fourth top-level screen fills that slot and needs no change
- * here — **unless the new screen has its own create action**, in which case it sets
- * `BottomBarDestination.hidesCreateButton = true` and the shared "+" is left out for it, as
- * Alarms does.
+ * here. The centre "+" is drawn on every screen, Alarms included — Alarms also carries its own
+ * floating action button for adding an alarm, and the two are deliberately different actions:
+ * this one always writes a note, wherever it is tapped from.
  *
  * @param onCreateNote the user tapped the centre action button.
  * @author Phong-Kaster
@@ -86,15 +86,6 @@ fun CoreBottomBar(
     val leftCount = (BottomBarDestination.entries.size + 1) / 2
     val leftDestinations = BottomBarDestination.entries.take(leftCount)
     val rightDestinations = BottomBarDestination.entries.drop(leftCount)
-
-    // AS-5: a destination can opt out of the shared create button (Alarms does, because it gets
-    // its own floating action button) — see BottomBarDestination.hidesCreateButton. Swapped for a
-    // same-sized Spacer rather than removed outright, so the tab slots either side keep the exact
-    // width they have on every other screen.
-    val currentBottomBarDestination = BottomBarDestination.entries.firstOrNull { entry ->
-        currentDestination?.hierarchy?.any { it.id == entry.destinationId } == true
-    }
-    val hideCreateButton = currentBottomBarDestination?.hidesCreateButton == true
 
     Row(
         modifier = Modifier
@@ -120,30 +111,26 @@ fun CoreBottomBar(
             }
         }
 
-        if (hideCreateButton) {
-            Spacer(modifier = Modifier.padding(horizontal = 12.dp).size(48.dp))
-        } else {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .size(48.dp)
-                    .clip(shape = CircleShape)
-                    .background(color = MaterialTheme.colorScheme.primary)
-                    // Debounced like the tabs beside it: this navigates, and two taps arriving inside
-                    // the same moment would push two copies of the Note screen onto the back stack.
-                    .clickable(onClick = { if (NavigationUtil.canNavigate()) onCreateNote() }),
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    // Not null. The tabs each carry their label, but this button is icon-only, so
-                    // without a description the app's primary create action is an unnamed button to
-                    // anybody using a screen reader.
-                    contentDescription = stringResource(R.string.add_note),
-                    modifier = Modifier.size(30.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .size(48.dp)
+                .clip(shape = CircleShape)
+                .background(color = MaterialTheme.colorScheme.primary)
+                // Debounced like the tabs beside it: this navigates, and two taps arriving inside
+                // the same moment would push two copies of the Note screen onto the back stack.
+                .clickable(onClick = { if (NavigationUtil.canNavigate()) onCreateNote() }),
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Add,
+                // Not null. The tabs each carry their label, but this button is icon-only, so
+                // without a description the app's primary create action is an unnamed button to
+                // anybody using a screen reader.
+                contentDescription = stringResource(R.string.add_note),
+                modifier = Modifier.size(30.dp),
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
         }
 
         // The empty slots that keep the action button centred. Placed *before* the remaining tabs

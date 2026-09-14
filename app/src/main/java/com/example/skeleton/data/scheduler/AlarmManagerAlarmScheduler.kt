@@ -10,6 +10,7 @@ import com.example.skeleton.data.receiver.AlarmReceiver
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.scheduler.AlarmScheduler
 import com.example.skeleton.domain.scheduler.nextFireTimeMillis
+import com.example.skeleton.domain.scheduler.toRepeatDaysBitmask
 import java.time.Clock
 
 /**
@@ -56,6 +57,11 @@ internal sealed class ScheduleDecision {
  * difference is the whole point: an alarm that has just been switched off usually has one already
  * armed, and "do nothing" would leave it ticking.
  *
+ * **A third path to [ScheduleDecision.Cancel]: [nextFireTimeMillis] answering `null`.** That happens
+ * only for a [com.example.skeleton.domain.enums.AlarmRepeatMode.CUSTOM] alarm with no weekday picked
+ * yet — switched on, saved, but with nothing for the system to arm. Same decision as a switched-off
+ * alarm, and for the same reason: whatever was pending for this id before must not keep ticking.
+ *
  * @param alarm the alarm being armed.
  * @param canScheduleExactAlarms whether this phone currently lets the app set exact alarms.
  * @param clock where "now" comes from — a parameter so a test can fix it.
@@ -70,14 +76,15 @@ internal fun scheduleDecision(
 
     if (!alarm.enabled) return ScheduleDecision.Cancel
 
-    return ScheduleDecision.Arm(
-        triggerAtMillis = nextFireTimeMillis(
-            hourOfDay = alarm.hourOfDay,
-            minute = alarm.minute,
-            clock = clock,
-        ),
-        exact = canScheduleExactAlarms,
-    )
+    val triggerAtMillis = nextFireTimeMillis(
+        hourOfDay = alarm.hourOfDay,
+        minute = alarm.minute,
+        repeatMode = alarm.repeatMode,
+        repeatDays = alarm.repeatDays,
+        clock = clock,
+    ) ?: return ScheduleDecision.Cancel
+
+    return ScheduleDecision.Arm(triggerAtMillis = triggerAtMillis, exact = canScheduleExactAlarms)
 }
 
 /**
@@ -186,6 +193,8 @@ class AlarmManagerAlarmScheduler(
                 putExtra(AlarmReceiver.EXTRA_ALARM_MESSAGE, alarm.message)
                 putExtra(AlarmReceiver.EXTRA_ALARM_HOUR_OF_DAY, alarm.hourOfDay)
                 putExtra(AlarmReceiver.EXTRA_ALARM_MINUTE, alarm.minute)
+                putExtra(AlarmReceiver.EXTRA_ALARM_REPEAT_MODE, alarm.repeatMode.name)
+                putExtra(AlarmReceiver.EXTRA_ALARM_REPEAT_DAYS, alarm.repeatDays.toRepeatDaysBitmask())
             },
             // UPDATE_CURRENT so that editing an alarm's message replaces the extras of the pending
             // intent instead of leaving yesterday's wording armed. IMMUTABLE because nothing outside

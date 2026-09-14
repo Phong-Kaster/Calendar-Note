@@ -1,8 +1,11 @@
 package com.example.skeleton.domain.scheduler
 
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import java.time.Clock
+import java.time.DayOfWeek
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -142,6 +145,81 @@ class NextFireTimeTest {
         val nextFire = nextFireTime(hourOfDay = 7, minute = 0, clock = deliveredLate)
 
         assertEquals(LocalDateTime.of(2026, 3, 15, 7, 0), nextFire)
+    }
+
+    // ---------- Custom weekdays ----------
+
+    @Test
+    fun `a custom alarm fires today when today's weekday is picked and the time is still ahead`() {
+        // TODAY (2026-03-14) is a Saturday — see the companion object's own comment.
+        val nextFire = nextFireTime(
+            hourOfDay = 21,
+            minute = 30,
+            repeatMode = AlarmRepeatMode.CUSTOM,
+            repeatDays = setOf(DayOfWeek.SATURDAY),
+            clock = clockAt(hour = 9, minute = 0),
+        )
+
+        assertEquals(LocalDateTime.of(2026, 3, 14, 21, 30), nextFire)
+    }
+
+    @Test
+    fun `a custom alarm skips to the next picked weekday when today is not one of them`() {
+        // Saturday, none of Monday/Wednesday/Friday — the nearest of the three is Monday, two days
+        // ahead, not the first one alphabetically or by enum order.
+        val nextFire = nextFireTime(
+            hourOfDay = 7,
+            minute = 0,
+            repeatMode = AlarmRepeatMode.CUSTOM,
+            repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+            clock = clockAt(hour = 9, minute = 0),
+        )
+
+        assertEquals(LocalDateTime.of(2026, 3, 16, 7, 0), nextFire)
+    }
+
+    @Test
+    fun `a custom alarm whose only picked day is today, already gone, waits a full week`() {
+        // The case the "offset 0..7" range in the implementation exists for: today (Saturday)
+        // qualifies as a weekday, but 07:00 is already behind the 09:00 clock, so the answer is not
+        // "no valid day" — it is the same weekday, a full week from today.
+        val nextFire = nextFireTime(
+            hourOfDay = 7,
+            minute = 0,
+            repeatMode = AlarmRepeatMode.CUSTOM,
+            repeatDays = setOf(DayOfWeek.SATURDAY),
+            clock = clockAt(hour = 9, minute = 0),
+        )
+
+        assertEquals(LocalDateTime.of(2026, 3, 21, 7, 0), nextFire)
+    }
+
+    @Test
+    fun `a custom alarm with no weekday picked has no next occurrence`() {
+        // Reachable from the editor: switching to Custom before ticking anything. There is nothing
+        // to arm, and the answer says so rather than falling back to "every day" or crashing.
+        val nextFire = nextFireTime(
+            hourOfDay = 8,
+            minute = 0,
+            repeatMode = AlarmRepeatMode.CUSTOM,
+            repeatDays = emptySet(),
+            clock = clockAt(hour = 9, minute = 0),
+        )
+
+        assertNull(nextFire)
+    }
+
+    @Test
+    fun `the millisecond form of a custom alarm with no weekday picked is also null`() {
+        val millis = nextFireTimeMillis(
+            hourOfDay = 8,
+            minute = 0,
+            repeatMode = AlarmRepeatMode.CUSTOM,
+            repeatDays = emptySet(),
+            clock = clockAt(hour = 9, minute = 0),
+        )
+
+        assertNull(millis)
     }
 
     // ---------- The epoch-millisecond form AlarmManager needs ----------

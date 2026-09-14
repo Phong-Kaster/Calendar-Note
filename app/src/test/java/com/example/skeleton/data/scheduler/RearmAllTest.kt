@@ -170,11 +170,15 @@ private class RecordingAlarmScheduler(private val clock: Clock) : AlarmScheduler
     override fun schedule(alarm: Alarm) {
         if (!alarm.enabled) return
 
-        armed[alarm.id] = nextFireTimeMillis(
+        val triggerAtMillis = nextFireTimeMillis(
             hourOfDay = alarm.hourOfDay,
             minute = alarm.minute,
+            repeatMode = alarm.repeatMode,
+            repeatDays = alarm.repeatDays,
             clock = clock,
-        )
+        ) ?: return
+
+        armed[alarm.id] = triggerAtMillis
     }
 
     override fun cancel(alarmId: Long) {

@@ -20,12 +20,6 @@ enum class BottomBarDestination (
     @IdRes val destinationId: Int,
     val directions: Int,
     @IdRes val homeDestinationId: Int,
-    // The centre "+" is the app's shared create-a-note action. A screen that has its own floating
-    // action button for its own kind of "create" (Alarms) sets this true so CoreBottomBar leaves
-    // the shared button out rather than offering a second, redundant create control. The decision
-    // lives here, on the destination it is about, rather than as a hardcoded id check inside
-    // CoreBottomBar itself.
-    val hidesCreateButton: Boolean = false,
 ) {
     Home(
         nameId = R.string.home,
@@ -41,19 +35,18 @@ enum class BottomBarDestination (
         directions = R.id.toCalendar,
         homeDestinationId = R.id.calendarFragment,
     ),
-    Setting(
-        nameId = R.string.setting,
-        drawableId = R.drawable.ic_bottom_settings,
-        destinationId = R.id.settingFragment,
-        directions = R.id.toSetting,
-        homeDestinationId = R.id.settingFragment,
-    ),
     Alarms(
         nameId = R.string.alarms,
         drawableId = R.drawable.ic_bottom_alarm,
         destinationId = R.id.alarmsFragment,
         directions = R.id.toAlarms,
         homeDestinationId = R.id.alarmsFragment,
-        hidesCreateButton = true,
+    ),
+    Setting(
+        nameId = R.string.setting,
+        drawableId = R.drawable.ic_bottom_settings,
+        destinationId = R.id.settingFragment,
+        directions = R.id.toSetting,
+        homeDestinationId = R.id.settingFragment,
     ),
 }

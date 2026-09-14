@@ -106,4 +106,8 @@
     <string name="exact_alarms_are_not_allowed">Exact alarms are not allowed</string>
     <string name="turn_on_notifications">Turn on notifications</string>
     <string name="allow_exact_alarms">Allow exact alarms</string>
+    <string name="repeat">Repeat</string>
+    <string name="every_day">Every day</string>
+    <string name="one_time">One-time</string>
+    <string name="custom">Custom</string>
 </resources>

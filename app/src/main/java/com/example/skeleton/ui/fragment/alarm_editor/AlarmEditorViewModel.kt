@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skeleton.common.Outcome
+import com.example.skeleton.domain.enums.AlarmRepeatMode
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.model.BlankAlarmMessageException
 import com.example.skeleton.domain.repository.AlarmRepository
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 
 /**
  * Drives the alarm editor: holds what the user is typing and picking, and hands it to the store on
@@ -92,6 +94,8 @@ class AlarmEditorViewModel(
                 message = draft.message,
                 hourOfDay = draft.hourOfDay,
                 minute = draft.minute,
+                repeatMode = draft.repeatMode,
+                repeatDays = draft.repeatDays,
             )
             return
         }
@@ -122,6 +126,8 @@ class AlarmEditorViewModel(
                 message = stored.message,
                 hourOfDay = stored.hourOfDay,
                 minute = stored.minute,
+                repeatMode = stored.repeatMode,
+                repeatDays = stored.repeatDays,
                 isLoading = false,
             )
         }
@@ -140,6 +146,34 @@ class AlarmEditorViewModel(
      */
     fun setTime(hourOfDay: Int, minute: Int) {
         _uiState.value = _uiState.value.copy(hourOfDay = hourOfDay, minute = minute)
+    }
+
+    /**
+     * Mirrors which repeat option the user picked.
+     *
+     * [AlarmEditorUiState.repeatDays] is left exactly as it was, even when leaving `CUSTOM` —
+     * switching to `CUSTOM` a second time shows the same ticks rather than an empty row, which
+     * matches [Alarm.repeatDays]'s own contract.
+     */
+    fun setRepeatMode(repeatMode: AlarmRepeatMode) {
+        _uiState.value = _uiState.value.copy(repeatMode = repeatMode)
+    }
+
+    /**
+     * Flips one weekday on or off for a `CUSTOM` alarm.
+     *
+     * Meaningful only while [AlarmEditorUiState.repeatMode] is [AlarmRepeatMode.CUSTOM] — the row of
+     * weekday toggles this drives is not even drawn otherwise — but it does not guard on that here.
+     * The set is still exactly what would be saved if the user switched to Custom this instant, and
+     * refusing the toggle for the wrong reason (a stale `repeatMode` read at the wrong moment) is a
+     * worse bug than a toggle that changed a number nothing currently reads.
+     *
+     * @param day the weekday tapped.
+     */
+    fun toggleRepeatDay(day: DayOfWeek) {
+        val current = _uiState.value.repeatDays
+        val next = if (day in current) current - day else current + day
+        _uiState.value = _uiState.value.copy(repeatDays = next)
     }
 
     /**
@@ -167,6 +201,11 @@ class AlarmEditorViewModel(
                     message = state.message,
                     hourOfDay = state.hourOfDay,
                     minute = state.minute,
+                    repeatMode = state.repeatMode,
+                    // Stored regardless of `repeatMode`, same as the screen carries it regardless —
+                    // see `Alarm.repeatDays`'s own KDoc for why an alarm switched away from Custom
+                    // keeps its ticks rather than losing them.
+                    repeatDays = state.repeatDays,
                 ),
             )
 
