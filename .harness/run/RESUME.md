@@ -7,37 +7,36 @@
 > this file is the one that is wrong: correct it and trust the source. Recovery from a dirty tree
 > always reads ground truth, never this.
 
-- **Stage:** executing → verification. **All seven tasks (A-001 through A-007) are complete.** Nothing
-  abandoned, nothing deferred, no queued decision outstanding. `STATE.md` records `DONE-candidate: yes`.
-- **The next invocation is the Verifier (ENGINE.md §11).** It wrote none of this implementation and must
-  distrust all of it: re-run and re-read fresh evidence for every `machine` criterion rather than trusting
-  the numbers below, which are this iteration's own and not yet independently re-proved.
-  1. Re-verify all four commands together: `./gradlew :app:assembleDebug :app:testDebugUnitTest
-     :app:lintDebug :app:validateDebugScreenshotTest`. Expected, from this iteration's own run:
-     `BUILD SUCCESSFUL`, 251 tests / 0 failures, lint 0 errors / 72 warnings, 23/23 screenshot cases.
-  2. Re-check DoD criteria 3, 12, 33, 34, 36 by reading the source directly (version numbers, navigation
-     graph, grep for colour literals and hardcoded strings, README content) — see `DoD.md` § Verification
-     Evidence Required for exactly what each asks for.
-  3. If every `machine` criterion holds and nothing is abandoned or deferred: raise the **Human
-     Verification Request** (§11) for all sixteen unsigned `human` criteria — do **not** report `DONE`
-     yet. Report `ESCALATE`.
-     - Criteria: **4** (v3→v4 install migrates without crashing), **8** (Alarms tab findable), **9** (long
-       list scrolls, last row fully visible), **10** (empty state reads as empty), **11** (long message
-       overflows cleanly), **13** (FAB visible, opens editor), **16** (editor usable with keyboard up),
-       **18** (alarm survives force-stop), **22** (alarm actually fires as a heads-up popup, repeats daily),
-       **23** (tapping the notification opens Alarms without stacking a second app instance), **25**
-       (tapping a row opens it pre-filled), **28** (delete control findable, confirming button
-       unmistakable), **30** (on/off switch reads correctly at a glance), **31** (permission-missing banner
-       shows the right fix and clears itself), **32** (alarm survives a reboot with the app never opened),
-       **35** (both new screens look like they belong to this app — black ground, product blue, no
-       Material-default lilac).
-     - Each item's exact steps are already written in `DoD.md` § Verification Evidence Required — copy
-       them into the request rather than re-deriving "check the UI looks right" from scratch.
-  4. Only once a person has signed off every item (recorded with the date in `STATE.md` § Human sign-offs)
-     does a later invocation create the Cleanup Commit (remove `.harness/run/`, keep `.harness/ISSUES.md`)
-     and report `DONE`.
-- **Abandoned:** none. **Unreachable:** none. **Queued decisions:** none outstanding — D-001 through D-007
-  are all consumed; see `AMENDMENTS.md` for the full trail.
+- **Stage:** verification. **All seven tasks (A-001 through A-007) are complete.** Nothing abandoned,
+  nothing deferred. `STATE.md` records `DONE-candidate: yes`, **now independently re-confirmed by the
+  Verifier (iteration 9)**.
+- **Iteration 9 was the Verifier (ENGINE.md §11) and is done.** It wrote none of the implementation,
+  distrusted iteration 8's numbers, and re-proved every `machine` criterion from fresh evidence:
+  - `./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest`
+    together → `BUILD SUCCESSFUL`.
+  - 251 tests / 0 failures — summed directly from the 15 JVM test-result XML files, not read from a prior
+    iteration's claim.
+  - Lint 0 errors / 72 warnings — read directly from `lint-results-debug.txt`.
+  - 23/23 screenshot cases — 23 reference PNGs counted directly on disk, `validateDebugScreenshotTest`
+    green against them.
+  - Criteria 3, 12, 33, 34, 36 each re-checked by reading the source directly (line numbers and grep
+    results recorded in `ESCALATION.md` D-008). All hold.
+  - It then raised **D-008**, the Human Verification Request, in `ESCALATION.md` — all sixteen unsigned
+    `human` criteria with exact steps copied from `DoD.md` § Verification Evidence Required — and reported
+    `ESCALATE`, not `DONE`.
+- **The next invocation's job depends on whether D-008 has been answered:**
+  - **If unanswered:** no executable task remains and D-008 is the only queued decision → report
+    `ESCALATE` again without redoing the verification work above (it does not go stale between
+    invocations unless the implementation changes — check `git log` against `507f03e`/this iteration's
+    commit first).
+  - **If answered, all sixteen items pass:** consume D-008 per §6.2, record each sign-off with its date in
+    `STATE.md` § Human sign-offs, create the **Cleanup Commit** (remove `.harness/run/`, keep
+    `.harness/ISSUES.md`), and report `DONE`.
+  - **If answered and any item fails:** that failed item is a discovery (§8) — reconcile it into a task,
+    an amendment, or a queued decision; do not create the Cleanup Commit; clear the `DONE-candidate` flag
+    until the fix is re-verified.
+- **Abandoned:** none. **Unreachable:** none. **Queued decisions:** D-008 only (Human Verification
+  Request, iteration 9). D-001 through D-007 are all consumed; see `AMENDMENTS.md` for that trail.
 - **Verified commands** — build/test/lint/screenshots run together this iteration, twice (once before this
   iteration's own review fix, once after): build `./gradlew :app:assembleDebug` | test
   `./gradlew :app:testDebugUnitTest` | lint `./gradlew :app:lintDebug` | screenshots
@@ -54,13 +53,15 @@
 - **Closed, not outstanding — do not re-raise:** the `org.gradle.java.home` pin question; D-005
   (`fallbackToDestructiveMigration` — call removed, Constraint C-13 records the resolved state); D-006 and
   D-007 (single-use screenshot grants, both consumed and spent).
-- **This iteration (8) consumed D-007 and completed the run's last two tasks.** D-007's goal-scoped grant
+- **Iteration 8 consumed D-007 and completed the run's last two tasks.** D-007's goal-scoped grant
   was applied (one invocation of `updateDebugScreenshotTest --tests "*AlarmsPermissionNoticeCase*"`,
   before/after state reported in `ESCALATION.md`), unblocking A-006's completion. A-007 then ran as a
   single-task Phase: a Worker reconciled `.harness/knowledge/PROJECT.md` with the tree (new Constraints
   C-16, C-17), and a Fresh-Context Review found one MAJOR (an overstated testability claim in the C-06
   edit, contradicting 85 existing tests and C-17's own citation) and one MINOR (a stale "four constants"
   comment) — both fixed by the Iteration. See `AMENDMENTS.md` A-15 and A-16.
+- **Iteration 9 (this one) was the Verifier and wrote no code.** No task file, `PLAN.md`, or source file
+  changed — only `.harness/run/` bookkeeping and `.harness/ISSUES.md`. See the Stage summary above.
 - **Watch for commits made outside the loop.** None since iteration 4 (`ee7b5c9`). Cheap to check with
   `git log` against the last `loop(...)` commit before trusting either this file or `STATE.md`.
 - **Expected dirty paths** (not run debris — do not salvage or revert in §6.1): `skills-lock.json`,

@@ -5,17 +5,24 @@
 
 ## Current
 
-- **Stage:** executing
+- **Stage:** verification
   <!-- "Stage" is the run's lifecycle position. A "Phase" is a group of tasks. Do not conflate them. -->
 - **Loop Branch:** loop/calendar-note-app
 - **Next Phase:** none. **All seven tasks (A-001 … A-007) are complete.** Nothing abandoned, nothing
-  deferred, no queued decision outstanding. Every `machine` DoD criterion appears satisfied by this
-  iteration's own evidence; every `human` criterion is still unsigned (no person has looked at the running
-  app in this run) — a Human Verification Request is owed before this run can report `DONE`.
-- **DONE-candidate:** yes (set this iteration). The next invocation is the Verifier (§11): it must
-  re-prove every `machine` criterion fresh (do not trust this iteration's numbers), then raise the Human
-  Verification Request for all sixteen unsigned `human` criteria (4, 8, 9, 10, 11, 13, 16, 18, 22, 23, 25,
-  28, 30, 31, 32, 35) and report `ESCALATE` — not `DONE` — until a person signs each one off.
+  deferred, no queued decision outstanding except the new D-008 (Human Verification Request, below).
+- **DONE-candidate:** yes, still — **and independently re-confirmed this iteration (9) by the Verifier**,
+  which wrote none of the implementation. Every `machine` criterion was re-proved from fresh evidence, not
+  trusted from iteration 8's numbers: `assembleDebug` + `testDebugUnitTest` + `lintDebug` +
+  `validateDebugScreenshotTest` together → `BUILD SUCCESSFUL`; 251 tests / 0 failures summed directly from
+  the 15 JVM test-result XML files; lint 0 errors / 72 warnings read directly from
+  `lint-results-debug.txt`; 23 screenshot reference PNGs counted directly on disk. Criteria 3, 12, 33, 34, 36
+  each re-checked by reading the source directly (see `ESCALATION.md` D-008 for the exact lines). All hold.
+- **D-008 raised this iteration**: a Human Verification Request for all sixteen still-unsigned `human`
+  criteria (4, 8, 9, 10, 11, 13, 16, 18, 22, 23, 25, 28, 30, 31, 32, 35), with the exact steps for each
+  copied from `DoD.md` § Verification Evidence Required. This is what blocks the Cleanup Commit — not any
+  remaining code. The next invocation should consume D-008 the moment a person has filled in its answers
+  (or the per-item sign-offs directly below), re-open any failed item as a normal discovery (§8), and only
+  create the Cleanup Commit once every item passes.
 
 ## Progress
 
@@ -110,6 +117,7 @@ criteria (4, 8, 9, 10, 11, 13, 16, 18, 22, 23, 25, 28, 30, 31, 32, 35) are ready
 re-opened by further code changes in this run, because there are none left. A-007 (this iteration) adds
 no `human` criterion of its own — DoD 36 is `machine`.
 
-A Human Verification Request has still **not** been raised yet — that is the Verifier's job (§11), on the
-invocation that finds `DONE-candidate: yes` and writes none of the implementation. Listed in `ISSUES.md`
-so the waiting work is visible now rather than arriving as a surprise at the end.
+**The Human Verification Request was raised this iteration (9) as `ESCALATION.md` D-008** — the Verifier's
+job (§11), on the invocation that found `DONE-candidate: yes` and wrote none of the implementation. All
+sixteen items are listed there with exact steps, still awaiting a person. Listed in `ISSUES.md` so the
+waiting work is visible now rather than arriving as a surprise at the end.

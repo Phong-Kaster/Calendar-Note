@@ -6,6 +6,46 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 9 — 2026-09-14 — Verifier: every `machine` criterion re-proved fresh; Human Verification Request raised (D-008)
+
+- **Recovery:** working tree was clean on entry, nothing to salvage or revert (§6.1).
+- **Decisions consumed:** none — D-007 was fully consumed last iteration.
+- **Role:** this invocation found `STATE.md`'s `DONE-candidate: yes` and ran as the Verifier (§11). It
+  wrote none of the implementation, so it distrusted iteration 8's own reported numbers and re-derived
+  everything from scratch:
+  - `./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest`
+    run together → `BUILD SUCCESSFUL` (61 tasks, 1 executed / 60 up-to-date — Gradle's own guarantee that
+    nothing changed since the last green run, not a stale cache read).
+  - Summed test counts directly from the 15 `app/build/test-results/testDebugUnitTest/*.xml` files:
+    **251 tests, 0 failures, 0 errors** — matches iteration 8's claim, independently re-derived rather than
+    copied.
+  - Read `app/build/reports/lint-results-debug.txt`'s tail directly: **0 errors, 72 warnings.**
+  - Counted `app/src/screenshotTestDebug/reference/**/*.png` directly: **23** files, including all three
+    `AlarmsScreenshotTestKt` cases (`AlarmsEmptyStateCase`, `AlarmDeleteConfirmationCase`,
+    `AlarmsPermissionNoticeCase`).
+  - Criterion 3: read `AppDatabase.kt:36` (`version = 4`), `Migration.kt:83` (`MIGRATION_3_4`),
+    `DatabaseModule.kt:29` (`addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)`) directly.
+  - Criterion 12: read `navigation_graph.xml` directly — `alarmsFragment`, `alarmEditorFragment`, the
+    `toAlarmEditor` action, and `alarmEditorFragment`'s `alarmId` argument carrying
+    `android:defaultValue="-1L"`.
+  - Criterion 33: `grep -nE 'Color\.Black|Color\.White|Color\(0x'` over every alarm file → no matches.
+  - Criterion 34: `grep -nE 'text = "|contentDescription = "'` over every alarm file → no matches.
+  - Criterion 36: `README.md` package tree lists `ui/fragment/alarms/` and the alarm editor package with
+    purpose notes; feature table marks the Alarms rows `✅ built`.
+  - **Gap found: none.** All `machine` criteria hold on fresh re-verification.
+- **Human Verification Request raised** as `ESCALATION.md` D-008: all sixteen unsigned `human` criteria (4,
+  8, 9, 10, 11, 13, 16, 18, 22, 23, 25, 28, 30, 31, 32, 35), each with the exact what-to-open / what-to-do
+  / what-to-expect steps copied verbatim from `DoD.md` § Verification Evidence Required rather than
+  re-derived. Not a decision with options — a request for observation, answerable per-item.
+- **Persisted:** `STATE.md` (Stage → verification, DONE-candidate re-confirmed, D-008 cross-referenced),
+  `RESUME.md` (regenerated: Verifier's work is done, next invocation's job branches on whether D-008 is
+  answered), `ESCALATION.md` (D-008 appended), `.harness/ISSUES.md` (regenerated: D-008 now listed under
+  Queued decisions, human-criteria section points at it). No source file, task file, or `PLAN.md` changed
+  — this iteration wrote no code, which is exactly what qualifies it as the Verifier under the
+  DONE-Candidate rule (ENGINE.md §4 rule 8).
+- **Report:** `ESCALATE` — no executable task remains, and D-008 is a queued decision blocking the only
+  remaining step (the Cleanup Commit).
+
 ### Iteration 8 — 2026-09-14 — D-007 consumed; A-006 and A-007 completed; run's last task closed, DONE-candidate
 
 - **Recovery:** working tree was clean on entry apart from the human's filled-in `## Decision` on D-007 in

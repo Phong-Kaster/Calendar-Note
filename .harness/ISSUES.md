@@ -15,7 +15,11 @@ None. All seven tasks (A-001 … A-007) are complete.
 
 ## Queued decisions awaiting an answer
 
-None. D-001 through D-007 are all consumed — see `AMENDMENTS.md` for the full trail.
+**D-008 — Human Verification Request**, raised iteration 9 (the Verifier). Every `machine` criterion was
+re-proved fresh this iteration (build/test/lint/screenshots all green, re-read from disk rather than
+trusted); the request asks a person to work through the sixteen `human` checks below on the running app
+and record pass/fail for each. See `ESCALATION.md` D-008 for the exact steps. D-001 through D-007 are all
+consumed — see `AMENDMENTS.md` for that trail.
 
 ## `human` criteria still unsigned
 
@@ -48,10 +52,11 @@ deferred.
   Material-default lilac, every label legible.
 
 Each item's exact steps (what to open, what to do, what to expect) are already written in `DoD.md` §
-Verification Evidence Required. The next invocation to find `STATE.md`'s `DONE-candidate: yes` is the
-Verifier (ENGINE.md §11): it re-proves every `machine` criterion fresh, then raises the Human
-Verification Request for these sixteen and reports `ESCALATE` — not `DONE` — until a person signs each
-one off.
+Verification Evidence Required and copied into `ESCALATION.md` D-008. **The Human Verification Request
+has now been raised** (iteration 9, the Verifier, which re-proved every `machine` criterion fresh first).
+Answer D-008 — either by filling in its `## Decision` section or by recording each item directly in
+`STATE.md` § Human sign-offs, dated — and the next invocation will consume it, re-open any failed item as
+a normal discovery, and create the Cleanup Commit once every item passes.
 
 ## Review findings recorded but not fixed
 
@@ -146,6 +151,9 @@ guessing at it.
 - **A-007** is complete: `.harness/knowledge/PROJECT.md` reconciled with the tree, two new Constraints
   (C-16, C-17) added. A Fresh-Context Review found and the Iteration fixed one MAJOR (an overstated
   testability claim) and one MINOR (a stale constant count) — see `AMENDMENTS.md` A-16.
-- **All seven tasks in this run are now complete.** Nothing abandoned, nothing deferred, no queued
-  decision outstanding. `STATE.md` records `DONE-candidate: yes`. The only remaining work is the
-  end-of-run Human Verification Request (§11), owed to the sixteen `human` criteria listed above.
+- **All seven tasks in this run are now complete.** Nothing abandoned, nothing deferred.
+  `STATE.md` records `DONE-candidate: yes`.
+- **Iteration 9 (the Verifier) re-proved every `machine` criterion from fresh evidence** — it wrote none
+  of the implementation, trusted none of iteration 8's numbers, and re-ran build/test/lint/screenshots
+  and re-read criteria 3, 12, 33, 34, 36 directly from source. All hold. It then raised the Human
+  Verification Request as `ESCALATION.md` D-008, the only thing standing between this run and `DONE`.
