@@ -11,45 +11,41 @@ None. No task has failed an attempt in this run.
 
 ## Unreachable tasks
 
-None yet. A-004 … A-007 are blocked behind A-003's dependency, not abandoned — they become reachable the
-moment D-006 is answered and A-003 is marked complete.
+None. A-005 and A-006 depend only on A-004, now complete, and are both selectable. A-007 depends on all
+six other tasks and stays unreachable until A-005 and A-006 land.
 
 ## Queued decisions awaiting an answer
 
-### D-006 — A goal-scoped grant to record one brand-new screenshot reference: the delete confirmation
-
-**Blocks A-003's completion, and A-004 … A-007 transitively** (every task from here depends on A-003).
-
-`AlarmsScreenshotTestKt.AlarmDeleteConfirmationCase` — a picture of `AlarmDeleteConfirmContent()`, the
-confirmation sheet's two controls — has no reference image yet. Without the grant,
-`validateDebugScreenshotTest` fails on this one case with `ScreenshotImageNotFoundException`; every other
-DoD 24, 26, 27, 29, 33, 34 evidence for A-003 is green (assemble, 206 unit tests, lint 0 errors). Full
-options in `.harness/run/ESCALATION.md`.
-
-Note what this grant does **not** cover: `AlarmRow` in both switch states, which A-003's own Acceptance
-line also asked to be pinned. That half was deliberately not attempted — `AlarmRow`'s displayed time is
-host-dependent (device 12/24-hour setting + the app's own locale), so a pinned reference would only be
-valid on the host it was recorded on. See D-006's own text and `AMENDMENTS.md` A-6 for the trap this
-avoids. Plain (non-pinned) `@Preview` cases for both switch states exist in `AlarmRow.kt`.
+None. `ESCALATION.md` is empty — D-001 through D-006 are all answered and archived into `HISTORY.md`.
 
 ## `human` criteria still unsigned
 
-**All 17.** No person has looked at the running app in this run — the engine cannot, and says so rather
-than certifying what it cannot see.
+All of them. No person has looked at the running app in this run — the engine cannot, and says so
+rather than certifying what it cannot see.
 
-Nine are **ready to be shown to someone now**, since A-001 and A-002 are complete with green machine
-evidence: criteria **3, 4** (upgrade over a v3 install does not crash), **8** (the Alarms tab is findable
-and it is obvious which screen you are on), **9** (the list scrolls and the last row is not hidden under
-the floating button), **10** (the empty screen reads as empty rather than broken), **11** (a long alarm
-message has defined overflow), **13, 16** (the floating button is visible and opens the editor; the editor
-stays usable with the keyboard up).
+Fifteen are **ready to be shown to someone now**, since A-001 through A-004 are all complete with
+green machine evidence:
 
-**A-003's `human` criteria (25, 28, 30) are code-complete and reviewed** but not yet requestable — A-003
-itself is not marked complete (blocked by D-006), and a Human Verification Request is never raised against
-a task the run has not finished.
+- **3, 4** — upgrade over a v3 install does not crash.
+- **8** — the Alarms tab is findable and it is obvious which screen you are on.
+- **9** — the list scrolls and the last row is not hidden under the floating button.
+- **10** — the empty screen reads as empty rather than broken.
+- **11** — a long alarm message has defined overflow.
+- **13, 16** — the floating button is visible and opens the editor; the editor stays usable with the
+  keyboard up.
+- **25** — tapping an alarm in the list opens it with its message and time already filled in.
+- **28** — the delete control is findable and the confirming button is unmistakably different from the
+  safe one.
+- **30** — the enabled switch reads correctly at a glance and its state marker contrasts with its
+  background.
+- **22** — the alarm actually fires at the time set, with the user's message, as a popup over whatever
+  is on screen, and repeats the next day unattended.
+- **23** — tapping the notification opens the app on the Alarms screen and dismisses the notification,
+  without launching a second copy of the app.
 
-None of these are being requested yet, deliberately. The Human Verification Request is raised once at the
-end of the run (§11) rather than per phase: it costs one sitting instead of several.
+None of these are being requested yet, deliberately. The Human Verification Request is raised once at
+the end of the run (§11) rather than per phase: it costs one sitting instead of several, and some of
+these will be re-opened anyway by A-006, which touches the same Alarms screen files.
 
 ## Review findings recorded but not fixed
 
@@ -71,29 +67,56 @@ Same structure, same padding, same body-copy pattern, same accessibility handlin
 unrelated screens with no `ui/component/` extraction, which `.claude/figma-design-system.md` §15 calls for.
 A future change to the shared recipe (the 14dp padding that buys Cancel's 48dp touch target, the
 `error`/`onError` pairing) applied to one copy and not the other would let the two confirmation sheets in
-this app drift apart with a green build. Not extracted this checkpoint: doing so would touch
-`NoteFragment.kt` and `NoteScreenshotTest.kt`, both outside A-003's scope and both already shipped and
-reviewed. Worth a small future task if a third confirmation sheet ever appears, or if the two drift.
+this app drift apart with a green build. Not extracted: doing so would touch `NoteFragment.kt` and
+`NoteScreenshotTest.kt`, both outside any Alarms task and both already shipped and reviewed. Worth a small
+future task if a third confirmation sheet ever appears, or if the two drift.
+
+### `AlarmNotifier.createChannelIfNeeded()`'s name promises a guard its body does not contain
+
+`data/notification/AlarmNotifier.kt`. The function always builds the `NotificationChannel` and always
+calls `createNotificationChannel` — safe today, because the platform call itself is a documented no-op
+for an id that already exists (which is the entire point of C-10's "immutable once created"), but the
+name reads as if the function checks something first. The next person to add a side effect inside it
+(logging, a metric) will believe it runs exactly once and be wrong. A rename
+(`ensureChannelExists` or similar) or an explicit early-return guard would close the gap. Not touched
+this checkpoint — a naming nit, not a behavioural defect.
+
+### A sub-second window lets a confirmed delete be undone by the alarm that was already firing
+
+`data/receiver/AlarmReceiver.kt`. `onReceive` notifies, then re-arms the next occurrence by rebuilding
+the alarm from the intent's own extras — deliberately, per A-004's own design: `onReceive` has only
+seconds to live, and reading Room from it means `goAsync()` and a coroutine, real machinery the task
+chose not to add. Consequence: if a delete is confirmed in the window between the notify and the
+re-arm steps, `AlarmRepositoryImpl.delete`'s `mirrorCancel` finds nothing pending (the receiver hasn't
+re-armed yet) and the receiver's re-arm then puts a schedule back for a row that no longer exists in
+the table — one that can never be cancelled again through the app, because there is no row left to
+delete a second time. The window is sub-second (device-dependent), so this is a rare-but-real race, not
+a routine one. Flagged for A-005, which introduces a `rearmAll` seam that reads the table on boot — the
+natural place to have every re-arm consult the table rather than only the intent's cached copy of it.
 
 ## Recorded assumptions
 
 - **AS-1 … AS-11 live in `.harness/run/DoD.md`**, not here — see D-001's archived exchange.
 - `AlarmRow` formats its time to the device's 12/24-hour setting and the app's locale, which makes its
-  rendered text **host-dependent**. Confirmed again this iteration: it is why `AlarmRow` carries no pinned
-  `@PreviewTest` case even though A-003's Acceptance line asked for one — see D-006 and `AMENDMENTS.md`
-  A-6. Any future screenshot case photographing `AlarmRow` must hand it a pre-formatted `String` instead,
-  the same trap `PROJECT.md` already records for the Note editor.
-- `AlarmEntity.enabled` now drives the per-row switch (A-003), but nothing schedules an alarm or wakes the
-  device for it yet — that is A-004.
+  rendered text **host-dependent**. It carries no pinned `@PreviewTest` case for this reason — see
+  `AMENDMENTS.md` A-6. Any future screenshot case photographing `AlarmRow` must hand it a
+  pre-formatted `String` instead, the same trap `PROJECT.md` already records for the Note editor.
+- **A-004's DoD 29 evidence is split across two tests rather than proven end to end in one.**
+  `switching an alarm back on arms it again, for the time it is actually set for` proves the stored
+  alarm reaches the scheduler on re-enable; the instant computed being genuinely in the future (not the
+  alarm's original creation time) is proven separately by `AlarmSchedulingTest`/`NextFireTimeTest`. No
+  single test performs disable → advance the clock past the alarm's time → enable → assert tomorrow.
+  The substance is covered; the shape the DoD evidence line describes is not literally what exists.
 
 ## Closed since the last report
 
-- **D-004** (the screenshot-recording grant for A-001's empty state) is answered and closed. The reference
-  image arrived via commit `7d0c0da` and validates, so the granted command was never run.
-- **D-005** (`fallbackToDestructiveMigration(false)` enabling destructive migration) is answered and
-  applied this iteration. The call is removed from `DatabaseModule.kt`; Constraint C-13 in
-  `.harness/knowledge/PROJECT.md` now records the resolved state rather than only the trap.
-- **The `deletedTrigger` re-announcement bug** the Fresh-Context Review found this iteration is fixed —
-  `AlarmsViewModel.consumeDeleted()` added and wired, with a regression test.
-- **`README.md`**'s feature table and package tree are brought current with A-003 (switching, deleting,
-  and `AlarmDeleteConfirmSheet.kt` all now listed as built).
+- **D-006** (the screenshot-recording grant for A-003's delete confirmation) is answered and applied.
+  The reference image is recorded; A-003 is marked complete.
+- **A-004** is complete: an alarm now actually arms, notifies and re-arms itself daily, mirrored on
+  every save/delete through the `AlarmScheduler` seam.
+- **Two MAJOR defects** the Fresh-Context Review found in A-004's diff are fixed: a `MainActivity`
+  notification-tap handler that replayed on every activity recreation and could stack a duplicate
+  Alarms screen; a missing `android.permission.VIBRATE` declaration that silently dropped the
+  vibration half of the API-24/25 heads-up recipe. See `AMENDMENTS.md` A-12.
+- **`README.md`**'s feature table and package tree are brought current with A-004 (the notification
+  feature row, and the `notification/`, `receiver/`, `scheduler/` packages).

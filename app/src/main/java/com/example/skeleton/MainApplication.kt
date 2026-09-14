@@ -2,6 +2,7 @@ package com.example.skeleton
 
 import android.app.Application
 import android.util.Log
+import com.example.skeleton.data.notification.AlarmNotifier
 import com.example.skeleton.injection.appModule
 import com.example.skeleton.injection.databaseModule
 import com.example.skeleton.injection.datastoreModule
@@ -25,11 +26,21 @@ class MainApplication : Application() {
 
         installUpdatedSecurityProvider()
 
-        startKoin {
+        val koinApplication = startKoin {
             androidLogger()
             androidContext(this@MainApplication)
             modules(appModule)
         }
+
+        // Through Koin's own instance, not a second `AlarmNotifier(this)` — `AlarmReceiver` reaches
+        // the one `schedulerModule` registers via `by inject()`, and a second instance built here
+        // would only coincidentally be interchangeable with it today; the moment either one starts
+        // caching anything, the two would silently stop agreeing.
+        //
+        // Created here, not only lazily on first alarm: a channel's importance is frozen at creation
+        // (see AlarmNotifier's own KDoc), and creating it at launch is what lets the user find it in
+        // system settings and choose its sound or vibration before any alarm has ever gone off.
+        koinApplication.koin.get<AlarmNotifier>().createChannelIfNeeded()
     }
 
     /**

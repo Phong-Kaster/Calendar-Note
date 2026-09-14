@@ -6,6 +6,59 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 6 — 2026-09-14 — Recovered a crashed invocation; D-006 applied and A-003 completed; Phase 4 (A-004) completed and reviewed
+
+- **Phase:** 4 — A-004 alone (the only executable task at Orient time, once D-006's consumption was
+  recognised as already-done debris).
+- **Recover (§6.1):** the working tree on entry was not clean. Uncommitted: `AMENDMENTS.md`,
+  `ESCALATION.md`, `TASKS/A-003.md` (all describing D-006 answered, its single-use screenshot grant
+  consumed, and A-003 marked complete) plus a new reference PNG for `AlarmDeleteConfirmationCase`.
+  Untracked: a first Worker's complete output for most of A-004's scope (`domain/scheduler/`,
+  `data/scheduler/AlarmManagerAlarmScheduler.kt`, `data/receiver/AlarmReceiver.kt`,
+  `data/notification/AlarmNotifier.kt`, `res/drawable/ic_notification_alarm.xml`, and three test
+  files) — `AlarmRepositoryImpl.kt` itself untouched, no Iteration-owned wiring done, `STATE.md`/
+  `RESUME.md` still describing the pre-D-006 world. Read as a prior invocation that completed D-006's
+  consumption, dispatched a Worker for A-004, and died before the repository-mirroring half, the
+  wiring, or any checkpoint. Assessed rather than reverted: `assembleDebug` + `testDebugUnitTest` +
+  `lintDebug` + `validateDebugScreenshotTest` run together on the tree as found —
+  `BUILD SUCCESSFUL`, 224 tests (0 failures, up from 206), lint 0 errors / 68 warnings, screenshots
+  23/23 — proving both halves of the debris coherent and safe to build on. One unrelated stray file
+  from an earlier iteration's review pass (`a003_review.diff`, untracked) was found alongside it and
+  deleted.
+- **Consume decisions (§6.2):** none newly answered this iteration — D-006's consumption was already
+  in the debris; `ESCALATION.md` confirmed empty.
+- **Dispatch (§6.5):** one Worker at **Capable**, scoped to A-004's three remaining declared files
+  (`AlarmRepositoryImpl.kt` MODIFY, `AlarmRepositoryImplTest.kt` MODIFY, `AlarmNotifierConstantsTest.kt`
+  CREATE), briefed with the first Worker's output as read-only context (the `FakeAlarmScheduler` /
+  `BrokenAlarmScheduler` test doubles it had already written) and every Constraint verbatim. Reported
+  back the cancel-then-arm mirroring, nine new repository tests, and one necessary change to the
+  private `FakeAlarmDao` (now emulates Room's `autoGenerate`, without which the "post-insert id, not
+  zero" assertion is unreachable) — all inside its own declared scope.
+- **Scope check (§6.6):** `git status` showed exactly the two MODIFY targets plus the one CREATE.
+  Clean.
+- **Wire (§6.6):** `injection/SchedulerModule.kt` (new — binds `AlarmScheduler` and `AlarmNotifier`),
+  `AppModule.kt` (`includes`), `RepositoryModule.kt` (`alarmScheduler = get()`), `AndroidManifest.xml`
+  (the `<receiver>`), `MainApplication.kt` (channel creation at startup), `MainActivity.kt` (opens
+  Alarms on a notification tap, AS-6), `README.md` (feature table + package tree).
+- **Build/test (§6.7):** combined run — `BUILD SUCCESSFUL`, **239 unit tests** (0 failures, up from
+  224), lint **0 errors / 68 warnings** (unchanged), screenshots unaffected (no Compose UI in this
+  task).
+- **Fresh-Context Review (§6.8):** clean context, Capable, given the combined diff, `DoD.md` criteria
+  19/20/21/29/33/34/22/23, and every Constraint verbatim. No Constraint violation. Two MAJOR findings
+  (a notification-tap navigation bug that replayed on activity recreation and could double-stack the
+  Alarms screen; a missing `VIBRATE` permission that silently dropped half the API-24/25 heads-up
+  recipe) and four MINOR findings (public scheduling internals with no external caller; a second,
+  DI-invisible `AlarmNotifier` instance; a misleading test comment; a non-guarding method name) — all
+  but the last fixed this checkpoint; see `AMENDMENTS.md` A-12. Two more recorded rather than acted on
+  (a naming nit; a sub-second re-arm race that is A-005's to reconcile) — see `ISSUES.md`.
+  Re-verified after the fixes: `BUILD SUCCESSFUL`, still 239/0, lint unchanged.
+- **Reconcile (§6.9):** all six findings classified — four Tier-1 fixes (`AMENDMENTS.md` A-12), two
+  recorded-not-acted (`ISSUES.md`). A-004 marked complete; its `human` criteria (22, 23) join the pool
+  for the end-of-run Human Verification Request.
+- **Outcome:** real progress checkpointed — A-003 completed (carrying forward the salvaged debris),
+  A-004 completed and reviewed, four defects fixed. A-005 and A-006 (both depending only on A-004,
+  disjoint Declared File Scopes) are the next Phase → `CONTINUE`.
+
 ### Iteration 5 — 2026-09-14 — Phase 3 (A-003) implemented and reviewed; D-005 applied; one screenshot grant queued (D-006)
 
 - **Phase:** 3 — A-003 alone, the only executable task (strictly linear chain).

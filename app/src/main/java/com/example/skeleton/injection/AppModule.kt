@@ -9,5 +9,6 @@ val appModule = module {
         repositoryModule,
         viewModelModule,
         networkModule,
-        localeModule)
+        localeModule,
+        schedulerModule)
 }

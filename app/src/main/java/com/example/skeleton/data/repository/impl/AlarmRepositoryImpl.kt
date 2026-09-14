@@ -8,6 +8,7 @@ import com.example.skeleton.data.mapper.toEntity
 import com.example.skeleton.domain.model.Alarm
 import com.example.skeleton.domain.model.BlankAlarmMessageException
 import com.example.skeleton.domain.repository.AlarmRepository
+import com.example.skeleton.domain.scheduler.AlarmScheduler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,21 @@ import java.time.Clock
  * one copy of the truth and already pushes a new list whenever the table changes, so adding a
  * second copy here would only create something that can disagree with the database.
  *
+ * **It also keeps the phone's own list of pending alarms in step with the table.** That mirroring
+ * lives here, and not on a screen, because this is the one place *every* write already funnels
+ * through: the editor saving, a switch being flipped in the list, a delete being confirmed. A screen
+ * that remembered to arm an alarm after saving it would be a screen that some other screen forgets
+ * to copy — and the thing it forgets is invisible until an alarm the user deleted goes off anyway.
+ *
+ * The mirror is **best-effort and never changes the answer**. The database is the truth; a phone that
+ * refuses to arm an alarm (the exact-alarm permission can be withdrawn mid-write) must not turn a row
+ * that was written perfectly well into a failure on screen.
+ *
  * @param alarmDao the table's accessor.
+ * @param alarmScheduler the thing that makes an alarm actually go off, kept in step with every
+ *   successful write. An interface and not `AlarmManager`, because the platform's alarm calls are
+ *   invisible to a unit test here — a test hands over a fake that writes down what it was asked to
+ *   do, and that is how "a deleted alarm is also cancelled" is checkable at all.
  * @param clock where "now" comes from. A constructor parameter and not a direct
  *   `System.currentTimeMillis()` call, because this class's promise — that a new alarm is stamped
  *   with the current time and an existing one keeps its stamp — is only checkable if a test can
@@ -36,6 +51,7 @@ import java.time.Clock
  */
 class AlarmRepositoryImpl(
     private val alarmDao: AlarmDao,
+    private val alarmScheduler: AlarmScheduler,
     private val clock: Clock = Clock.systemDefaultZone(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : AlarmRepository {
@@ -101,7 +117,13 @@ class AlarmRepositoryImpl(
         )
 
         try {
-            alarmDao.upsert(alarm = stamped.toEntity())
+            // The row id Room hands back, not `stamped.id`. For an edit the two are the same, but a
+            // brand-new alarm arrives carrying [Alarm.UNSAVED_ID] — `0` — and the scheduler refuses
+            // to arm an alarm with no id (it would be filed under an address every unsaved alarm
+            // shares). Arming `stamped` itself would therefore mean that **no alarm the user ever
+            // creates goes off**, while the row landed in the table and the list looked perfect.
+            val rowId = alarmDao.upsert(alarm = stamped.toEntity())
+            mirrorSchedule(alarm = stamped.copy(id = rowId))
             Outcome.Success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -135,12 +157,60 @@ class AlarmRepositoryImpl(
                 return@withContext Outcome.Error(message = "There was no such alarm to delete.")
             }
 
+            // Only once a row really went. **This is the half that must never be skipped.** A row
+            // removed from the table while its alarm stays armed still goes off, still shows its
+            // notification, and — because the receiver re-arms itself afterwards — goes off again
+            // every day, for an alarm the user can no longer see and therefore cannot delete twice.
+            mirrorCancel(alarmId = alarm.id)
+
             Outcome.Success(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "delete(id=${alarm.id}) failed", e)
             Outcome.Error(message = "The alarm could not be deleted.", throwable = e)
+        }
+    }
+
+    /**
+     * Makes the phone's pending alarms agree with the alarm that was just written.
+     *
+     * **Cancel first, always, then arm only if it is switched on.** Both halves are deliberate:
+     *
+     * - Cancelling *unconditionally* is what makes an edit safe. Moving an alarm from 07:00 to 08:00
+     *   arms a new one, and without cancelling the old one the user now has two — one of them for a
+     *   time that is no longer written anywhere. `AlarmScheduler.cancel` on an id nothing was armed
+     *   for is a documented no-op, so this is harmless for a brand-new alarm too.
+     * - Arming only when `enabled` is what makes the switch mean something. A switched-off alarm ends
+     *   this function with nothing pending, which is the whole point of flipping the switch.
+     *
+     * @param alarm the alarm exactly as it now sits in the table, **carrying its real row id**.
+     */
+    private fun mirrorSchedule(alarm: Alarm) {
+        // The write already succeeded. Whatever happens in here, it is not allowed to change that
+        // answer: the database is the truth and the schedule is a best-effort copy of it, so a phone
+        // that has just withdrawn the exact-alarm permission must not make a good save read as a
+        // failure on screen. `CancellationException` is not re-thrown here — unlike the DAO calls
+        // above, these are plain non-suspending calls and cancellation cannot arrive through them.
+        try {
+            alarmScheduler.cancel(alarmId = alarm.id)
+
+            if (alarm.enabled) alarmScheduler.schedule(alarm = alarm)
+        } catch (e: Exception) {
+            Log.w(TAG, "alarm ${alarm.id} was saved, but its schedule was not updated", e)
+        }
+    }
+
+    /**
+     * Takes an alarm off the phone after its row has gone, defended the same way as [mirrorSchedule].
+     *
+     * @param alarmId the row id of the alarm that was just removed.
+     */
+    private fun mirrorCancel(alarmId: Long) {
+        try {
+            alarmScheduler.cancel(alarmId = alarmId)
+        } catch (e: Exception) {
+            Log.w(TAG, "alarm $alarmId was deleted, but its schedule was not cancelled", e)
         }
     }
 

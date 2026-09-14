@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name=".MainApplication"
@@ -36,6 +37,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Rearms and reposts one alarm when AlarmManager fires it. Never launched by anything
+             outside this app, so it is not exported. -->
+        <receiver
+            android:name=".data.receiver.AlarmReceiver"
+            android:exported="false" />
 
         <!-- AndroidX in-app language: persist and restore user locale (Android 12 and lower). -->
         <service

@@ -10,6 +10,7 @@ import com.example.skeleton.domain.repository.NoteRepository
 import com.example.skeleton.domain.repository.PostRepository
 import com.example.skeleton.domain.repository.SettingRepository
 import com.example.skeleton.domain.repository.UserActionRepository
+import com.example.skeleton.domain.scheduler.AlarmScheduler
 import org.koin.dsl.module
 
 /**
@@ -37,6 +38,9 @@ val repositoryModule = module {
     single<NoteRepository> { NoteRepositoryImpl(noteDao = get()) }
 
     // The alarm store. `clock` and `ioDispatcher` are left at their defaults on purpose — they are
-    // parameters only so a test can pass a fixed clock and a test dispatcher.
-    single<AlarmRepository> { AlarmRepositoryImpl(alarmDao = get()) }
+    // parameters only so a test can pass a fixed clock and a test dispatcher. `alarmScheduler` is
+    // resolved from `schedulerModule` — the interface, never `AlarmManagerAlarmScheduler` directly.
+    single<AlarmRepository> {
+        AlarmRepositoryImpl(alarmDao = get(), alarmScheduler = get<AlarmScheduler>())
+    }
 }

@@ -6,6 +6,59 @@
 
 <!-- Newest first. -->
 
+### A-12 — Four Fresh-Context Review findings fixed inside already-owned files, A-004 marked complete (Tier 1, review-driven)
+
+- **Iteration:** 6
+- **Date:** 2026-09-14
+- **What changed:** A-004 completed across two Worker dispatches (a prior, crashed invocation's
+  dispatch for the scheduler/receiver/notifier vertical, salvaged after re-verification per §6.1; this
+  iteration's own dispatch for the repository-mirroring half) plus this Iteration's DI/manifest/
+  Activity/Application wiring. A clean-context Fresh-Context Review against every Constraint and DoD
+  19/20/21/29/33/34/22/23 found no Constraint violation and six findings, four fixed this checkpoint:
+  1. **MAJOR** — `MainActivity`'s notification-tap handling replayed on every activity recreation (a
+     rotation, or the in-app language change, both of which recreate the activity without a fresh
+     `Intent`) and could stack a duplicate Alarms screen over an open editor or Settings. Fixed:
+     `onCreate` now guards on `savedInstanceState == null`, and navigation goes through the
+     `R.id.toAlarms` tab-swap action (`popUpTo="@id/homeFragment"` + `launchSingleTop`) instead of the
+     raw destination.
+  2. **MAJOR** — `android.permission.VIBRATE` was never declared, so the vibration pattern
+     `AlarmNotifier` builds (and `AlarmNotifierConstantsTest` asserts) could never fire — silently
+     dropping half of the API-24/25 heads-up recipe (C-10) on a silenced phone. Added to the manifest.
+  3. **MINOR** — `ScheduleDecision`/`scheduleDecision`/`requestCodeFor` were `public` with no caller
+     outside `AlarmRepositoryImpl`'s own mirroring. Narrowed to `internal` (still visible to the test
+     source set) so nothing can bypass the repository and arm or cancel an alarm directly.
+  4. **MINOR** — `MainApplication` built a second, DI-invisible `AlarmNotifier` instance to create the
+     notification channel at startup, separate from the one `schedulerModule` binds for `AlarmReceiver`.
+     Now resolved through Koin's own `startKoin { ... }` return value instead.
+  A fifth, a misleading test comment claiming the repository's own `clock` decides an alarm's fire
+  instant (it does not — only `AlarmManagerAlarmScheduler`'s does), was also corrected.
+- **Recorded, not acted on:** `AlarmNotifier.createChannelIfNeeded()`'s name promises a guard its body
+  does not contain (harmless — the platform call itself is idempotent, per C-10 — but worth a rename);
+  and a sub-second race where a delete confirmed between `AlarmReceiver.onReceive`'s notify and re-arm
+  steps can resurrect a just-deleted alarm's schedule — the "rebuild from the intent, never re-read the
+  table" design is this task's own deliberate choice, and reconciling it is A-005's job. Both in
+  `ISSUES.md` and `TASKS/A-004.md` § Notes.
+- **Why:** all four fixed findings sit inside files already in A-004's Declared File Scope or are
+  Iteration-owned (`MainActivity.kt`, `MainApplication.kt`, `AndroidManifest.xml`); none changes the
+  PRD, DoD, architecture, or A-004's acceptance criteria — only correctness of what already exists.
+- **Tier:** 1 — review-driven correctness fixes; no PRD/DoD/architecture change.
+
+### A-11 — D-006 consumed: goal-scoped `updateDebugScreenshotTest` grant applied, A-003 marked complete (Tier 2)
+
+- **Iteration:** 6
+- **Date:** 2026-09-14
+- **What changed:** A-003's completion is no longer blocked. `.harness/run/capabilities.json` gained a
+  third, single-use entry matching D-006's approved text exactly (scoped to one invocation of
+  `updateDebugScreenshotTest --tests "*AlarmDeleteConfirmationCase*"`); the Iteration ran that one
+  command, recorded the reference image, and re-verified `assembleDebug` + `testDebugUnitTest` +
+  `lintDebug` + `validateDebugScreenshotTest` together (`BUILD SUCCESSFUL`, 23/23 screenshot cases). A-003
+  marked complete; its `human` criteria (25, 28, 30) join the pool ready for the end-of-run Human
+  Verification Request. A-004 becomes selectable.
+- **Why:** The human approved option 1 as written: a single-use grant for exactly one new, prior-reference-
+  free case, with a before/after report of the reference directory.
+- **Conditions met:** answered decision, named task (A-003) unblocked, transitively unblocking
+  A-004 → {A-005, A-006} → A-007, per ENGINE.md §6.2.
+
 ### A-10 — Three Fresh-Context Review findings fixed inside A-003's own files (Tier 1, review-driven)
 
 - **Iteration:** 5

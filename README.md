@@ -43,20 +43,21 @@ Two things at once:
 | Re-open an alarm from its row, change it, and save it back to the same row | ✅ built |
 | Switch an alarm off or on from its row, without opening it | ✅ built |
 | Delete an alarm, behind a confirmation step | ✅ built |
-| Have an alarm actually go off and notify you | ❌ not yet — later tasks in this run |
+| Have an alarm actually go off, as a heads-up notification, and repeat the next day | ✅ built |
 
 > **Implementation status is deliberately explicit.** The note feature is complete: every row above
 > is code that exists, and this table was updated in the same change that landed each piece — a
 > README that claims a feature the code does not have is worse than no README.
 >
-> Three rows are honest about being less than finished. The **language picker** is inherited and only
+> Two rows are honest about being less than finished. The **language picker** is inherited and only
 > two of its seven languages have translations. The **German bottom-bar label** truncates
 > ("Einstell…") — a known defect, filed in `knowledge/ISSUES.md` and pinned by a reference image so
-> it cannot get quietly worse. **Alarms** is a run in progress: an alarm can be written, saved, listed,
-> reopened and changed, switched off or on, and deleted behind a confirmation, and it survives a
-> restart — but nothing actually rings yet. The `enabled` column now drives the per-row switch, but
-> nothing schedules an alarm or wakes the device for it: there is no scheduler, no receiver and no
-> notification. Those land in the tasks that follow.
+> it cannot get quietly worse. **Alarms is otherwise complete**: an alarm can be written, saved,
+> listed, reopened and changed, switched off or on, deleted behind a confirmation, and — at the time
+> set — arrives as a heads-up notification carrying its message, then repeats the next day with no
+> further action from the user. What no command in this repository can check — whether a real phone
+> actually pops the banner up, and whether tapping it opens the Alarms list without stacking a second
+> copy of the app — is left for a person; see the Human Verification Request when this run finishes.
 
 ## Business rules
 
@@ -207,6 +208,10 @@ com/example/skeleton/
 │   │   ├── NoteMapper.kt                   #     The only place an epoch day becomes a LocalDate
 │   │   ├── PostMapper.kt
 │   │   └── UserActionMapper.kt
+│   ├── notification/
+│   │   └── AlarmNotifier.kt                #   Builds and posts the alarm's heads-up notification; owns the channel
+│   ├── receiver/
+│   │   └── AlarmReceiver.kt                #   Fires the notification, then re-arms tomorrow's occurrence
 │   ├── remote/
 │   │   ├── api/
 │   │   │   ├── ApiPath.kt                  #     Every endpoint path lives here
@@ -216,13 +221,15 @@ com/example/skeleton/
 │   │   │   └── PostDto.kt                  #     Wire format only — never leaves the data layer
 │   │   └── util/
 │   │       └── safeApiCallFlow.kt          #     Wraps a call as Flow<Outcome<T>>; repositories never throw
-│   └── repository/
-│       └── impl/                           #   The implementations behind the domain interfaces
-│           ├── AlarmRepositoryImpl.kt      #     Room-only store; owns the earliest-first order and the blank-message refusal
-│           ├── NoteRepositoryImpl.kt       #     Room-only store; guarantees the newest-first order itself
-│           ├── PostRepositoryImpl.kt
-│           ├── SettingRepositoryImpl.kt
-│           └── UserActionRepositoryImpl.kt
+│   ├── repository/
+│   │   └── impl/                           #   The implementations behind the domain interfaces
+│   │       ├── AlarmRepositoryImpl.kt      #     Room-only store; owns the earliest-first order and the blank-message refusal
+│   │       ├── NoteRepositoryImpl.kt       #     Room-only store; guarantees the newest-first order itself
+│   │       ├── PostRepositoryImpl.kt
+│   │       ├── SettingRepositoryImpl.kt
+│   │       └── UserActionRepositoryImpl.kt
+│   └── scheduler/
+│       └── AlarmManagerAlarmScheduler.kt   #   The one real AlarmScheduler; talks to AlarmManager, never tested directly
 ├── domain/                                 # What the app is about, in plain Kotlin. Android-free by rule.
 │   ├── enums/
 │   │   └── BottomBarDestination.kt         #   Home, Calendar, Setting, Alarms — declaration order is tab order
@@ -234,12 +241,15 @@ com/example/skeleton/
 │   │   ├── Note.kt                         #     A note, plus the displayTitle fallback a row draws
 │   │   ├── Post.kt
 │   │   └── UserAction.kt
-│   └── repository/                         #   Interfaces only. Implementations live in data/.
-│       ├── AlarmRepository.kt
-│       ├── NoteRepository.kt
-│       ├── PostRepository.kt
-│       ├── SettingRepository.kt
-│       └── UserActionRepository.kt
+│   ├── repository/                         #   Interfaces only. Implementations live in data/.
+│   │   ├── AlarmRepository.kt
+│   │   ├── NoteRepository.kt
+│   │   ├── PostRepository.kt
+│   │   ├── SettingRepository.kt
+│   │   └── UserActionRepository.kt
+│   └── scheduler/                          #   The seam that makes "when does this go off" and "arm/cancel it" testable
+│       ├── AlarmScheduler.kt               #     Interface: schedule(alarm), cancel(alarmId) — no Android in sight
+│       └── NextFireTime.kt                 #     Pure arithmetic: next occurrence of hour:minute against a Clock
 ├── injection/                              # Koin modules. AppModule pulls the rest together.
 │   ├── AppModule.kt
 │   ├── DatabaseModule.kt
@@ -247,6 +257,7 @@ com/example/skeleton/
 │   ├── LocaleModule.kt
 │   ├── NetworkModule.kt
 │   ├── RepositoryModule.kt
+│   ├── SchedulerModule.kt                   #   Binds AlarmScheduler -> AlarmManagerAlarmScheduler, and AlarmNotifier
 │   └── ViewModelModule.kt
 ├── ui/                                     # Everything the user sees.
 │   ├── component/                          #   Widgets shared by two or more unrelated screens
