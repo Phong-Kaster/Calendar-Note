@@ -1,133 +1,93 @@
-# Product Requirements Document: Calendar Note App
+# Daily greeting notification, and a permission clean-up
 
-**Status:** Draft — generated from initial description, not yet reviewed
-**Purpose:** Input artifact for the "foreman" harness experiment
-
----
-
-## 1. Overview
-
-A note-taking Android app organized around dates. Users capture notes tied to
-the current day, browse them in a reverse-chronological list on the home
-screen, or jump to a specific day via a calendar view to see that day's notes.
-
-## 2. Tech Stack (as specified)
-
-- **Language:** Kotlin
-- **Navigation:** Android Navigation Component with Fragments (multi-fragment,
-  single-Activity architecture)
-- **Theme:** Dark mode only — no light theme, no system-theme switching
-- **Primary color:** Blue (exact hex/token not specified — needs design input)
-
-> **Assumption flagged, not a confirmed spec:** the description also asks for
-> a `LazyColumn` for the home screen list. `LazyColumn` is a Jetpack Compose
-> API, while Navigation Fragment is the classic View-based navigation system.
-> These aren't mutually exclusive — Compose can be hosted inside a Fragment
-> via `ComposeView` — but this PRD does not know which of the following you
-> intend, and that choice changes the architecture meaningfully:
-> 1. **Hybrid:** Fragments + Navigation Component for screen navigation, with
->    individual screens (like the home list) built in Compose (`ComposeView`
->    hosting a `LazyColumn`).
-> 2. **Pure View system:** the term "LazyColumn" was used loosely to mean "a
->    lazily-rendered scrolling list," and the actual implementation should be
->    a `RecyclerView` (the View-system equivalent).
->
-> This should be confirmed before implementation starts. The rest of this
-> document assumes **Option 1 (hybrid)** since it's the closest literal match
-> to both stated requirements, but this is an inference, not something you
-> confirmed.
-
-## 3. Screens
-
-### 3.1 Home Screen
-- Displays all notes across all days.
-- List implementation: `LazyColumn` (see assumption above), hosted inside a
-  Fragment reached via the Navigation graph.
-- Sort order: latest → oldest (most recently created/edited note first).
-- Tapping a note opens the Note screen for editing.
-- Needs clarification (not specified in the original description):
-  - Is there an explicit "create note" entry point from Home (e.g., a FAB),
-    or is note creation only reachable via the Calendar screen?
-  - What "latest" is sorted by — creation timestamp or last-edited timestamp
-    — is not stated.
-
-### 3.2 Calendar Screen
-- Displays a calendar (month view assumed — the description doesn't specify
-  week vs. month view).
-- Tapping a day shows all notes belonging to that day (in some list/detail
-  form — not specified whether this is a bottom sheet, a separate fragment,
-  or an inline expansion).
-- **Business rule (explicitly stated):** users cannot add a note to a future
-  day. This implies:
-  - Days after "today" should be visually disabled or otherwise blocked from
-    the "add note" action.
-  - Today and past days remain selectable and support adding notes.
-  - Not specified: what happens if a user taps a future day at all — is it
-    non-interactive entirely, or interactive-but-read-only (e.g., can view
-    but not add)? Since there's nothing to view on a future day yet, likely
-    the former, but this should be confirmed.
-
-### 3.3 Note Screen
-- Create/edit a single note.
-- Fields, note structure (title? body only? attachments?), and validation
-  rules are not specified in the original description and need clarification.
-- Not specified: can a note be deleted? Edited after creation? Is a note tied
-  to exactly one day, set automatically to "today" or the day it was created
-  under from the Calendar screen?
-
-## 4. Data Model (inferred, not confirmed)
-
-This is a best-effort inference from the requirements, not a confirmed spec:
-
-| Field       | Type          | Notes                                   |
-|-------------|---------------|------------------------------------------|
-| id          | Long / UUID   | Primary key                              |
-| date        | LocalDate     | The day the note belongs to              |
-| content     | String        | Note body — title field unconfirmed      |
-| createdAt   | Timestamp     | For sort order, if "latest" = creation    |
-| updatedAt   | Timestamp     | For sort order, if "latest" = last edit   |
-
-Persistence layer (Room, DataStore, plain file storage, etc.) is not
-specified and should be decided separately.
-
-## 5. Explicit Business Rules
-
-1. A user cannot create a note for a future date.
-2. Notes on the Home screen are sorted latest → oldest.
-3. The app is dark-mode only; no light theme should be built or exposed.
-4. Primary color is blue (specific shade not defined).
-
-## 6. Non-Goals / Out of Scope (not stated, assumed absent unless added)
-
-- No reminders/notifications mentioned.
-- No note categories, tags, or search mentioned.
-- No multi-user, sync, or cloud backup mentioned.
-- No rich text/attachments mentioned.
-
-## 7. Open Questions Before Implementation
-
-- [ ] Confirm Compose-in-Fragment hybrid vs. pure RecyclerView for the list.
-- [ ] Exact blue color token/hex for the primary color.
-- [ ] Month vs. week calendar view.
-- [ ] How a day's notes are displayed after tapping (sheet, screen, inline).
-- [ ] Note fields: title + body, or body only?
-- [ ] Sort key for "latest": createdAt vs. updatedAt.
-- [ ] Whether notes can be edited/deleted after creation.
-- [ ] Persistence choice (Room is the typical default for this app shape, but
-      not stated).
-- [ ] Minimum SDK / target SDK versions.
+Two independent pieces of work. Neither depends on the other, and neither should
+change how alarms behave.
 
 ---
 
-*This document reflects only what was explicitly described plus clearly
-labeled assumptions and open questions. Anything not marked as stated or
-inferred above was not part of the original description and should be
-treated as undecided.*
+## 1. Greet me once a day, the first time I open the app
+
+The first time I open Calendar Note on any given day, it posts a notification
+saying hello — something like "Good morning". Every later open on the same day
+posts nothing.
+
+The rule, precisely:
+
+- **Once per calendar day**, using the **device's local date**, not a 24-hour
+  timer. Opening at 23:58 and again at 00:02 is two different days, so that is
+  two notifications.
+- **"Open" means the app is brought to the foreground**, whether it was launched
+  cold or resumed from the background. If resuming counts as an open in your
+  design, say so in the Definition of Done and keep it consistent.
+- The "already greeted today" fact must **survive the app being killed and
+  relaunched**. Holding it in memory is not enough: force-stopping the app and
+  reopening it on the same day must still post nothing.
+- A new day **re-arms** it, with no user action.
+
+### Where it fits
+
+- `SettingDatastore` (`data/datastore/SettingDatastore.kt`) already persists
+  preferences with `stringPreferencesKey` / `booleanPreferencesKey`. The stored
+  date belongs there unless you find a reason it does not.
+- `AlarmNotifier` (`data/notification/AlarmNotifier.kt`) already posts
+  notifications for alarms. Reuse what it establishes — channel creation,
+  permission handling — rather than building a second, parallel way to notify.
+  The greeting is not an alarm, so it may want its own channel; that is your
+  call, but say which you chose and why.
+- `MainActivity` / `MainApplication` are the entry points.
+
+### What must not happen
+
+- No notification on the second open of the same day. This is the whole point,
+  so it needs a test that actually exercises the second open, not just the first.
+- Alarms keep working exactly as they do now. The 251 existing unit tests and the
+  23 screenshot references stay green.
+
+### What I do not care about
+
+The exact wording, the icon, and whether it is "Hello" or "Good morning". Pick
+something sensible and put it in `strings.xml` like everything else — do not
+hardcode a literal.
 
 ---
 
-## Addendum — Alarms feature (appended requirement, verbatim)
+## 2. Remove permissions the app does not use
 
-i need you continue on this branch with new screen named alarms where display all alarms the app have, i need a floating aciton button which
-  open a new screen allow i can write my message, set time to fire alarm. For instance, on 12h everyday, the app will fire a notification with
-  my message with highest prioriy, i need notification appears as popup notification to attract my focus on
+`app/src/main/AndroidManifest.xml` declares eight permissions. Three of them are
+dead weight and should go:
+
+| Remove | Why |
+|---|---|
+| `VIBRATE` | Nothing references it. There is no `Vibrator` usage anywhere in the app. |
+| `ACCESS_COARSE_LOCATION` | The app asks for location and never uses it — no `LocationManager`, no fused location client, nothing that reads a position. |
+| `ACCESS_FINE_LOCATION` | Same. |
+
+**Keep these. Do not remove them:**
+
+| Keep | Why |
+|---|---|
+| `INTERNET`, `ACCESS_NETWORK_STATE` | `injection/NetworkModule.kt` and `ui/util/NetworkUtil.kt` exist and appear to use them. If you find they are genuinely dead too, **say so and leave them alone** — that is a separate decision for me, not part of this run. |
+| `POST_NOTIFICATIONS` | Needed by alarms, and by the greeting above. |
+| `SCHEDULE_EXACT_ALARM` | Needed by alarms. |
+| `RECEIVE_BOOT_COMPLETED` | Needed so alarms survive a reboot. |
+
+Removing the two location permissions also means removing the code that requests
+them — `ui/fragment/home/component/HomePermissionBottomSheet.kt` references them.
+A manifest with the permission gone and UI still asking for it is worse than
+either state on its own. If that bottom sheet also handles a permission we are
+keeping, strip only the location part and leave the rest working.
+
+After the change, the app must still build, install and open, and the permission
+notice the alarms screen shows must behave exactly as it does today.
+
+---
+
+## Scope
+
+This is a small run on purpose. Two tasks, no new libraries, no new modules, no
+architecture changes. If you find yourself proposing more than a handful of
+tasks, the decomposition is wrong — say so rather than building it.
+
+I already know the answers to the questions this most obviously raises — which
+permissions to drop, and where the date should live — and they are written above
+precisely so this run does not stop to ask me.
