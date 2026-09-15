@@ -113,12 +113,12 @@
 <div class="wrap">
 
 <header class="mast">
-  <p class="eyebrow" data-lang="vi">Cập nhật 15-09-2026 (lần lặp 2) · nhánh loop/calendar-note-app</p>
-  <p class="eyebrow" data-lang="en">Updated 2026-09-15 (iteration 2) · branch loop/calendar-note-app</p>
+  <p class="eyebrow" data-lang="vi">Cập nhật 15-09-2026 (lần lặp 3) · nhánh loop/calendar-note-app</p>
+  <p class="eyebrow" data-lang="en">Updated 2026-09-15 (iteration 3) · branch loop/calendar-note-app</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
-  <p class="standfirst" data-lang="vi">Hai việc engine không được tự quyết trong lần chạy này: một câu hỏi đang chặn tiến độ, và những bài học có thể không thuộc về riêng repo này. Cả hai chỉ là đề nghị đọc — không có gì tự áp dụng.</p>
-  <p class="standfirst" data-lang="en">Two things the engine cannot decide for itself this run: a question blocking progress, and lessons that may not belong to this repository alone. Both are read-only proposals — nothing here applies itself.</p>
+  <p class="standfirst" data-lang="vi">Mọi tiêu chí máy chấm được đã được chứng minh lại từ đầu. Còn lại <strong>bảy việc chỉ con người nhìn được</strong> — engine không có máy thật để chạy app. Ký xong bảy mục đó là lần chạy này kết thúc.</p>
+  <p class="standfirst" data-lang="en">Every machine-checkable criterion has been re-proved from scratch. What remains is <strong>seven things only a person can look at</strong> — the engine has no device to run the app on. Signing those off is the last step of this run.</p>
 
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-btn-escalate" aria-controls="panel-escalate" data-tab="escalate">
@@ -137,6 +137,60 @@
   <p data-lang="vi"><strong>Đây là bản sao chỉ đọc của <span class="mono">ESCALATION.md</span>.</strong> Trả lời tại <span class="mono">.harness/run/DECISIONS.md</span>, không phải ở đây — trang này chỉ để đọc cho dễ, không phải nơi engine nhận quyết định.</p>
   <p data-lang="en"><strong>This is a read-only mirror of <span class="mono">ESCALATION.md</span>.</strong> Answer in <span class="mono">.harness/run/DECISIONS.md</span>, never here — this page exists to make the queue easy to read, not the channel the engine listens on.</p>
 </div>
+
+<details class="card esc" open>
+  <summary>
+    <div class="tagrow">
+      <span class="id">D-002</span>
+      <span class="tag pending" data-lang="vi">Đang chờ bạn · lần lặp 3</span>
+      <span class="tag pending" data-lang="en">Waiting on you · iteration 3</span>
+    </div>
+    <h3 data-lang="vi">Kiểm tra bằng tay: bảy việc chỉ con người nhìn được</h3>
+    <h3 data-lang="en">Human Verification Request: seven things only a person can look at</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Loại: Yêu cầu kiểm tra thủ công (ENGINE.md §11). <strong>Chặn:</strong> chính việc báo <span class="mono">DONE</span>. Không còn task nào — T-001 và T-002 đã xong, không có gì bị bỏ dở, và cả mười bốn tiêu chí máy chấm được đã được lần chạy này chứng minh lại từ đầu. Bảy chữ ký này là thứ duy nhất còn lại.</p>
+    <p data-lang="en">Type: Human Verification Request (ENGINE.md §11). <strong>Blocks:</strong> the <span class="mono">DONE</span> report itself. No task remains — T-001 and T-002 are complete, nothing was abandoned, and all fourteen machine criteria were re-proved fresh by this invocation. These seven signatures are the only thing left.</p>
+    <p data-lang="vi">Repo này không có emulator, không có thiết bị, không có Robolectric — nên không lệnh nào engine chạy được từng <em>nhìn thấy</em> app chạy thật. Một lần chạy trước ở chính repo này đã giao một nút xoá nối dây đúng nhưng <em>vô hình</em> trên đúng nền của nó, với toàn bộ test xanh. Danh sách này tồn tại để bắt đúng loại lỗi đó.</p>
+    <p data-lang="en">There is no emulator, no device and no Robolectric here — so nothing the engine can run ever <em>sees</em> the app running. A previous run in this same repository shipped a delete button that was correctly wired and rendered invisible against its own background, with every test green. This list exists to catch that class of thing.</p>
+    <p data-lang="vi"><strong>APK:</strong> <span class="mono">app/build/outputs/apk/debug/app-debug.apk</span>, dựng bởi lần gọi này từ đầu nhánh.</p>
+    <p data-lang="en"><strong>The APK:</strong> <span class="mono">app/build/outputs/apk/debug/app-debug.apk</span>, built by this invocation from the branch tip.</p>
+    <div class="scroll"><table>
+      <thead>
+        <tr data-lang="vi"><th>#</th><th>Mở cái gì / làm gì</th><th>Mong đợi thấy gì</th></tr>
+        <tr data-lang="en"><th>#</th><th>What to open &amp; do</th><th>What to expect</th></tr>
+      </thead>
+      <tbody>
+        <tr data-lang="vi"><td>15</td><td>Cài mới (hoặc xoá sạch dữ liệu), cấp quyền thông báo, mở app lần đầu trong ngày.</td><td>Một thông báo <em>"Hello! What will you write today?"</em> — là một dòng yên trong khay, <strong>không</strong> phải banner trùm màn hình. Icon nhỏ là hình chuông trắng phẳng, không phải icon launcher thu nhỏ. Kéo mở ra đọc được hết câu.</td></tr>
+        <tr data-lang="en"><td>15</td><td>Fresh install (or clear storage), grant notifications, open the app for the first time today.</td><td>A notification reading <em>"Hello! What will you write today?"</em> — a quiet line in the shade, <strong>not</strong> a banner over the screen. Its small icon is a flat white alarm glyph, not a shrunken launcher icon. Pull it open: the full greeting is readable, not clipped.</td></tr>
+        <tr data-lang="vi"><td>16</td><td>Nhấn Home rồi quay lại app 2-3 lần, cùng ngày.</td><td>Không có thông báo thứ hai ở bất kỳ lần nào.</td></tr>
+        <tr data-lang="en"><td>16</td><td>Press Home and return to the app two or three times, same day.</td><td>No second notification on any of those returns.</td></tr>
+        <tr data-lang="vi"><td>17</td><td>Cài đặt → Ứng dụng → <strong>Buộc dừng</strong>, rồi mở lại từ launcher, vẫn cùng ngày.</td><td>Vẫn không có thông báo. Đây là mục chứng minh app nhớ <em>trên đĩa</em> chứ không phải trong bộ nhớ.</td></tr>
+        <tr data-lang="en"><td>17</td><td>Settings → Apps → <strong>Force stop</strong>, then relaunch from the launcher, same day.</td><td>Still no notification. This is the one that proves the fact was remembered <em>on disk</em>, not in memory.</td></tr>
+        <tr data-lang="vi"><td>18</td><td>Chỉnh ngày hệ thống tiến lên một ngày (hoặc đợi qua nửa đêm), rồi mở app.</td><td>Lời chào xuất hiện trở lại, không cần bạn làm gì. Nhớ bật lại ngày tự động sau đó.</td></tr>
+        <tr data-lang="en"><td>18</td><td>Move the device date forward one day (or wait past local midnight), then open the app.</td><td>The greeting appears again with no action from you. Turn automatic date back on afterwards.</td></tr>
+        <tr data-lang="vi"><td>19</td><td>Tắt quyền thông báo (và trên Android 12+ thu hồi cả <em>Báo thức &amp; nhắc nhở</em>), mở tab <strong>Home</strong>, bấm từng dòng.</td><td>Đúng hai dòng trên Android 12+ (Thông báo, Báo thức chính xác), một dòng trên bản cũ hơn. <strong>Không có dòng Vị trí</strong>, không có khoảng trống thừa. Mỗi dòng mở đúng màn hình hệ thống của nó.</td></tr>
+        <tr data-lang="en"><td>19</td><td>Turn notifications off (and on Android 12+ revoke <em>Alarms &amp; reminders</em>), open the <strong>Home</strong> tab, tap each row.</td><td>Exactly two rows on Android 12+ (Notification, Exact alarms), one on older versions. <strong>No Location row</strong>, no leftover gap. Each row opens its correct system screen — Exact alarms landing on the switch itself, not one screen short.</td></tr>
+        <tr data-lang="vi"><td>20</td><td>Mở tab <strong>Alarms</strong> khi còn thiếu quyền, rồi mở lại sau khi cấp đủ.</td><td>Banner y hệt như trước lần chạy này, nút bấm đi đúng chỗ cũ, và không vẽ gì khi đã đủ quyền. (Diff lần chạy này không đụng file nào trong <span class="mono">ui/fragment/alarms/</span>.)</td></tr>
+        <tr data-lang="en"><td>20</td><td>Open the <strong>Alarms</strong> tab with a permission missing, then again with both granted.</td><td>The same banner as before this run, buttons landing on the same screens, and nothing drawn once both permissions are in order. (This run's diff touches no file under <span class="mono">ui/fragment/alarms/</span>.)</td></tr>
+        <tr data-lang="vi"><td>21</td><td>Cài APK debug và mở từ launcher.</td><td>Home hiện ra, không crash, danh sách ghi chú vẽ bình thường. Hai quyền đã bị xoá khỏi manifest — đây là mục kiểm tra không có gì âm thầm phụ thuộc vào chúng.</td></tr>
+        <tr data-lang="en"><td>21</td><td>Install the debug APK and tap the launcher icon.</td><td>Home appears, no crash, the notes list renders. Two permissions were deleted from the manifest — this checks nothing was quietly depending on them.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="ev">:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest
+  -&gt; BUILD SUCCESSFUL
+unit tests   288 across 18 classes, 0 failures, 0 errors   (forced re-execution, --rerun-tasks)
+lint         0 errors, 75 warnings
+screenshots  23 of 23 green, 23 reference files, no orphans
+manifest     source AND merged manifest carry neither location permission; VIBRATE kept per D-001
+location     0 hits for all nine location symbols across app/src/main/java
+alarms       AlarmNotifier.kt, ui/fragment/alarms/ and AlarmNotifierConstantsTest.kt untouched</div>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Trả lời thế nào</span><span class="lbl" data-lang="en">How to answer</span>
+      <p data-lang="vi">Trong <span class="mono">.harness/run/DECISIONS.md</span>, dưới tiêu đề <span class="mono">## D-002</span>. Mỗi mục một dòng là đủ (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). Mục nào <strong>fail</strong> thì ghi bạn thấy gì thay vào đó — engine sẽ biến nó thành task, không tranh luận lại.</p>
+      <p data-lang="en">In <span class="mono">.harness/run/DECISIONS.md</span>, under a <span class="mono">## D-002</span> heading. One line per item is plenty (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). For any <strong>fail</strong>, say what you saw instead — the engine will reconcile it into a task rather than arguing with you.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">DONE — không còn task nào / no task remains</span></div>
+  </div>
+</details>
 
 <details class="card esc">
   <summary>

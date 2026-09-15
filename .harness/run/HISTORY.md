@@ -100,6 +100,44 @@
   invocation is the Verifier (§11): re-prove every `machine` criterion fresh, then raise a Human
   Verification Request for the seven unsigned `human` criteria (15-21).
 
+## Iteration 3 — 2026-09-15 — Final Verification (ENGINE.md §11)
+
+- **Role:** Verifier. This invocation wrote none of the implementation and distrusted all of it.
+- **Recovered:** working tree carried one modified file, `.harness/TELEMETRY.tsv` — a Runtime artifact, not
+  implementation debris. Nothing to salvage, nothing to revert.
+- **Decisions consumed:** none new. `DECISIONS.md` holds only `D-001`, already answered, applied and
+  archived in iteration 2; its `ESCALATION.md` entry is marked `answered`. Nothing to re-apply.
+- **Re-proved every `machine` criterion against its own fresh evidence** — all fourteen, each checked
+  explicitly, none accepted on iteration 2's word. Per-criterion table with the exact file/line or command
+  behind each one is in `STATE.md` § Machine verification. Headline figures: `BUILD SUCCESSFUL`; 288 unit
+  tests across 18 classes with 0 failures and 0 errors (above the DoD's 251 floor); lint 0 errors / 75
+  warnings; screenshot validation 23 of 23 with 23 reference files on disk and no orphans; source **and**
+  merged manifest carry neither location permission while keeping `VIBRATE` per D-001; zero hits for all
+  nine location symbols across `app/src/main/java`; `AlarmNotifier.kt`, `AlarmNotifierConstantsTest.kt` and
+  everything under `ui/fragment/alarms/` absent from the run's diff (`git diff 3506b33 HEAD`).
+- **Gaps found:** none. The DONE-candidate flag stands.
+- **Discovery (knowledge update, ENGINE.md §8).** The first verification run returned `BUILD SUCCESSFUL`
+  with `1 executed, 60 up-to-date` — Gradle's incremental cache, not a re-execution, which is not what §11
+  means by fresh evidence. `--rerun` was the obvious remedy and only half worked: it re-ran `lintDebug` and
+  `validateDebugScreenshotTest` but left `:app:testDebugUnitTest` `UP-TO-DATE` (`2 executed, 42
+  up-to-date`), so the counts in `TEST-*.xml` were still the *previous* invocation's — the same shape of
+  trap as the aborted-task one already recorded, arriving through a flag that looks like it ruled the trap
+  out. `./gradlew :app:testDebugUnitTest --rerun-tasks` genuinely re-executed them (`28 actionable tasks:
+  28 executed`), and that run is where the 288/0 figure comes from. Written to
+  `.harness/knowledge/PROJECT.md` § Toolchain in this same checkpoint, since a future Verifier asked to
+  "re-prove fresh" would otherwise walk straight into it. No new capability needed — both flags fall under
+  the standing ledger's `Bash(./gradlew :app:testDebugUnitTest*)` wildcard.
+- **Queued D-002 — Human Verification Request** for the seven unsigned `human` criteria (DoD 15-21), as a
+  numbered checklist giving what to open, what to do and what to expect for each, written to be followed
+  without reading any code. It names what it blocks: the `DONE` report itself, no task remaining.
+  `SUGGESTIONS.html`'s Escalate tab regenerated from `ESCALATION.md` in the same step, before the status
+  was written.
+- **Not done, deliberately:** no Cleanup Commit, no `DONE`. ENGINE.md §11.3 forbids both while a `human`
+  criterion is unsigned. The engine has no device, no emulator and no Robolectric here, so reporting `DONE`
+  on criteria 15-21 would be a claim it has no standing to make — and this repository has already shipped a
+  correctly-wired, invisible delete button with every test green.
+- **Reported:** `ESCALATE` — no executable task remains and a decision is queued (§6.11).
+
 ## Archived Decisions
 
 ### D-001 - Approve the Definition of Done for the greeting-notification / permission-cleanup run

@@ -340,6 +340,27 @@ and `failures="0"` — producing a confident, wrong "the new tests pass". **Read
 own `BUILD SUCCESSFUL` you saw**, and treat a test count that did not move after adding tests as proof the
 task did not run.
 
+### `UP-TO-DATE` is not fresh evidence, and `--rerun` does not fix it for `testDebugUnitTest`
+
+A Verifier (ENGINE.md §11) is required to re-prove every `machine` criterion *itself*. Re-running the
+standard four-task command on an unchanged tree returns `BUILD SUCCESSFUL` with almost every task marked
+`UP-TO-DATE` — Gradle asserting its cached outputs still match their inputs, which is a real guarantee but
+is **not** the same as having watched the tests execute. Measured this iteration: the full command finished
+in 19s with `1 executed, 60 up-to-date`.
+
+`--rerun` is the obvious fix and it is **only partly effective here**. Asked for three tasks with `--rerun`,
+Gradle re-executed `lintDebug` and `validateDebugScreenshotTest` but left `:app:testDebugUnitTest`
+`UP-TO-DATE` (`44 actionable tasks: 2 executed, 42 up-to-date`). The counts in
+`app/build/test-results/testDebugUnitTest/TEST-*.xml` were therefore still the *previous* invocation's —
+the same shape of trap as the aborted-task one above, arriving through a flag that looks like it ruled the
+trap out.
+
+**`./gradlew :app:testDebugUnitTest --rerun-tasks` is what actually re-executes the tests** (`28 actionable
+tasks: 28 executed`, ~42s, recompiles upstream). Both flags are covered by the standing ledger's
+`Bash(./gradlew :app:testDebugUnitTest*)` wildcard, so neither needs a new capability. When a task's line
+in the console carries no `UP-TO-DATE`/`FROM-CACHE` marker, it ran; that marker, not the `BUILD SUCCESSFUL`
+line, is what says whether the evidence is this invocation's.
+
 ### A piped Gradle command reports the *pipe's* exit code, not Gradle's
 
 `./gradlew … 2>&1 | tail -20` exits 0 even when the build failed, because the status belongs to `tail`.
