@@ -6,8 +6,12 @@
 
 ## Status
 
-- [ ] APPROVED — approve via the pending `.harness/run/ESCALATION.md`; edit criteria freely before approving.
-      Approval covers the Verification Class of each criterion, not only its wording.
+- [x] APPROVED — D-001, 2026-09-15, with one change: `android.permission.VIBRATE` is kept (the human's
+      reason: `AlarmNotifier.kt` calls `.setVibrate(...)`/`channel.enableVibration(true)`, so the
+      permission backs a feature that actually exists — the PRD's removal rationale was incomplete).
+      Criterion 9 no longer lists VIBRATE; the old KDoc-correction and VIBRATE-heads-up-check criteria are
+      dropped entirely (nothing left to verify once the permission stays). Criteria renumbered below to
+      close the gaps. Everything else approved as written.
 
 ## Acceptance Criteria
 
@@ -35,16 +39,16 @@
    distinct from the alarms channel, created at app launch alongside the existing `AlarmNotifier` channel
    creation in `MainApplication.onCreate` — mirroring the precedent Constraint C-10 protects (a channel's
    importance is frozen the first time it is created).
-8. [machine] `AlarmNotifier`'s existing constants and behavior are unchanged by this run except the
-   `VIBRATION_PATTERN` KDoc correction (criterion 15); `AlarmNotifierConstantsTest` still passes unmodified.
+8. [machine] `AlarmNotifier`'s existing constants, behavior, and KDoc are wholly unchanged by this run;
+   `AlarmNotifierConstantsTest` still passes unmodified.
 
 ### Permission removal
 
-9. [machine] `app/src/main/AndroidManifest.xml` no longer declares `android.permission.VIBRATE`,
-   `ACCESS_COARSE_LOCATION`, or `ACCESS_FINE_LOCATION`, and still declares `INTERNET`,
+9. [machine] `app/src/main/AndroidManifest.xml` no longer declares `ACCESS_COARSE_LOCATION` or
+   `ACCESS_FINE_LOCATION`, and still declares `android.permission.VIBRATE`, `INTERNET`,
    `ACCESS_NETWORK_STATE`, `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED`.
 10. [machine] The **merged** manifest AGP writes under `app/build/intermediates/merged_manifests/debug/`
-    (after `:app:assembleDebug`) does not carry the three removed permissions either — a source-file grep
+    (after `:app:assembleDebug`) does not carry the two removed permissions either — a source-file grep
     alone does not prove a manifest-injecting dependency isn't reintroducing one.
 11. [machine] No source file under `app/src/main/java` references location-permission checking or
     requesting (`ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION`, `isLocationGranted`, `isLocationEnable`,
@@ -55,13 +59,10 @@
 13. [machine] `ui/fragment/alarms/component/AlarmsPermissionNotice.kt` is untouched by this run's diff, and
     its pinned screenshot case (`AlarmsPermissionNoticeCase`, reference
     `AlarmsScreenshotTestKt/AlarmsPermissionNoticeCase_*.png`) still validates.
-14. [machine] `AlarmNotifier.kt`'s `VIBRATION_PATTERN` KDoc is corrected to stop claiming vibration is
-    guaranteed on API 24-25 now that `VIBRATE` is removed — noting the heads-up still survives there
-    because a sound is also set (Constraint C-10: priority plus sound **or** vibration).
 
 ### Regression guard
 
-15. [machine] One invocation of
+14. [machine] One invocation of
     `:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest` ends in
     `BUILD SUCCESSFUL`; `testDebugUnitTest` reports 0 failures with a test count that has visibly
     increased above the 251 baseline; `lintDebug` reports 0 errors; `validateDebugScreenshotTest` is 23 of
