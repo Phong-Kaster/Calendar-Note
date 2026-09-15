@@ -5,16 +5,18 @@
 
 ## Current
 
-- **Stage:** executing — Phase 2 complete, awaiting a fresh Verifier
+- **Stage:** verified — awaiting human sign-off. Every `machine` criterion is proved; the run is blocked on
+  six pairs of eyes and nothing else.
 - **Loop Branch:** loop/calendar-note-app
-- **Next Phase:** none — the task graph is empty again. T-001, T-002 and T-003 are all complete.
-- **DONE-candidate:** yes, **fresh**, set by this iteration. Iteration 3's candidacy was **cleared** first:
-  the human's answer to D-002 failed DoD criterion 15, which is not something a DONE-candidate survives.
-  T-003 closed the cause and this iteration re-ran everything green, so the flag is set again — but by an
-  invocation that **wrote this implementation**, so it cannot certify it (ENGINE.md §6.11, invariant 8).
-  The next invocation is the Verifier: re-prove all fourteen `machine` criteria against its own fresh
-  evidence (§11.1), then queue **one** consolidated Human Verification Request for the six `human`
-  criteria that are now unsigned, and report `ESCALATE`.
+- **Next Phase:** none — the task graph is empty. T-001, T-002 and T-003 are all complete.
+- **DONE-candidate:** yes, and **now certified for its `machine` half** by iteration 5, which wrote none of
+  this implementation and re-measured all fourteen criteria from scratch rather than reading iteration 4's
+  table. The flag stands; nothing was found wrong, so there was nothing to clear.
+- **What the next invocation does:** if `DECISIONS.md` carries a `## D-003` heading, consume it (§6.2). Any
+  item answered **pass** is signed below; any **fail** is an ordinary discovery — file a task, clear the
+  DONE-candidate, keep going. If every one of 15-20 comes back pass, that invocation creates the Cleanup
+  Commit (remove `.harness/run/`, keep `.harness/ISSUES.md`) and reports `DONE`. If some are still
+  unanswered, re-raise **only those**, never the ones already signed.
 
 ## Progress
 
@@ -24,23 +26,29 @@
 | T-002 | complete | `AndroidManifest.xml`, `ui/fragment/home/component/HomeRequestPermission.kt`, `ui/fragment/home/component/HomePermissionBottomSheet.kt`, `ui/fragment/home/HomeFragment.kt`, `ui/util/PermissionUtil.kt` | commit `e7798dd`; iteration 3 re-proved it |
 | T-003 | complete | `domain/greeting/GreetOnceADay.kt` (new), `test/.../GreetOnceADayTest.kt` (new), `data/notification/GreetingNotifier.kt`, `ui/fragment/home/HomeFragment.kt` | this checkpoint; full evidence in `TASKS/T-003.md` |
 
-**Evidence (iteration 4, this checkpoint).** One invocation of
-`:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest` →
-`BUILD SUCCESSFUL in 1m 7s`, `61 actionable tasks: 23 executed, 38 up-to-date`, with **no** `UP-TO-DATE`
-marker on any of the four. Tests **296 across 19 classes, 0 failures, 0 errors** (up from 288/18; the 8
-new ones are `GreetOnceADayTest`). Lint **0 errors, 75 warnings**. Screenshots **23 of 23**, 23 live
-hashes and 23 files on disk, no orphans. Fresh-Context Review (Capable, clean context): **APPROVE**, zero
-blocking findings, three non-blocking — two fixed here (`AMENDMENTS.md` A-16), one in `.harness/ISSUES.md`.
+## Machine verification (iteration 5, the Verifier — measured by this invocation, not copied)
 
-## Machine verification (iteration 3 — now partly stale, and deliberately not re-copied)
+One invocation of
+`:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest --rerun-tasks`
+→ `BUILD SUCCESSFUL in 1m 8s`, **`61 actionable tasks: 61 executed`**. Not one `UP-TO-DATE` marker: that,
+and not the `BUILD SUCCESSFUL` line, is what makes this evidence this invocation's own.
 
-Iteration 3 re-proved all fourteen `machine` criteria fresh and its per-criterion table was correct for
-the tree it saw. **That tree is no longer the tree.** T-003 changed `GreetingNotifier.kt`,
-`HomeFragment.kt` and `README.md` and added two files, so criteria 4, 5, 6 and 14 in particular were
-re-measured this iteration (all still hold — the mutex still guards the whole sequence, nothing caches
-the date on the notifier, the greeting still comes from `R.string`, and the test count went up not down).
-The next Verifier re-proves all fourteen itself rather than reading either table. That is the point of
-being a Verifier, and the table here is a summary for a human, never an input.
+| # | Criterion, in short | How it was proved here | Holds |
+|---|---|---|---|
+| 1 | plain-Kotlin decision behind an injected `Clock` | `greetingDueOn(lastGreetedDate, clock)` in `domain/greeting/GreetingDecision.kt`; `GreetingDecisionTest` — never-greeted greets, twice on one day greets once, a new day greets again, a stored day reads back | ✓ |
+| 2 | calendar day, not a rolling 24 hours | `GreetingDecisionTest`: *"four minutes across midnight is two different days and greets twice"* **and** *"a nearly twenty-four hour gap inside one day is still one day"* — both directions, which is what makes it a calendar comparison | ✓ |
+| 3 | triggered from `MainActivity.onStart()` | `MainActivity.kt:58-64` — `override fun onStart()` → `greetingNotifier.greetIfFirstForegroundToday()` | ✓ |
+| 4 | the sequence is serialized | `GreetingNotifier.kt:80,96` — `greetingMutex.withLock { greetOnceToday() }`; the lock wraps read→decide→post→write entire, not just the write | ✓ |
+| 5 | persisted, never only in memory | `SettingDatastore.kt:37` `stringPreferencesKey("lastGreetedDateKey")`, read back through `lastGreetedDateFlow.first()` on every call; no field caches it | ✓ |
+| 6 | greeting text from `strings.xml`, both locales | `R.string.hello_what_will_you_write_today` in `values/` **and** `values-de/`; no quoted greeting literal in the notifier | ✓ |
+| 7 | own channel, id `greeting`, `IMPORTANCE_DEFAULT`, created at launch | `GreetingNotifier` constants + `GreetingNotifierConstantsTest` (6 green, incl. *"the greeting has a channel of its own and not the alarms one"*); `MainApplication.onCreate` creates it through Koin's instance beside the alarms one | ✓ |
+| 8 | `AlarmNotifier` wholly unchanged | absent from the run's diff (`3506b33..HEAD`); `AlarmNotifierConstantsTest.kt` absent too, 6 tests green | ✓ |
+| 9 | source manifest | no `ACCESS_COARSE_LOCATION`/`ACCESS_FINE_LOCATION`; all six required present, `VIBRATE` included per D-001 | ✓ |
+| 10 | **merged** manifest | `app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml` — same six, neither location permission. (AGP injects its own `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`; not a source declaration) | ✓ |
+| 11 | no location symbols survive | **0 hits** for all nine names across `app/src/main/java` | ✓ |
+| 12 | no Location row in the sheet | **0** case-insensitive hits for "location" in `HomePermissionBottomSheet.kt` | ✓ |
+| 13 | alarms notice untouched and still pinned | no file under `ui/fragment/alarms/` in the run's diff; `AlarmsPermissionNoticeCase`'s `a2b5ee82_0.png` is a live hash in the report and validated | ✓ |
+| 14 | one green invocation, tests up, lint clean, 23/23 | 296 tests / 19 classes / 0 failures / 0 errors (> the 251 baseline); lint 0 errors, 75 warnings; 23 rendered, **0 diffs**; 23 live hashes == 23 files on disk, compared name by name — no orphan, no new reference | ✓ |
 
 ## Assumptions
 
@@ -58,19 +66,15 @@ being a Verifier, and the table here is a summary for a human, never an input.
 
 ## Human sign-offs
 
-D-002 was answered on 2026-09-15 (see `AMENDMENTS.md`). Four items came back signed; **three of those
-four did not survive the iteration**, because T-003 changed the code they were looking at, and ENGINE.md
-§11 unsigns any item whose implementation later changed — the thing that was looked at no longer exists.
+D-002 was answered on 2026-09-15 (see `AMENDMENTS.md`). Six of the seven `human` criteria are unsigned
+today, and **iteration 5 queued `D-003` covering exactly those six** — one request, not six.
 
-| Criterion | Signed | Standing after T-003 |
+| Criterion | Signed | Standing |
 |---|---|---|
-| 15 | ✗ **FAIL**, 2026-09-15 | Cause fixed by T-003. Must be re-checked, on the branch the criterion actually names: app data cleared, permission granted when asked. |
-| 16 | ✓ 2026-09-15 | **Unsigned again** — `GreetingNotifier` changed. Re-check. |
-| 17 | ✓ 2026-09-15 | **Unsigned again** — `GreetingNotifier` changed. Re-check. |
-| 18 | ☐ not answered | Needs the device's system date moved forward a day; not done on a daily-driver phone without being asked. |
-| 19 | ☐ not answered | Needs taps MIUI's "USB debugging (Security settings)" gate refuses to inject. Needs a person's finger. |
-| 20 | ☐ not answered | Same reason as 19. |
-| 21 | ✓ 2026-09-15 | **Stands.** It is about the removed location permissions, and nothing in T-003 touched the manifest or the permission code. One carve-out the human recorded: the notes list was not scrolled. |
-
-So six of seven `human` criteria are unsigned. One consolidated Human Verification Request covering
-15-20 is the next Verifier's job to queue — not a second one per criterion, and not a re-ask of 21.
+| 15 | ✗ **FAIL**, 2026-09-15 | Cause fixed by T-003. Re-check on the branch the criterion actually names: **app data cleared, permission granted when asked**. The recorded pass that preceded the failure came from a device where the permission was already granted — the other branch, and how the bug shipped. |
+| 16 | ☐ unsigned | Passed 2026-09-15, then **unsigned again**: T-003 changed `GreetingNotifier`, and §11 unsigns any item whose implementation changed — the thing that was looked at no longer exists. |
+| 17 | ☐ unsigned | Same. Worth not skipping: the only check that separates "remembered on disk" from "remembered in memory". |
+| 18 | ☐ not answered | Needs the device's system date moved forward a day on a daily-driver phone. D-003 states that plainly and offers "just open it tomorrow" instead; it is the human's call either way. |
+| 19 | ☐ not answered | Needs taps the device refuses to inject (`SecurityException: … INJECT_EVENTS`, MIUI's "USB debugging (Security settings)" gate). Written up in D-003 as a by-hand item. |
+| 20 | ☐ not answered | Same gate as 19. |
+| 21 | ✓ 2026-09-15 | **Stands, and is deliberately not in D-003.** It is about the removed location permissions; nothing since has touched the manifest or the permission code. One carve-out the human recorded: the notes list was not scrolled. |

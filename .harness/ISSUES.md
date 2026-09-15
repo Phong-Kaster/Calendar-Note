@@ -5,13 +5,13 @@
 > This file sits beside `run/` rather than inside it, so it survives the Cleanup Commit that removes
 > `.harness/run/` when the run completes.
 
-_Last updated: 2026-09-15 - branch `loop/calendar-note-app` - iteration 4_
+_Last updated: 2026-09-15 - branch `loop/calendar-note-app` - iteration 5 (Verifier)_
 
-**What happened this iteration.** A person tried DoD criterion 15 on a real phone and it **failed**: on a
-fresh install, the greeting never arrived — not that day, not later. Every unit test had been green, lint
-clean, and an earlier device check had passed, because that check was run on a device where the
-notification permission was already granted. That is the other branch. The cause is fixed (T-003) and
-written down as Constraint C-18, and six of the seven `human` criteria now need a person again.
+**Where the run stands.** Everything a command can prove is proved. Iteration 5 wrote no code: it
+re-measured all fourteen `machine` criteria from scratch — `--rerun-tasks`, 61 of 61 Gradle tasks actually
+executed, nothing served from cache — and all fourteen hold. **The only thing between this run and `DONE`
+is six checks that need a person and a phone**, raised as `D-003`. One of them, criterion 15, is the check
+that failed last time; its cause is fixed and written down as Constraint C-18.
 
 ## Abandoned tasks
 
@@ -23,15 +23,21 @@ None.
 
 ## Decisions awaiting an answer
 
-None right now. **D-002 was answered and consumed this iteration** — in part: four items answered, three
-not. The next invocation (the Verifier) will queue **one** consolidated Human Verification Request
-covering the six criteria below and stop there. Nothing is blocked in the meantime because no task remains.
+**One: `D-003`** — the consolidated Human Verification Request for DoD criteria 15-20, queued by iteration
+5. Answer it in `.harness/run/DECISIONS.md` under a `## D-003` heading, one line per item; a partial answer
+is fine and the engine re-raises only what is still unsigned. It blocks the `DONE` report and no task,
+because no task remains.
+
+Two of its items cannot be automated on the device that exists here (19 and 20 need real taps — MIUI's
+"USB debugging (Security settings)" gate refuses injected input), and one (18) asks for the system date to
+be moved forward on a daily-driver phone, which is stated as the human's call with "open it tomorrow"
+offered instead.
 
 ## `human` criteria still unsigned
 
-Six of seven. Criterion **21 is signed and stays signed** — it is about the removed location permissions,
-and nothing since touched the manifest or the permission code. (Its one carve-out: the notes list was not
-scrolled when it was checked.)
+Six of seven — the six in `D-003`. Criterion **21 is signed and stays signed**, and is deliberately **not**
+in that request: it is about the removed location permissions, and nothing since has touched the manifest
+or the permission code. (Its one carve-out: the notes list was not scrolled when it was checked.)
 
 | # | What to check | Standing |
 |---|---|---|
@@ -44,11 +50,18 @@ scrolled when it was checked.)
 
 ## Verification status
 
-Iteration 3 ran as the Verifier and re-proved all fourteen `machine` criteria — correctly, for the tree it
-saw. **That tree has since changed** (T-003 added two files and modified two), so iteration 4 re-measured
-what its own change touched and the next invocation re-proves all fourteen from scratch. Iteration 4's own
-run: `BUILD SUCCESSFUL`, **296 tests / 0 failures across 19 classes** (up from 288/18), lint 0 errors /
-75 warnings, screenshots 23 of 23 with no orphans.
+**All fourteen `machine` criteria hold**, re-proved by iteration 5 — an invocation that wrote none of this
+implementation and read none of the previous tables as input. Its own run:
+
+```
+:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest --rerun-tasks
+  -> BUILD SUCCESSFUL in 1m 8s, 61 actionable tasks: 61 executed (no UP-TO-DATE on any line)
+unit tests   296 across 19 classes, 0 failures, 0 errors
+lint         0 errors, 75 warnings
+screenshots  23 rendered, 0 diffs; 23 live hashes == 23 files on disk, no orphans
+```
+
+The per-criterion table is in `.harness/run/STATE.md` § Machine verification. Nothing on it is a gap.
 
 Two methodological traps, both recorded in `.harness/knowledge/PROJECT.md` so they are not rediscovered:
 

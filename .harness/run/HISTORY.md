@@ -173,6 +173,58 @@
 - **Reported:** `CONTINUE`. A DONE-candidate is recorded, but this invocation wrote the implementation and
   may not certify it (invariant 8). The next one is the Verifier.
 
+## Iteration 5 — 2026-09-15 — Final Verification (ENGINE.md §11), second pass
+
+- **Role:** Verifier. This invocation wrote none of the implementation — no Worker was dispatched, no
+  source file was touched, and the only files it changed are `.harness/` bookkeeping and
+  `SUGGESTIONS.html`. It distrusted iteration 4's evidence table on principle and re-measured everything.
+- **Recovered:** working tree clean apart from `.harness/TELEMETRY.tsv`, which the Runtime appends to on
+  every invocation. Not debris (already noted in `PROJECT.md`); left alone.
+- **Decisions consumed:** none. `DECISIONS.md` holds D-001 and D-002, both already answered and archived.
+  No new id appeared, so nothing was unblocked and nothing was waiting.
+- **All fourteen `machine` criteria re-proved from scratch**, with `--rerun-tasks` rather than `--rerun`,
+  because the trap `PROJECT.md` records is precisely that `--rerun` leaves `:app:testDebugUnitTest`
+  `UP-TO-DATE` while looking like it forced a re-execution. Result: `BUILD SUCCESSFUL in 1m 8s`,
+  **61 actionable tasks: 61 executed** — not one `UP-TO-DATE` marker on any line, which is what makes the
+  numbers below this invocation's own rather than a cache's.
+  - **296 tests across 19 classes, 0 failures, 0 errors** (criteria 1, 2, 7, 8, 14). The named cases exist
+    and are green: `GreetingDecisionTest`'s *"four minutes across midnight is two different days and greets
+    twice"* and *"a nearly twenty-four hour gap inside one day is still one day"* are criterion 2 written
+    as a test; `GreetOnceADayTest`'s *"failure then success on the same day greets exactly once and records
+    only the success"* is the criterion-15 fix; `AlarmNotifierConstantsTest` still passes unmodified.
+  - **Lint 0 errors, 75 warnings** (criterion 14).
+  - **Screenshots: 23 rendered, 0 diffs.** The 23 live hashes in the validation report and the 23 `.png`
+    files on disk are the *same 23*, compared name by name — so no orphan and no new reference (13, 14).
+    `AlarmsPermissionNoticeCase`'s `a2b5ee82_0.png` is among them.
+  - **Manifest, source and merged** (9, 10): neither location permission in either; all six required
+    permissions present, `VIBRATE` included per D-001. The merged manifest additionally carries AGP's own
+    injected `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, which is not a source declaration.
+  - **Location symbols: 0 hits** across `app/src/main/java` for all nine names, and 0 in
+    `HomePermissionBottomSheet.kt` (11, 12).
+  - **Greeting mechanics read in the source, not taken on trust** (3-7): `MainActivity.onStart` →
+    `greetIfFirstForegroundToday`; `greetingMutex.withLock` wraps the whole read-decide-post-write
+    sequence, not just the write; the fact is persisted through `SettingDatastore.lastGreetedDateKey` and
+    re-read from the flow on every call, with no in-memory holder; the text comes from
+    `R.string.hello_what_will_you_write_today`, present in both `values/` and `values-de/`; channel id
+    `"greeting"` at `IMPORTANCE_DEFAULT`, created in `MainApplication.onCreate` through Koin's own
+    instance, beside the alarms channel.
+  - **Alarms untouched** (8, 13): `AlarmNotifier.kt`, `AlarmNotifierConstantsTest.kt` and every file under
+    `ui/fragment/alarms/` appear nowhere in this run's diff (`3506b33..HEAD`, the last pre-run commit).
+- **Queued D-003** — one consolidated Human Verification Request for the six unsigned `human` criteria
+  (15-20), and **not** for 21, which the human signed on 2026-09-15 and which nothing since has touched.
+  Re-asking it is the failure mode §7 names by example. Items 19 and 20 are written to be done by hand,
+  because the device refuses injected input; item 18 says plainly that it needs the system date moved on a
+  daily-driver phone and that the decision is the human's, with "just open it tomorrow" offered as the
+  alternative. Item 15 states its precondition — data cleared, permission granted *when asked* — as the
+  check itself, since testing the other branch is how the bug shipped.
+- **`SUGGESTIONS.html`'s Escalate tab regenerated in the same step**, before the status was written: D-003
+  added as the pending card, D-002 marked closed with a pointer to where the answer now goes, the
+  standfirst corrected from seven items to six.
+- **No amendment.** The plan did not change: no task was split, merged, reordered or added, and the
+  DONE-candidate flag stands rather than being cleared, because nothing was found wrong.
+- **Reported:** `ESCALATE`. Every `machine` criterion holds; six `human` criteria are unsigned; no
+  executable task remains. ENGINE.md §11.3 — do not create the Cleanup Commit, do not report `DONE`.
+
 ## Archived Decisions
 
 ### D-002 - Human Verification Request: seven things only a person can look at

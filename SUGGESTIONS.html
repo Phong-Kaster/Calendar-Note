@@ -117,8 +117,8 @@
   <p class="eyebrow" data-lang="en">Updated 2026-09-15 (iteration 4) · branch loop/calendar-note-app</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
-  <p class="standfirst" data-lang="vi">Mọi tiêu chí máy chấm được đã được chứng minh lại từ đầu. Còn lại <strong>bảy việc chỉ con người nhìn được</strong> — engine không có máy thật để chạy app. Ký xong bảy mục đó là lần chạy này kết thúc.</p>
-  <p class="standfirst" data-lang="en">Every machine-checkable criterion has been re-proved from scratch. What remains is <strong>seven things only a person can look at</strong> — the engine has no device to run the app on. Signing those off is the last step of this run.</p>
+  <p class="standfirst" data-lang="vi">Cả mười bốn tiêu chí máy chấm được đã được chứng minh lại từ đầu bởi lần gọi này. Còn lại <strong>sáu việc chỉ con người nhìn được</strong> — engine không có máy thật để chạy app. Tiêu chí 21 bạn đã ký và <em>vẫn còn hiệu lực</em>, không hỏi lại. Ký xong sáu mục kia là lần chạy này kết thúc.</p>
+  <p class="standfirst" data-lang="en">All fourteen machine-checkable criteria have been re-proved from scratch by this invocation. What remains is <strong>six things only a person can look at</strong> — the engine has no device to run the app on. Criterion 21 you already signed and it <em>still stands</em>; it is not being re-asked. Signing off the other six is the last step of this run.</p>
 
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-btn-escalate" aria-controls="panel-escalate" data-tab="escalate">
@@ -139,9 +139,66 @@
 </div>
 
 <div class="lead">
-  <p data-lang="vi"><strong>Hiện không có câu hỏi nào đang chờ bạn.</strong> D-002 đã được trả lời và tiêu thụ ở lần lặp 4. Tiêu chí 15 <strong>trượt</strong>, và nguyên nhân đã được sửa (T-003). Lần chạy tiếp theo sẽ gửi <em>một</em> yêu cầu kiểm tra thủ công gộp chung cho các tiêu chí 15-20.</p>
-  <p data-lang="en"><strong>Nothing is waiting on you right now.</strong> D-002 was answered and consumed in iteration 4. Criterion 15 came back <strong>FAIL</strong> and its cause is fixed (T-003). The next run will queue <em>one</em> consolidated human check covering criteria 15-20 — not one request per criterion.</p>
+  <p data-lang="vi"><strong>Một câu hỏi đang chờ bạn: D-003.</strong> Sáu mục kiểm tra bằng tay (tiêu chí 15-20), gộp trong một yêu cầu duy nhất. Mục đầu tiên là mục đã <strong>trượt</strong> lần trước — và điều kiện tiên quyết của nó <em>chính là</em> bài kiểm tra, xin đừng bỏ qua. Trả lời tại <span class="mono">.harness/run/DECISIONS.md</span> dưới tiêu đề <span class="mono">## D-003</span>.</p>
+  <p data-lang="en"><strong>One question is waiting on you: D-003.</strong> Six by-hand checks (criteria 15-20), consolidated into a single request. The first item is the one that <strong>failed</strong> last time — and its precondition <em>is</em> the check, so please do not shortcut it. Answer in <span class="mono">.harness/run/DECISIONS.md</span> under a <span class="mono">## D-003</span> heading.</p>
 </div>
+
+<details class="card esc" open>
+  <summary>
+    <div class="tagrow">
+      <span class="id">D-003</span>
+      <span class="tag" data-lang="vi">Đang chờ bạn · lần lặp 5 (Verifier)</span>
+      <span class="tag" data-lang="en">Waiting on you · iteration 5 (Verifier)</span>
+    </div>
+    <h3 data-lang="vi">Kiểm tra bằng tay: sáu mục, và mục đã trượt lần trước</h3>
+    <h3 data-lang="en">Human Verification Request: six checks, and the one that failed last time</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi"><strong>Đã đổi gì từ D-002.</strong> Tiêu chí 15 trượt vì app ghi lại "đã chào hôm nay" bất kể thông báo có tới được ai hay không. T-003 (commit <span class="mono">8b67f40</span>) đã sửa: giờ app hỏi <span class="mono">areNotificationsEnabled()</span> trước, và chỉ ghi ngày xuống khi hệ thống thực sự nhận thông báo. Bản sửa đó đụng vào <span class="mono">GreetingNotifier</span> — nên tiêu chí 16 và 17 phải xem lại dù lần trước bạn đã ký: đoạn mã bạn từng nhìn không còn tồn tại nữa (ENGINE.md §11).</p>
+    <p data-lang="en"><strong>What changed since D-002.</strong> Criterion 15 failed because the app wrote down "greeted today" whether or not the notification reached anybody. T-003 (commit <span class="mono">8b67f40</span>) fixed it: the app now asks <span class="mono">areNotificationsEnabled()</span> first and records the day <strong>only</strong> when the system accepted the post. That fix changed <span class="mono">GreetingNotifier</span> — which is why 16 and 17 need looking at again even though you signed them last time: the code you were looking at no longer exists (ENGINE.md §11).</p>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Ba điều cần biết trước</span><span class="lbl" data-lang="en">Three things to know first</span>
+      <p data-lang="vi"><strong>Mục 19 và 20 cần ngón tay thật.</strong> Lần trước không tự động hoá được — máy từ chối bơm thao tác (<span class="mono">SecurityException: Injecting input events requires ... INJECT_EVENTS</span>, cổng "USB debugging (Security settings)" của MIUI). <strong>Mục 18 cần đổi ngày hệ thống</strong> trên chính máy bạn dùng hằng ngày, ảnh hưởng mọi app trên máy — đó là quyết định của bạn, không ai tự làm thay. Không muốn thì cứ mở app vào ngày mai, cùng một phép thử. <strong>Tiêu chí 21 không có trong danh sách</strong>: bạn đã ký và nó vẫn còn hiệu lực.</p>
+      <p data-lang="en"><strong>Items 5 and 6 need a real finger.</strong> They could not be automated last time — the device refuses injected input (<span class="mono">SecurityException: Injecting input events requires ... INJECT_EVENTS</span>, MIUI's "USB debugging (Security settings)" gate). <strong>Item 4 needs the system date moved forward</strong> on what is your daily-driver phone, which affects every app on it — your call, and nobody made it for you. If you would rather not, just open the app tomorrow; same check, slower. <strong>Criterion 21 is not in the list</strong>: you signed it and it still stands.</p></div>
+    <p data-lang="vi"><strong>APK:</strong> <span class="mono">app/build/outputs/apk/debug/app-debug.apk</span>, dựng bởi chính lần gọi này từ đầu nhánh <span class="mono">loop/calendar-note-app</span>.</p>
+    <p data-lang="en"><strong>The APK:</strong> <span class="mono">app/build/outputs/apk/debug/app-debug.apk</span>, built by this very invocation from the tip of <span class="mono">loop/calendar-note-app</span>.</p>
+    <div class="scroll"><table>
+      <thead>
+        <tr data-lang="vi"><th>#</th><th>Mở cái gì / làm gì</th><th>Mong đợi thấy gì</th></tr>
+        <tr data-lang="en"><th>#</th><th>What to open &amp; do</th><th>What to expect</th></tr>
+      </thead>
+      <tbody>
+        <tr data-lang="vi"><td>15</td><td><strong>Xoá sạch dữ liệu app trước</strong> (Cài đặt → Ứng dụng → Calendar-Note → Bộ nhớ → Xoá dữ liệu), hoặc gỡ rồi cài lại APK. Mở app, và <strong>cấp quyền thông báo khi app hỏi</strong>. Máy đã có sẵn quyền từ trước là nhánh khác — đúng chỗ con bug này lọt lưới.</td><td>Một thông báo trong khay sau một hai giây: tiêu đề là tên app, nội dung <em>"Hello! What will you write today?"</em> (hoặc <em>"Hallo! Was schreibst du heute?"</em> trên máy tiếng Đức). Là một dòng yên trong khay, <strong>không</strong> phải banner trùm màn hình. Icon nhỏ là hình trắng phẳng, không phải icon launcher thu nhỏ, không phải ô vuông xám. Kéo mở ra: đọc được hết câu, không bị cắt.</td></tr>
+        <tr data-lang="en"><td>15</td><td><strong>Clear the app's data first</strong> (Settings → Apps → Calendar-Note → Storage → Clear storage), or uninstall and install the APK fresh. Open the app and <strong>grant the notification permission when it asks</strong>. A device that already had the permission walks the other branch — that is exactly how this bug shipped.</td><td>A notification in the shade within a second or two: title is the app name, text reads <em>"Hello! What will you write today?"</em> (or <em>"Hallo! Was schreibst du heute?"</em> on a German device). A quiet line in the shade, <strong>not</strong> a banner over the screen. Its small icon is a flat white glyph, not a shrunken launcher icon and not a featureless grey square. Pull it open: the whole greeting is readable, not clipped. <em>If it still does not appear, say whether the permission dialog appeared at all.</em></td></tr>
+        <tr data-lang="vi"><td>16</td><td>Nhấn Home rồi quay lại app 2-3 lần, cùng ngày, không qua nửa đêm.</td><td>Không có thông báo thứ hai ở bất kỳ lần nào. Nếu bạn đã gạt bỏ lời chào đầu tiên, nó không quay lại.</td></tr>
+        <tr data-lang="en"><td>16</td><td>Press Home and bring the app back two or three times, same day, without crossing local midnight.</td><td>No second notification on any of those returns. If you dismissed the first greeting, it does not come back.</td></tr>
+        <tr data-lang="vi"><td>17</td><td>Cài đặt → Ứng dụng → <strong>Buộc dừng</strong>, rồi mở lại từ launcher, vẫn cùng ngày.</td><td>Vẫn không có thông báo. Đây là mục duy nhất phân biệt "nhớ trên đĩa" với "nhớ trong bộ nhớ" — đừng bỏ qua.</td></tr>
+        <tr data-lang="en"><td>17</td><td>Settings → Apps → <strong>Force stop</strong>, then relaunch from the launcher, same calendar day.</td><td>Still no notification. This is the only check that separates "remembered on disk" from "remembered in memory" — worth not skipping.</td></tr>
+        <tr data-lang="vi"><td>18</td><td>Hoặc đợi qua nửa đêm rồi mở app (không cần đổi gì), hoặc Cài đặt → Hệ thống → Ngày &amp; giờ, tắt ngày tự động và đẩy tiến một ngày. <strong>Tuỳ bạn.</strong></td><td>Lời chào xuất hiện trở lại, không cần bạn làm gì. Nếu có đổi ngày, nhớ bật lại ngày tự động sau đó.</td></tr>
+        <tr data-lang="en"><td>18</td><td>Either come back after local midnight and open the app (no settings change at all), or Settings → System → Date &amp; time, turn off automatic date and move it forward one day. <strong>Your call.</strong></td><td>The greeting appears again with no action from you. If you changed the date, turn automatic date back on afterwards.</td></tr>
+        <tr data-lang="vi"><td>19</td><td><em>Cần ngón tay.</em> Tắt quyền thông báo (và trên Android 12+ thu hồi cả <em>Báo thức &amp; nhắc nhở</em>), mở tab <strong>Home</strong>, bấm từng dòng. Xong nhớ bật lại thông báo.</td><td>Đúng hai dòng trên Android 12+ (Thông báo, Báo thức chính xác), một dòng trên bản cũ hơn. <strong>Không có dòng Vị trí</strong>, không có khoảng trống hay vạch ngăn thừa. Mỗi dòng mở đúng màn hình hệ thống của nó — Báo thức chính xác phải rơi thẳng vào cái công tắc, không phải dừng trước một màn hình.</td></tr>
+        <tr data-lang="en"><td>19</td><td><em>Needs a finger.</em> Turn notifications off (and on Android 12+ revoke <em>Alarms &amp; reminders</em>), open the <strong>Home</strong> tab, tap each row. Turn notifications back on afterwards.</td><td>Exactly two rows on Android 12+ (Notification, Exact alarms), one on older versions. <strong>No Location row</strong>, no leftover gap or stray divider. Each row opens its correct system screen — Exact alarms landing on the switch itself, not one screen short.</td></tr>
+        <tr data-lang="vi"><td>20</td><td><em>Cần ngón tay.</em> Mở tab <strong>Alarms</strong> khi còn thiếu quyền, rồi mở lại sau khi cấp đủ; đọc banner và bấm các nút sửa.</td><td>Banner y hệt như trước lần chạy này, nút bấm đi đúng chỗ cũ, và không vẽ gì khi đã đủ quyền. Kiểm tra cho chắc thôi: diff lần chạy này không đụng file nào trong <span class="mono">ui/fragment/alarms/</span>, và ảnh tham chiếu <span class="mono">a2b5ee82_0.png</span> của màn hình đó xanh trong chính lần chạy này.</td></tr>
+        <tr data-lang="en"><td>20</td><td><em>Needs a finger.</em> Open the <strong>Alarms</strong> tab with a permission missing, then again with both granted; read the banner in each state and tap its fix buttons.</td><td>The same banner wording and the same fix buttons as before this run, each landing on the correct system screen, and nothing drawn once both permissions are in order. Belt-and-braces: this run's diff touches no file under <span class="mono">ui/fragment/alarms/</span>, and that screen's reference image <span class="mono">a2b5ee82_0.png</span> validated green in this invocation's own run.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="ev">:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest --rerun-tasks
+  -&gt; BUILD SUCCESSFUL in 1m 8s, 61 actionable tasks: 61 executed (no UP-TO-DATE on any)
+unit tests   296 across 19 classes, 0 failures, 0 errors        (criteria 1, 2, 7, 8, 14)
+lint         0 errors, 75 warnings                              (criterion 14)
+screenshots  23 of 23 rendered, 0 diffs; 23 live hashes == 23 files on disk, no orphans (13, 14)
+manifest     source AND merged manifest carry neither location permission; VIBRATE kept per D-001 (9, 10)
+location     0 hits for all nine location symbols across app/src/main/java (11); none in the sheet (12)
+greeting     onStart -&gt; greetIfFirstForegroundToday (3); Mutex guards read-decide-post-write (4);
+             persisted through SettingDatastore, no in-memory holder (5); text from R.string in both
+             locales (6); channel id "greeting" at IMPORTANCE_DEFAULT, created in MainApplication (7)
+alarms       AlarmNotifier.kt, ui/fragment/alarms/ and AlarmNotifierConstantsTest.kt appear nowhere in
+             this run's diff (8, 13)</div>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Trả lời thế nào</span><span class="lbl" data-lang="en">How to answer</span>
+      <p data-lang="vi">Trong <span class="mono">.harness/run/DECISIONS.md</span>, dưới tiêu đề <span class="mono">## D-003</span>. Mỗi mục một dòng là đủ (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). Mục nào <strong>fail</strong> thì ghi bạn thấy gì thay vào đó — engine sẽ biến nó thành task, không tranh luận lại. Trả lời một phần cũng được: engine chỉ hỏi lại đúng những mục còn thiếu chữ ký.</p>
+      <p data-lang="en">In <span class="mono">.harness/run/DECISIONS.md</span>, under a <span class="mono">## D-003</span> heading. One line per item is plenty (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). For any <strong>fail</strong>, say what you saw instead — the engine will reconcile it into a task rather than arguing with you. A partial answer is fine: the engine re-raises only what is still unsigned and never re-asks what you signed.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">DONE — không còn task nào / no task remains</span></div>
+  </div>
+</details>
 
 <details class="card esc">
   <summary>
@@ -196,9 +253,9 @@ manifest     source AND merged manifest carry neither location permission; VIBRA
 location     0 hits for all nine location symbols across app/src/main/java
 alarms       AlarmNotifier.kt, ui/fragment/alarms/ and AlarmNotifierConstantsTest.kt untouched</div>
     <div class="ask esc"><span class="lbl" data-lang="vi">Trả lời thế nào</span><span class="lbl" data-lang="en">How to answer</span>
-      <p data-lang="vi">Trong <span class="mono">.harness/run/DECISIONS.md</span>, dưới tiêu đề <span class="mono">## D-002</span>. Mỗi mục một dòng là đủ (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). Mục nào <strong>fail</strong> thì ghi bạn thấy gì thay vào đó — engine sẽ biến nó thành task, không tranh luận lại.</p>
-      <p data-lang="en">In <span class="mono">.harness/run/DECISIONS.md</span>, under a <span class="mono">## D-002</span> heading. One line per item is plenty (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). For any <strong>fail</strong>, say what you saw instead — the engine will reconcile it into a task rather than arguing with you.</p></div>
-    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">DONE — không còn task nào / no task remains</span></div>
+      <p data-lang="vi"><strong>Mục này đã đóng — đừng trả lời ở đây nữa.</strong> Các mục còn thiếu chữ ký (15-20) đã được chuyển sang <span class="mono">D-003</span> ở trên, và đó là nơi trả lời.</p>
+      <p data-lang="en"><strong>This one is closed — do not answer it any more.</strong> The items still unsigned (15-20) were carried into <span class="mono">D-003</span> above, and that is where to answer.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Đã chặn</span><span class="lbl" data-lang="en">Blocked</span><span class="mono">DONE — đã tiêu thụ ở lần lặp 4 / consumed in iteration 4</span></div>
   </div>
 </details>
 
