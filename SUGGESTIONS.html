@@ -6,7 +6,7 @@
     --ink:#191D1E; --ink-2:#3D4547; --muted:#667072;
     --rule:#C6CAC4; --rule-soft:#D6D9D3;
     --accent:#0F5C63; --accent-ink:#0B4750;
-    --core:#35618E; --pack:#6B4E9C; --local:#667072; --new:#9C6206; --done:#2C6547;
+    --core:#35618E; --pack:#6B4E9C; --local:#667072; --new:#9C6206; --pending:#9A2B22;
     --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
     --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
     --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Consolas,monospace;
@@ -16,14 +16,14 @@
     --ink:#E8EBE9; --ink-2:#BAC3C2; --muted:#8A9694;
     --rule:#2E373A; --rule-soft:#262E31;
     --accent:#4FBDC7; --accent-ink:#7FD5DC;
-    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --done:#63B489;
+    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --pending:#E0736A;
   }}
   :root[data-theme="dark"]{
     --paper:#14181A; --surface:#1B2023; --surface-2:#232A2D;
     --ink:#E8EBE9; --ink-2:#BAC3C2; --muted:#8A9694;
     --rule:#2E373A; --rule-soft:#262E31;
     --accent:#4FBDC7; --accent-ink:#7FD5DC;
-    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --done:#63B489;
+    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --pending:#E0736A;
   }
   [data-lang="en"]{display:none}
   :root[data-ui-lang="en"] [data-lang="en"]{display:revert}
@@ -39,13 +39,24 @@
     background-position:calc(100% - 14px) 52%,calc(100% - 9px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer}
   select option{background:var(--surface);color:var(--ink)}
   .wrap{max-width:900px;margin:0 auto;padding:0 28px 90px}
-  header.mast{border-bottom:2px solid var(--ink);padding:34px 0 18px;margin-bottom:28px}
+  header.mast{border-bottom:2px solid var(--ink);padding:34px 0 18px;margin-bottom:0}
   .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 12px}
   h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2rem,5vw,2.9rem);line-height:1.12;letter-spacing:-.02em;margin:0 0 13px;text-wrap:balance}
   .standfirst{font-size:1.1rem;color:var(--ink-2);margin:0;max-width:60ch}
+
+  .tabs{display:flex;gap:0;margin:22px 0 0;border-bottom:1px solid var(--rule)}
+  .tabs button{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 4px;margin-right:28px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .tabs button .n{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:8px;background:var(--surface-2);color:var(--ink-2);font-size:10.5px}
+  .panel{padding-top:6px}
+  .panel[hidden]{display:none}
+
   .banner{border:1px solid var(--new);border-left:3px solid var(--new);background:var(--surface);padding:14px 18px;margin:26px 0 34px;font-size:.98rem}
   .banner strong{color:var(--new)}
   .banner p{margin:0 0 8px} .banner p:last-child{margin:0}
+  .banner.esc{border-color:var(--pending)}
+  .banner.esc strong{color:var(--pending)}
   h2{font-family:var(--f-display);font-weight:700;font-size:1.55rem;line-height:1.3;letter-spacing:-.012em;margin:52px 0 6px;text-wrap:balance}
   h2+.note{margin:0 0 24px;color:var(--muted);font-size:.95rem;max-width:62ch}
   h3{font-family:var(--f-display);font-weight:600;font-size:1.08rem;line-height:1.42;margin:0 0 8px}
@@ -56,21 +67,36 @@
   .kid p{margin:0 0 9px} .kid p:last-child{margin:0}
   .card{border-top:1px solid var(--rule-soft);padding:22px 0 24px}
   .card:first-of-type{border-top:1px solid var(--rule)}
+  .card.esc{border-top-color:var(--rule-soft)}
+  .card>summary{display:block;cursor:pointer;list-style:none;position:relative;padding-right:26px}
+  .card>summary::-webkit-details-marker{display:none}
+  .card>summary::marker{display:none;content:""}
+  .card>summary::after{content:"";position:absolute;right:2px;top:9px;width:7px;height:7px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+  .card[open]>summary::after{transform:rotate(-135deg);top:13px}
+  .card>summary:hover::after{border-color:var(--ink)}
+  .card>summary h3{margin:0}
+  .card-body{padding-top:14px}
   .tagrow{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 10px;align-items:center}
   .tag{font-family:var(--f-mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--rule);color:var(--muted);border-radius:2px}
   .tag.core{color:var(--core);border-color:var(--core)}
   .tag.pack{color:var(--pack);border-color:var(--pack)}
   .tag.local{color:var(--local);border-color:var(--local)}
-  .tag.done{color:var(--done);border-color:var(--done)}
+  .tag.pending{color:var(--pending);border-color:var(--pending)}
+  .tag.answered{color:var(--local);border-color:var(--local)}
   .id{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
   .ev{font-family:var(--f-mono);font-size:12.2px;line-height:1.6;background:var(--surface);border:1px solid var(--rule-soft);border-left:2px solid var(--rule);padding:10px 14px;margin:12px 0;overflow-x:auto;white-space:pre;color:var(--ink-2)}
   .ask{margin:13px 0 0;padding-left:15px;border-left:2px solid var(--accent)}
   .ask .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent-ink);display:block;margin-bottom:3px}
+  .ask.esc{border-left-color:var(--pending)}
+  .ask.esc .lbl{color:var(--pending)}
   .ask p{margin:0;font-size:.95rem}
+  .blocks{margin:13px 0 0;font-size:.92rem;color:var(--muted)}
+  .blocks .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-right:8px}
   table{width:100%;border-collapse:collapse;font-size:.94rem}
   th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
   th{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);font-weight:400}
   .scroll{overflow-x:auto}
+  .empty{font-size:.95rem;color:var(--muted);padding:28px 0;border-top:1px solid var(--rule)}
   footer{margin-top:56px;padding-top:17px;border-top:2px solid var(--ink);font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.8}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -87,21 +113,63 @@
 <div class="wrap">
 
 <header class="mast">
-  <p class="eyebrow" data-lang="vi">Cập nhật 11-09-2026 · nhánh loop/calendar-note-app</p>
-  <p class="eyebrow" data-lang="en">Updated 2026-09-11 · branch loop/calendar-note-app</p>
+  <p class="eyebrow" data-lang="vi">Cập nhật 15-09-2026 · nhánh loop/calendar-note-app</p>
+  <p class="eyebrow" data-lang="en">Updated 2026-09-15 · branch loop/calendar-note-app</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
-  <p class="standfirst" data-lang="vi">Những bài học mà engine học được ở ngôi nhà này, nhưng đúng với <em>mọi</em> ngôi nhà — nên lẽ ra không nên nằm lại đây.</p>
-  <p class="standfirst" data-lang="en">Lessons the engine learned in this house that are true of <em>every</em> house — so they should not be staying here.</p>
+  <p class="standfirst" data-lang="vi">Hai việc engine không được tự quyết trong lần chạy này: một câu hỏi đang chặn tiến độ, và những bài học có thể không thuộc về riêng repo này. Cả hai chỉ là đề nghị đọc — không có gì tự áp dụng.</p>
+  <p class="standfirst" data-lang="en">Two things the engine cannot decide for itself this run: a question blocking progress, and lessons that may not belong to this repository alone. Both are read-only proposals — nothing here applies itself.</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-btn-escalate" aria-controls="panel-escalate" data-tab="escalate">
+      <span data-lang="vi">Cần quyết</span><span data-lang="en">Escalate</span><span class="n" id="n-escalate">0</span>
+    </button>
+    <button role="tab" id="tab-btn-suggest" aria-controls="panel-suggest" data-tab="suggest">
+      <span data-lang="vi">Góp ý</span><span data-lang="en">Suggestions</span><span class="n" id="n-suggest">0</span>
+    </button>
+  </div>
 </header>
 
+<!-- ESCALATE TAB — mirrors .harness/run/ESCALATION.md, read-only. -->
+<section id="panel-escalate" class="panel" role="tabpanel" aria-labelledby="tab-btn-escalate">
+
+<div class="banner esc">
+  <p data-lang="vi"><strong>Đây là bản sao chỉ đọc của <span class="mono">ESCALATION.md</span>.</strong> Trả lời tại <span class="mono">.harness/run/DECISIONS.md</span>, không phải ở đây — trang này chỉ để đọc cho dễ, không phải nơi engine nhận quyết định.</p>
+  <p data-lang="en"><strong>This is a read-only mirror of <span class="mono">ESCALATION.md</span>.</strong> Answer in <span class="mono">.harness/run/DECISIONS.md</span>, never here — this page exists to make the queue easy to read, not the channel the engine listens on.</p>
+</div>
+
+<details class="card esc" open>
+  <summary>
+    <div class="tagrow">
+      <span class="id">D-001</span>
+      <span class="tag pending" data-lang="vi">Đang chờ · lần lặp 1</span>
+      <span class="tag pending" data-lang="en">Pending · iteration 1</span>
+    </div>
+    <h3 data-lang="vi">Duyệt Định nghĩa Hoàn thành cho lần chạy "chào buổi sáng + dọn quyền"</h3>
+    <h3 data-lang="en">Approve the Definition of Done for the greeting-notification / permission-cleanup run</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Loại: Duyệt DoD. Chặn: T-001, T-002 (chặn toàn bộ việc có thể làm — đúng theo thiết kế, vì chưa có task nào tồn tại cho tới khi bài kiểm tra được duyệt).</p>
+    <p data-lang="en">Type: DoD approval. Blocks: T-001, T-002 (blocks everything executable — by design, since no task exists until the exam it will be graded against is approved).</p>
+    <p data-lang="vi"><strong>Bối cảnh:</strong> <span class="mono">PRD.md</span> mô tả hai việc độc lập, đã được quyết sẵn: thông báo chào mỗi ngày ở lần mở ứng dụng đầu tiên, và gỡ ba quyền Android không dùng tới (<span class="mono">VIBRATE</span>, hai quyền vị trí) cùng mã yêu cầu chúng.</p>
+    <p data-lang="en"><strong>Context:</strong> <span class="mono">PRD.md</span> describes two independent, pre-decided pieces of work: a once-a-day greeting notification on first foreground open, and removing three unused Android permissions (<span class="mono">VIBRATE</span> and two location permissions) plus the code that requests them.</p>
+    <p data-lang="vi">Năm vai trò phân tích (Capable tier, chỉ đọc) phát hiện một điểm căng đáng lưu ý dù không chặn quyết định này: lý do PRD đưa ra để gỡ <span class="mono">VIBRATE</span> ("không có <span class="mono">Vibrator</span> nào trong app") đúng nhưng chưa đủ — <span class="mono">AlarmNotifier.kt</span> tự gọi rung cho thông báo báo thức trên API 24-25. PRD vẫn yêu cầu gỡ, nên lần chạy vẫn thực hiện; tiêu chí DoD 23 (người kiểm tra) sẽ bắt nếu báo thức thực sự hỏng — rủi ro thực sự chỉ là mất tiếng rung, không phải mất thông báo.</p>
+    <p data-lang="en">Five analysis roles (Capable tier, read-only) found one real tension worth noting, though it does not block this decision: the PRD's stated reason for removing <span class="mono">VIBRATE</span> ("no <span class="mono">Vibrator</span> usage") is true but incomplete — <span class="mono">AlarmNotifier.kt</span> independently calls vibration for alarm heads-up notifications on API 24-25. The PRD still asks for the removal, so the run proceeds; DoD criterion 23 (human-verified) would catch a real regression — the actual risk is only losing the buzz, not the notification.</p>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
+      <p data-lang="vi">Duyệt như đã viết. Các tiêu chí bám sát trực tiếp yêu cầu của PRD, được phân loại machine/human qua hai lượt phản biện độc lập, và không tiêu chí nào vượt quá những gì PRD đã nêu.</p>
+      <p data-lang="en">Approve as written. The criteria are drawn directly from the PRD's own requirements, classified machine/human through two independent arm's-length passes, and none asks for anything beyond what the PRD already specified.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">T-001, T-002</span></div>
+  </div>
+</details>
+
+</section>
+
+<!-- SUGGESTIONS TAB -->
+<section id="panel-suggest" class="panel" role="tabpanel" aria-labelledby="tab-btn-suggest" hidden>
+
 <div class="banner">
-  <p data-lang="vi"><strong>Cập nhật 11-09-2026 — S-01 đến S-05 đã được người duyệt và chép sang tầng loop của Foreman</strong> (commit bên dưới). Năm mục đó giữ lại ở đây chỉ để đối chiếu, đánh dấu <em>đã giải quyết</em>; chúng sẽ được xoá khỏi hộp ở lần chạy sau, vì một hộp thư chỉ đáng đọc khi mọi thứ trong đó còn đang chờ.</p>
-  <p data-lang="en"><strong>Updated 2026-09-11 — S-01 through S-05 were approved by the human and copied into Foreman's loop tier</strong> (commit below). They are kept here for reference, marked <em>resolved</em>; the next run removes them, because a suggestion box is only worth reading while everything in it is still pending.</p>
-  <p data-lang="vi"><strong>S-06, S-07 vẫn đang chờ bạn.</strong> Chưa có gì được sửa theo hai mục đó.</p>
-  <p data-lang="en"><strong>S-06 and S-07 are still waiting on you.</strong> Nothing has been changed for either.</p>
-  <p data-lang="vi"><strong>Ngoài năm mục đã duyệt, không có gì khác được sửa.</strong> Đây là bản đề nghị để bạn đọc, không phải việc đã làm. Không một dòng code hay doctrine nào thay đổi theo các mục dưới đây cho tới khi bạn đồng ý từng mục một.</p>
-  <p data-lang="en"><strong>Beyond the five approved items, nothing has been changed.</strong> This is a proposal for you to read, not work already done. No line of code or doctrine has moved because of anything below, and none will until you approve each item.</p>
+  <p data-lang="vi"><strong>S-01 đến S-05 (lần chạy alarms) đã được người duyệt và chép sang tầng loop</strong> — đã xoá khỏi hộp này. <strong>Chưa có gì khác được sửa.</strong> Đây là bản đề nghị để bạn đọc, không phải việc đã làm.</p>
+  <p data-lang="en"><strong>S-01 through S-05 (from the alarms run) were approved and copied into the loop tier</strong> — removed from this box. <strong>Nothing else has been changed.</strong> This is a proposal for you to read, not work already done.</p>
   <p data-lang="vi">Engine <em>không được phép</em> tự ghi vào sổ luật của chính nó. Nó chỉ được bỏ giấy vào hộp này. Chìa khoá vẫn trong tay bạn.</p>
   <p data-lang="en">The engine <em>may not</em> write into its own rulebook. It may only drop a note in this box. The key stays with you.</p>
 </div>
@@ -127,128 +195,73 @@
   </div>
 </div>
 
-<h2 data-lang="vi">Vì sao có cái hộp này</h2>
-<h2 data-lang="en">Why this box exists</h2>
-<p class="note" data-lang="vi">Phiên bản dành cho người lớn, ngắn.</p>
-<p class="note" data-lang="en">The grown-up version, briefly.</p>
-<p data-lang="vi">Tri thức trong Foreman chia ba tầng (ADR-019). Tầng <strong>loop</strong> — <code>.harness/loop/</code> — là doctrine, đi theo sản phẩm tới mọi repo. Tầng <strong>stack</strong> là kiến thức về một nền tảng, nằm trong gói cài thêm. Tầng <strong>repo</strong> — <code>knowledge/PROJECT.md</code> — là sự thật về riêng repo này.</p>
-<p data-lang="en">Foreman stratifies knowledge into three tiers (ADR-019). The <strong>loop</strong> tier — <code>.harness/loop/</code> — is doctrine, and travels with the product to every repository. The <strong>stack</strong> tier is platform knowledge, shipped as an opt-in pack. The <strong>repo</strong> tier — <code>knowledge/PROJECT.md</code> — is truth about this repository alone.</p>
-<p data-lang="vi">Engine bị chặn ghi vào tầng loop bằng deny rule của runtime, và chặn như vậy là đúng — đó là nơi ghi cả quyền hạn của nó. Nhưng hệ quả là: <strong>mọi bài học mang đi được đều rơi xuống tầng repo</strong>, vì đó là tầng duy nhất nó viết được. Và ở đó thì chúng không đi đâu cả.</p>
-<p data-lang="en">The engine is denied write access to the loop tier by runtime deny rules, and correctly so — that tier also records its own permissions. The consequence: <strong>every portable lesson falls into the repo tier</strong>, because that is the only tier it can write to. And there it stays.</p>
-<p data-lang="vi">ADR-019 đã lường trước và hoãn lại, với điều kiện xem xét lại rất rõ: <em>"khi một bài học thật sự bị mất vì không có ai ngồi xem."</em> Điều kiện đó <strong>đã xảy ra</strong> — bảng dưới là bằng chứng, và chúng chỉ được tìm thấy vì có người tình cờ đọc lại <code>PROJECT.md</code>.</p>
-<p data-lang="en">ADR-019 anticipated this and deferred it with an explicit revisit condition: <em>"when a lesson is actually lost because nobody was watching."</em> That condition <strong>has now been met</strong> — the table below is the evidence, and it was found only because someone happened to re-read <code>PROJECT.md</code>.</p>
-
 <h2 data-lang="vi">Đề nghị</h2>
 <h2 data-lang="en">The suggestions</h2>
-<p class="note" data-lang="vi">Tám mục, mỗi mục kèm nơi tôi nghĩ nó nên tới. Mỗi mục đều đã phải trả giá bằng một lần hỏng thật trong lần chạy này.</p>
-<p class="note" data-lang="en">Eight items, each with where I think it belongs. Every one was paid for by a real failure during this run.</p>
+<p class="note" data-lang="vi">Còn lại từ lần chạy trước, chưa được quyết. Mỗi mục đều đã phải trả giá bằng một lần hỏng thật.</p>
+<p class="note" data-lang="en">Carried over from the previous run, still undecided. Every one was paid for by a real failure.</p>
 
-<div class="card">
-  <div class="tagrow"><span class="id">S-01</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
-  <h3 data-lang="vi">Lệnh có ống dẫn (<code>|</code>) nói dối về thất bại</h3>
-  <h3 data-lang="en">A piped command lies about failure</h3>
-  <p data-lang="vi"><code>./gradlew build | tail -20</code> thoát với mã <strong>0 ngay cả khi build hỏng</strong>, vì mã thoát thuộc về <code>tail</code>. Một lần <code>BUILD FAILED</code> thật đã bị đọc nhầm thành pass.</p>
-  <p data-lang="en"><code>./gradlew build | tail -20</code> exits <strong>0 even when the build failed</strong>, because the exit status belongs to <code>tail</code>. A real <code>BUILD FAILED</code> was read as a pass this way.</p>
-  <div class="ev">$ false | tail -1 ; echo $?
-0                          <- "thành công" / "success"
+<details class="card">
+  <summary>
+    <div class="tagrow"><span class="id">S-06</span><span class="tag pack" data-lang="vi">Đề nghị: gói Android</span><span class="tag pack" data-lang="en">Proposed: Android pack</span></div>
+    <h3 data-lang="vi">Test đơn vị chạy với <code>android.jar</code> giả — mọi lời gọi framework đều ném lỗi</h3>
+    <h3 data-lang="en">Unit tests run against a stub <code>android.jar</code> — every framework call throws</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Trừ khi được cấu hình khác đi, mọi lời gọi vào framework trong test đơn vị đều ném lỗi thay vì trả về giá trị.</p>
+    <p data-lang="en">Unless configured otherwise, every framework call inside a unit test throws instead of returning.</p>
+    <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc gói stack</span><span class="lbl" data-lang="en">Why the stack pack</span>
+      <p data-lang="vi">Đúng với mọi repo Android, sai với mọi repo không phải Android. ADR-019 nói rõ: kiến thức nền tảng không được lên tầng loop.</p>
+      <p data-lang="en">True of every Android repository, false of every non-Android one. ADR-019 is explicit: platform knowledge must not reach the loop tier.</p></div>
+  </div>
+</details>
 
-$ set -o pipefail; false | tail -1 ; echo $?
-1                          <- sự thật / the truth</div>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
-    <p data-lang="vi">Không liên quan gì tới Gradle. Đúng với npm, pytest, cargo, make — mọi công cụ, mọi repo. Và hướng hỏng là hướng nguy hiểm: nó <em>không dừng</em> lần chạy, nó để lần chạy đi tiếp trên một niềm tin sai.</p>
-    <p data-lang="en">Nothing to do with Gradle. True of npm, pytest, cargo, make — every tool, every repository. And the failure direction is the dangerous one: it does not <em>stop</em> the run, it lets the run continue believing something false.</p></div>
-</div>
+<details class="card">
+  <summary>
+    <div class="tagrow"><span class="id">S-07</span><span class="tag pack" data-lang="vi">Đề nghị: gói Android</span><span class="tag pack" data-lang="en">Proposed: Android pack</span></div>
+    <h3 data-lang="vi"><code>updateDebugScreenshotTest</code> bỏ rơi ảnh cũ thay vì thay thế</h3>
+    <h3 data-lang="en"><code>updateDebugScreenshotTest</code> orphans reference images rather than replacing them</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Đổi tên một ca test thì ảnh cũ <strong>vẫn nằm lại</strong> trong thư mục tham chiếu. Không có gì dọn nó, và nó vẫn được commit.</p>
+    <p data-lang="en">Rename a test case and the old image <strong>stays behind</strong> in the reference directory. Nothing prunes it, and it still gets committed.</p>
+    <div class="ask"><span class="lbl" data-lang="vi">Vì sao quan trọng</span><span class="lbl" data-lang="en">Why it matters</span>
+      <p data-lang="vi">Ảnh tham chiếu là <em>chuẩn</em> để chấm điểm (ADR-017). Ảnh mồ côi làm người đọc tưởng độ phủ rộng hơn thực tế. Được cập nhật thêm bằng chứng: sau lần chạy alarms, thư mục tham chiếu vẫn sạch (23/23 ảnh khớp đúng 23 ca sống), nghĩa là bẫy này chưa từng xảy ra ở đây — nhưng vẫn còn treo, chưa có cách phòng ngừa nào được ghi vào gói Android.</p>
+      <p data-lang="en">Reference images are the <em>standard</em> a criterion is graded against (ADR-017). Orphans make coverage look wider than it is. Updated evidence: after the alarms run, the reference directory stayed clean (23/23 images map to exactly 23 live cases), so the trap has not fired here yet — but nothing in the Android pack yet documents a way to guard against it.</p></div>
+  </div>
+</details>
 
-<div class="card">
-  <div class="tagrow"><span class="id">S-02</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
-  <h3 data-lang="vi">Một task Gradle hỏng làm các task khác không chạy — và file XML cũ đọc y hệt một lần pass</h3>
-  <h3 data-lang="en">One failing task aborts the others, and the stale XML reads exactly like a pass</h3>
-  <p data-lang="vi">Xin bốn task trong một lệnh không có nghĩa là cả bốn cùng chạy. Ở vòng lặp 7, <code>validateDebugScreenshotTest</code> hỏng nên <code>testDebugUnitTest</code> <strong>không hề chạy</strong> — nhưng file kết quả từ lần trước vẫn nằm đó, với <code>failures="0"</code>. Đọc nó cho ra một câu khẳng định tự tin và sai.</p>
-  <p data-lang="en">Asking for four tasks in one command does not mean all four run. In iteration 7 <code>validateDebugScreenshotTest</code> failed so <code>testDebugUnitTest</code> <strong>never executed</strong> — but the previous run's results file was still sitting there with <code>failures="0"</code>. Reading it produced a confident, wrong answer.</p>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
-    <p data-lang="vi">Đây là luật về <em>bằng chứng</em>, không phải về Gradle: chỉ đọc kết quả từ một lần chạy mà chính mình thấy dòng thành công của nó. Mọi công cụ ghi file kết quả đều có cái bẫy này.</p>
-    <p data-lang="en">This is a rule about <em>evidence</em>, not about Gradle: read counts only from a run whose own success line you saw. Every tool that writes a results file has this trap.</p></div>
-</div>
+<details class="card">
+  <summary>
+    <div class="tagrow"><span class="id">S-08</span><span class="tag local" data-lang="vi">Đề nghị: giữ nguyên ở đây</span><span class="tag local" data-lang="en">Proposed: keep it here</span></div>
+    <h3 data-lang="vi">Một số mục nên ở nguyên chỗ cũ — sự thật riêng của repo này</h3>
+    <h3 data-lang="en">Some entries should stay where they are — truth about this repository alone</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi"><code>ScreenshotScaffold</code> tự áp theme; màn hình mới cần <code>imePadding()</code>; lint chặn build khi thiếu bản dịch tiếng Đức; migration Room viết tay không có test. Cả bốn đều là sự thật về <strong>riêng repo này</strong> và đang nằm đúng chỗ trong <span class="mono">.harness/knowledge/PROJECT.md</span>.</p>
+    <p data-lang="en"><code>ScreenshotScaffold</code> applies the theme itself; a new screen needs <code>imePadding()</code>; lint fails the build on a missing German translation; a hand-written Room migration has no test. All four are truth about <strong>this repository alone</strong> and are already in the right place in <span class="mono">.harness/knowledge/PROJECT.md</span>.</p>
+    <div class="ask"><span class="lbl" data-lang="vi">Vì sao nêu ra</span><span class="lbl" data-lang="en">Why mention it</span>
+      <p data-lang="vi">Một hộp thư chỉ đáng tin nếu nó cũng nói rõ cái gì <em>không</em> cần chuyển đi.</p>
+      <p data-lang="en">A suggestion box is only trustworthy if it also says what should <em>not</em> move.</p></div>
+  </div>
+</details>
 
-<div class="card">
-  <div class="tagrow"><span class="id">S-03</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
-  <h3 data-lang="vi">Build xanh trên một phần không có nghĩa là cả cây mã biên dịch được</h3>
-  <h3 data-lang="en">A green subset does not mean the tree compiles</h3>
-  <p data-lang="vi"><code>assembleDebug</code> và <code>testDebugUnitTest</code> cùng xanh, trong khi một source set thứ tư đã hỏng — phát hiện ở vòng 5 khi thêm một tham số bắt buộc cho một composable mà hai ca screenshot đang gọi.</p>
-  <p data-lang="en"><code>assembleDebug</code> and <code>testDebugUnitTest</code> both green while a fourth source set was broken — found in iteration 5 by adding a required parameter to a composable two screenshot cases call.</p>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
-    <p data-lang="vi">Luật chung: biết <em>tập hợp lệnh nào phủ hết cây mã</em>, và đừng coi một tập con xanh là toàn bộ. Repo nào cũng có source set mà lệnh mặc định không chạm tới.</p>
-    <p data-lang="en">The general rule: know <em>which set of commands covers the whole tree</em>, and never read a green subset as the whole. Every repository has a source set the default commands do not touch.</p></div>
-</div>
-
-<div class="card">
-  <div class="tagrow"><span class="id">S-04</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
-  <h3 data-lang="vi">Subagent chạy nền phải được chờ <em>bên trong</em> lượt nói</h3>
-  <h3 data-lang="en">A background subagent must be waited on <em>inside</em> the turn</h3>
-  <p data-lang="vi">Runtime gọi engine bằng một lần <code>claude -p</code> duy nhất, không tương tác. <strong>Lượt nói kết thúc là tiến trình thoát.</strong> Runtime không thấy file status, đếm là một lần sập, rồi chạy lại từ checkpoint — mất sạch những gì vòng lặp chưa commit.</p>
-  <p data-lang="en">The runtime invokes the engine as a single non-interactive <code>claude -p</code>. <strong>The moment the turn ends, the process exits.</strong> The runtime finds no status file, counts a crash, and re-invokes from the last checkpoint — losing everything the iteration had not committed.</p>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
-    <p data-lang="vi">Đây là sự thật về <strong>chính cơ chế của Foreman</strong>, không phải về repo này. Nó đúng với mọi engine chạy dưới runtime này, và hậu quả là mất việc chứ không phải chỉ chậm.</p>
-    <p data-lang="en">This is a fact about <strong>Foreman's own mechanism</strong>, not about this repository. It holds for every engine running under this runtime, and the cost is lost work rather than slowness.</p></div>
-</div>
-
-<div class="card">
-  <div class="tagrow"><span class="id">S-05</span><span class="tag done" data-lang="vi">✓ Đã chép sang tầng loop</span><span class="tag done" data-lang="en">✓ Copied to the loop tier</span></div>
-  <h3 data-lang="vi">Git Bash bóp méo đường dẫn khi đọc file ở nhánh khác</h3>
-  <h3 data-lang="en">Git Bash mangles the path when reading files from another branch</h3>
-  <p data-lang="vi"><code>git show &lt;ref&gt;:&lt;path&gt;</code> chạy bình thường với <code>app/**</code>, nhưng với đường dẫn bắt đầu bằng dấu chấm thì MSYS đổi <code>ref:path</code> thành <code>ref;path</code> và báo <em>"unknown revision or path"</em> — đọc y như file không tồn tại, trong khi nó vẫn ở đó.</p>
-  <p data-lang="en"><code>git show &lt;ref&gt;:&lt;path&gt;</code> works for <code>app/**</code>, but for a dot-directory path MSYS rewrites <code>ref:path</code> into <code>ref;path</code> and reports <em>"unknown revision or path"</em> — which reads exactly like the file is missing when it is not.</p>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
-    <p data-lang="vi">Foreman chỉ chạy trên Windows, và đường dẫn bị dính đúng là <code>.harness/**</code> — thư mục của chính nó. Thông báo lỗi lại đánh lừa theo hướng tệ nhất: engine sẽ kết luận là lịch sử không có gì.</p>
-    <p data-lang="en">Foreman runs on Windows only, and the affected paths are <code>.harness/**</code> — its own directory. The error message misleads in the worst direction: the engine concludes the history holds nothing.</p></div>
-</div>
-
-<div class="card">
-  <div class="tagrow"><span class="id">S-06</span><span class="tag pack" data-lang="vi">Đề nghị: gói Android</span><span class="tag pack" data-lang="en">Proposed: Android pack</span></div>
-  <h3 data-lang="vi">Test đơn vị chạy với <code>android.jar</code> giả — mọi lời gọi framework đều ném lỗi</h3>
-  <h3 data-lang="en">Unit tests run against a stub <code>android.jar</code> — every framework call throws</h3>
-  <p data-lang="vi">Trừ khi được cấu hình khác đi, mọi lời gọi vào framework trong test đơn vị đều ném lỗi thay vì trả về giá trị.</p>
-  <p data-lang="en">Unless configured otherwise, every framework call inside a unit test throws instead of returning.</p>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc gói stack</span><span class="lbl" data-lang="en">Why the stack pack</span>
-    <p data-lang="vi">Đúng với mọi repo Android, sai với mọi repo không phải Android. ADR-019 nói rõ: kiến thức nền tảng không được lên tầng loop — không repo nào kiểm chứng được nó, và nó sẽ mục dần mà không ai sửa.</p>
-    <p data-lang="en">True of every Android repository, false of every non-Android one. ADR-019 is explicit: platform knowledge must not reach the loop tier — nothing there can verify it, and it rots uncorrected.</p></div>
-</div>
-
-<div class="card">
-  <div class="tagrow"><span class="id">S-07</span><span class="tag pack" data-lang="vi">Đề nghị: gói Android</span><span class="tag pack" data-lang="en">Proposed: Android pack</span></div>
-  <h3 data-lang="vi"><code>updateDebugScreenshotTest</code> bỏ rơi ảnh cũ thay vì thay thế</h3>
-  <h3 data-lang="en"><code>updateDebugScreenshotTest</code> orphans reference images rather than replacing them</h3>
-  <p data-lang="vi">Đổi tên một ca test thì ảnh cũ <strong>vẫn nằm lại</strong> trong thư mục tham chiếu. Không có gì dọn nó, và nó vẫn được commit.</p>
-  <p data-lang="en">Rename a test case and the old image <strong>stays behind</strong> in the reference directory. Nothing prunes it, and it still gets committed.</p>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao quan trọng</span><span class="lbl" data-lang="en">Why it matters</span>
-    <p data-lang="vi">Gói Android hiện chưa nói điều này, mà nó lại liên quan trực tiếp tới chỗ ADR-017 vừa siết: ảnh tham chiếu là <em>chuẩn</em> để chấm điểm. Ảnh mồ côi làm người đọc tưởng độ phủ rộng hơn thực tế.</p>
-    <p data-lang="en">The Android pack does not mention this, and it bears directly on what ADR-017 just tightened: reference images are the <em>standard</em> a criterion is graded against. Orphans make coverage look wider than it is.</p></div>
-</div>
-
-<div class="card">
-  <div class="tagrow"><span class="id">S-08</span><span class="tag local" data-lang="vi">Đề nghị: giữ nguyên ở đây</span><span class="tag local" data-lang="en">Proposed: keep it here</span></div>
-  <h3 data-lang="vi">Bốn mục còn lại nên ở nguyên chỗ cũ</h3>
-  <h3 data-lang="en">Four remaining entries should stay where they are</h3>
-  <p data-lang="vi"><code>ScreenshotScaffold</code> tự áp theme; màn hình mới cần <code>imePadding()</code>; lint chặn build khi thiếu bản dịch tiếng Đức; migration Room viết tay không có test. Cả bốn đều là sự thật về <strong>riêng repo này</strong> và đang nằm đúng chỗ.</p>
-  <p data-lang="en"><code>ScreenshotScaffold</code> applies the theme itself; a new screen needs <code>imePadding()</code>; lint fails the build on a missing German translation; a hand-written Room migration has no test. All four are truth about <strong>this repository alone</strong> and are already in the right place.</p>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao nêu ra</span><span class="lbl" data-lang="en">Why mention it</span>
-    <p data-lang="vi">Một hộp thư chỉ đáng tin nếu nó cũng nói rõ cái gì <em>không</em> cần chuyển đi. Nếu mục nào cũng "nên nâng lên tầng trên" thì cái hộp chỉ là tiếng ồn.</p>
-    <p data-lang="en">A suggestion box is only trustworthy if it also says what should <em>not</em> move. If every entry argued for promotion, the box would be noise.</p></div>
-</div>
-
-<div class="card">
-  <div class="tagrow"><span class="id">S-09</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
-  <h3 data-lang="vi">"Hết hạn mức phiên" bị đọc như hạn mức tài khoản — vòng lặp ngủ hàng giờ trong khi khởi động lại phiên là đủ</h3>
-  <h3 data-lang="en">A "session limit" warning is read as the account-wide quota — the loop slept for hours when a fresh session would have cleared it in seconds</h3>
-  <p data-lang="vi">Lúc 21:01 và lại lúc 08:35, <code>run.ps1</code> nhận một sự kiện <em>"You've hit your session limit"</em> từ CLI và tính giờ ngủ theo <code>resetsAt</code> của sự kiện đó — gán nhãn cửa sổ <code>five_hour</code>, dù phần trăm đọc được chỉ 31%. Bảng sử dụng thật của tài khoản lúc đó cho thấy cửa sổ 5 giờ mới dùng 34% (còn 66%), cách xa ngưỡng 90%. Khi tiến trình đang ngủ bị dừng và khởi động lại — tức một tiến trình <code>claude -p</code> mới, một <strong>phiên</strong> mới — lệnh gọi kế tiếp được chấp nhận ngay, không hề bị từ chối.</p>
-  <p data-lang="en">At 21:01, and again at 08:35, <code>run.ps1</code> received a <em>"You've hit your session limit"</em> event from the CLI and computed its sleep target from that event's <code>resetsAt</code> — labelling it the <code>five_hour</code> window, even though the read percentage was only 31%. The account's real usage panel at that moment showed the five-hour window at just 34% used (66% remaining), nowhere near the 90% ceiling. When the sleeping process was killed and restarted — a fresh <code>claude -p</code> process, a new <strong>session</strong> — the very next call was accepted immediately, with no rejection at all.</p>
-  <div class="ev">08:35  Quota window 'five_hour' at 31% -&gt; treated as &gt;=90%, wait target 13:20:30
+<details class="card">
+  <summary>
+    <div class="tagrow"><span class="id">S-09</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+    <h3 data-lang="vi">"Hết hạn mức phiên" bị đọc như hạn mức tài khoản — vòng lặp ngủ hàng giờ oan uổng</h3>
+    <h3 data-lang="en">A "session limit" warning is read as the account-wide quota — the loop slept for hours needlessly</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Runtime nhận một sự kiện <em>"You've hit your session limit"</em> và tính giờ ngủ theo <code>resetsAt</code> của sự kiện đó, dù bảng sử dụng thật của tài khoản còn xa ngưỡng. Khi tiến trình đang ngủ bị khởi động lại thành một <strong>phiên</strong> mới, lệnh gọi kế tiếp được chấp nhận ngay.</p>
+    <p data-lang="en">The runtime received a <em>"You've hit your session limit"</em> event and computed its sleep target from that event's <code>resetsAt</code>, even though the account's real usage was nowhere near the ceiling. When the sleeping process was restarted as a fresh <strong>session</strong>, the very next call was accepted immediately.</p>
+    <div class="ev">08:35  Quota window 'five_hour' at 31% -&gt; treated as &gt;=90%, wait target 13:20:30
 10:06  Human's own usage panel: session 34% used / 66% remaining
 10:09  Process killed, relaunched as a fresh session -&gt; accepted at once, no rejection</div>
-  <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
-    <p data-lang="vi">Đây là cách vòng lặp diễn giải tín hiệu hạn mức của chính CLI, không phải chuyện riêng của repo này — ai chạy Foreman cũng vấp cùng một bẫy. "Hết hạn mức phiên" có vẻ là giới hạn theo <strong>phiên</strong>, không phải theo tài khoản, và một tiến trình mới xoá sạch nó; nhưng script lại đọc nó như một cửa sổ hạn mức tài khoản và ngủ hàng giờ chờ một mốc thời gian không liên quan. Cùng một lỗi khiến trợ lý (không phải engine của vòng lặp) khẳng định với người dùng rằng "không có cách nào bỏ qua" trước khi thử — tin vào một cờ cảnh báo còn sót lại thay vì thử một phiên mới trước.</p>
-    <p data-lang="en">This is about how the loop reads the CLI's own quota signal, not something specific to this repository — anyone running Foreman hits the same trap. "Session limit" appears to be a per-<strong>session</strong> ceiling, not an account-wide one, and a fresh process clears it — but the script read it as an account quota window and slept for hours against an unrelated reset time. The same error led the assistant (not the loop engine) to tell the human "there's no bypass available" before testing it — trusting a leftover warning flag instead of trying a fresh session first.</p></div>
-</div>
+    <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
+      <p data-lang="vi">Đây là cách vòng lặp diễn giải tín hiệu hạn mức của chính CLI, không phải chuyện riêng của repo này.</p>
+      <p data-lang="en">This is about how the loop reads the CLI's own quota signal, not something specific to this repository.</p></div>
+  </div>
+</details>
 
 <h2 data-lang="vi">Bạn cần làm gì</h2>
 <h2 data-lang="en">What you do</h2>
@@ -260,8 +273,8 @@ $ set -o pipefail; false | tail -1 ; echo $?
   <tbody>
     <tr data-lang="vi"><td><strong>Đồng ý</strong> một mục</td><td>Tôi chép nội dung sang tầng bạn chọn, trong một commit riêng, có trích dẫn lần hỏng đã sinh ra nó.</td></tr>
     <tr data-lang="en"><td><strong>Accept</strong> an item</td><td>I copy it into the tier you name, in its own commit, citing the failure that earned it.</td></tr>
-    <tr data-lang="vi"><td><strong>Đổi tầng</strong></td><td>Ví dụ S-05 bạn thấy chỉ nên nằm ở gói Windows chứ không phải doctrine chung — nói là được.</td></tr>
-    <tr data-lang="en"><td><strong>Re-tier</strong> it</td><td>Say S-05 belongs in a Windows pack rather than core doctrine, and it goes there instead.</td></tr>
+    <tr data-lang="vi"><td><strong>Đổi tầng</strong></td><td>Nói tầng bạn muốn thay vào — nó sẽ đi đúng chỗ đó.</td></tr>
+    <tr data-lang="en"><td><strong>Re-tier</strong> it</td><td>Say the tier you want instead, and it goes there.</td></tr>
     <tr data-lang="vi"><td><strong>Từ chối</strong></td><td>Mục bị xoá khỏi hộp. Không cần giải thích.</td></tr>
     <tr data-lang="en"><td><strong>Reject</strong> it</td><td>The item leaves the box. No justification needed.</td></tr>
     <tr data-lang="vi"><td><strong>Không làm gì</strong></td><td>Cũng được. Hộp cứ nằm đó; không có gì tự động xảy ra.</td></tr>
@@ -269,12 +282,16 @@ $ set -o pipefail; false | tail -1 ; echo $?
   </tbody>
 </table></div>
 
+</section>
+
 <footer>
-  <span data-lang="vi">Tạo bởi engine trong lần chạy <span class="mono">loop/calendar-note-app</span>, 11-09-2026. Nguồn: <span class="mono">knowledge/PROJECT.md</span>, mọi mục đều kèm vòng lặp đã phát hiện ra nó.<br>
-  Engine bị deny rule của runtime chặn ghi vào <span class="mono">.harness/loop/</span>. File này là kênh duy nhất để nó đề nghị một thay đổi ở đó — và chỉ là đề nghị.<br>
+  <span data-lang="vi">Tạo bởi engine trong lần chạy <span class="mono">loop/calendar-note-app</span>, 15-09-2026.<br>
+  Tab <strong>Cần quyết</strong> là bản sao chỉ đọc của <span class="mono">.harness/run/ESCALATION.md</span> — trả lời tại <span class="mono">DECISIONS.md</span>, không phải ở đây.<br>
+  Tab <strong>Góp ý</strong> mang theo các mục còn chờ từ lần chạy trước. Engine bị deny rule của runtime chặn ghi vào <span class="mono">.harness/loop/</span> và vào các gói stack; đây là kênh duy nhất để nó đề nghị một thay đổi ở đó — và chỉ là đề nghị.<br>
   Không có gì ở đây đã được áp dụng.</span>
-  <span data-lang="en">Written by the engine during the <span class="mono">loop/calendar-note-app</span> run, 2026-09-11. Source: <span class="mono">knowledge/PROJECT.md</span>, each item citing the iteration that found it.<br>
-  The engine is denied write access to <span class="mono">.harness/loop/</span> by runtime deny rules. This file is its only channel for proposing a change there — and it is only a proposal.<br>
+  <span data-lang="en">Written by the engine during the <span class="mono">loop/calendar-note-app</span> run, 2026-09-15.<br>
+  The <strong>Escalate</strong> tab is a read-only mirror of <span class="mono">.harness/run/ESCALATION.md</span> — answer in <span class="mono">DECISIONS.md</span>, never here.<br>
+  The <strong>Suggestions</strong> tab carries forward still-pending items from the previous run. The engine is denied write access to <span class="mono">.harness/loop/</span> and to the stack packs; this is its only channel for proposing a change there — and it is only a proposal.<br>
   Nothing here has been applied.</span>
 </footer>
 
@@ -289,5 +306,24 @@ $ set -o pipefail; false | tail -1 ; echo $?
         else if((navigator.language||'').toLowerCase().indexOf('vi')!==0) init='en';}catch(e){}
     apply(init);
     sel.addEventListener('change',function(){apply(sel.value)});
+  })();
+
+  (function(){
+    var buttons=document.querySelectorAll('.tabs button'), TKEY='cn-suggestions-tab';
+    var panels={escalate:document.getElementById('panel-escalate'), suggest:document.getElementById('panel-suggest')};
+    var escalateCount=panels.escalate.querySelectorAll(':scope > details.card').length;
+    var suggestCount=panels.suggest.querySelectorAll(':scope > details.card').length;
+    document.getElementById('n-escalate').textContent=escalateCount;
+    document.getElementById('n-suggest').textContent=suggestCount;
+    function select(name){
+      buttons.forEach(function(b){b.setAttribute('aria-selected', String(b.dataset.tab===name))});
+      Object.keys(panels).forEach(function(k){panels[k].hidden = (k!==name)});
+      try{localStorage.setItem(TKEY,name)}catch(e){}
+    }
+    buttons.forEach(function(b){b.addEventListener('click',function(){select(b.dataset.tab)})});
+    var start='suggest';
+    try{var stored=localStorage.getItem(TKEY); if(stored==='escalate'||stored==='suggest') start=stored; else if(escalateCount>0) start='escalate';}
+    catch(e){ if(escalateCount>0) start='escalate'; }
+    select(start);
   })();
 </script>
