@@ -55,6 +55,71 @@
   needed this run; the existing standing ledger already covers build/test/lint/screenshot-validate and
   the `git show` Windows workaround.
 
+### Iteration 2 - 2026-09-15
+
+- **Phase:** 1 (T-001, T-002 — the whole task graph)
+- **Attempted:** Consumed D-001 (see Archived Decisions below): revised `DoD.md`, `PLAN.md`,
+  `TASKS/T-002.md`, `STATE.md`, `ESCALATION.md` to keep `android.permission.VIBRATE`. Both tasks became
+  selectable; dispatched one Capable-tier (`opus`) `loop-worker` per task in parallel, attempt 1/3 each.
+  T-001 wrote `domain/greeting/GreetingDecision.kt` (+ test), `data/notification/GreetingNotifier.kt` (+
+  test), `injection/NotificationModule.kt`, and edited `SettingDatastore.kt`/`SettingRepository.kt`/
+  `SettingRepositoryImpl.kt`/`MainActivity.kt`. T-002 edited `AndroidManifest.xml`,
+  `HomeRequestPermission.kt`, `HomePermissionBottomSheet.kt`, `HomeFragment.kt`, `PermissionUtil.kt`.
+  Verified both Workers' reported file sets were pairwise disjoint, each contained in its own Declared
+  File Scope, and the union matched `git status` — no scope violation. Wired the shared/integration files
+  myself: added `notificationModule` to `AppModule`'s `includes(...)`, called
+  `GreetingNotifier.createChannelIfNeeded()` from `MainApplication.onCreate`, added the two new string
+  keys (`daily_greeting`, `hello_what_will_you_write_today`) and removed the two keys T-002 made dead
+  (`location`, `allow_location_to_help_you`) in both `res/values/strings.xml` and `res/values-de/strings.xml`,
+  and updated `README.md`'s package tree and feature table. Ran one invocation of `:app:assembleDebug
+  :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest`: `BUILD SUCCESSFUL`. Dispatched a
+  Capable-tier (`opus`) `loop-reviewer` with a clean context against the full diff, the DoD criteria, house
+  style, and every Constraint in `.harness/knowledge/PROJECT.md` — verdict **APPROVE**, three non-blocking
+  findings.
+- **Learned:**
+  - `.harness/knowledge/PROJECT.md`'s cached "251 tests across 15 classes" baseline was already stale
+    before this run started — the tree held 272 tests across 16 classes at the start of this iteration.
+    Corrected the cache to this iteration's own fresh measurement (288 tests / 18 classes) and noted the
+    cache is a floor for a *future* run's own measurement, not a diff base.
+  - `GreetingNotifier`'s default `Clock.systemDefaultZone()` binds the timezone once, at Koin singleton
+    construction time — a device timezone change mid-process would misjudge "today" until the process
+    restarts. Same pattern this codebase's other stores already use (e.g. `NoteRepositoryImpl`); accepted
+    as a pre-existing, self-healing limitation rather than fixed in this run.
+  - `SettingDatastore.kt`'s flows (including the new `lastGreetedDateFlow`) have no `.catch { IOException
+    -> emptyPreferences() }` guard that `.claude/repository-layer.md` documents as required — a
+    repo-wide, pre-existing gap, not something this run introduced. Recorded for a future task.
+  - `HomeRequestPermission.kt`'s private `shouldShowRequestPermissionRationale` was already an orphan
+    before this run's diff (confirmed via `git diff`, not just the Worker's own claim) — `requestLocation()`
+    used Accompanist's `.shouldShowRationale` instead, never this function. Not this run's to remove.
+- **Reconciled:** No new decision needed. All three review findings are non-blocking and classified "no
+  action, recorded" (ENGINE.md §8) — none breaks a DoD criterion, one is inherent to an established
+  codebase pattern, one is a pre-existing repo-wide gap out of scope for either task, one is pre-existing
+  dead code neither task touched. Both tasks completed on attempt 1/3, nothing abandoned. All 14 `machine`
+  DoD criteria appear satisfied by this iteration's own evidence; recorded **DONE-candidate: yes** in
+  `STATE.md` per ENGINE.md §6.11 (reporting `CONTINUE`, not `DONE` — this invocation wrote code). The next
+  invocation is the Verifier (§11): re-prove every `machine` criterion fresh, then raise a Human
+  Verification Request for the seven unsigned `human` criteria (15-21).
+
 ## Archived Decisions
 
-<!-- Full request + decision + rationale of every consumed Decision Queue entry. None yet this run. -->
+### D-001 - Approve the Definition of Done for the greeting-notification / permission-cleanup run
+
+**Queued:** Iteration 1, 2026-09-15. **Answered:** 2026-09-15. **Consumed:** Iteration 2, 2026-09-15.
+
+**Question:** Approve `.harness/run/DoD.md` as written (23 acceptance criteria, 6 Constraints), including
+the Verification Class assigned to each criterion?
+
+**Context:** `PRD.md` pre-decided a once-a-day greeting notification and the removal of three permissions
+(`VIBRATE`, `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION`). Bootstrap fan-out flagged that the PRD's
+stated reason for removing `VIBRATE` ("no `Vibrator` usage anywhere in the app") was incomplete —
+`data/notification/AlarmNotifier.kt` independently calls `.setVibrate(...)`/`channel.enableVibration(true)`
+— but did not block on it since the PRD explicitly asked the run not to re-litigate its pre-decisions.
+
+**Decision:** Approved with one change: do NOT remove `android.permission.VIBRATE`. The PRD's removal
+reason was wrong given `AlarmNotifier.kt`'s real usage. Revise `DoD.md` to drop criterion 9's VIBRATE
+clause, drop criterion 14 (KDoc correction is unnecessary if the permission stays), and drop criterion 23
+(no VIBRATE removal left to human-verify). Everything else approved as written: remove the two location
+permissions plus their code, and build the greeting notification as specified.
+
+**Applied:** See `AMENDMENTS.md`, 2026-09-15 entry, for the full list of files this decision touched
+(`DoD.md`, `PLAN.md`, `TASKS/T-002.md`, `STATE.md`, `ESCALATION.md`).

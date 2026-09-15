@@ -47,6 +47,7 @@ Two things at once:
 | Have an alarm actually go off, as a heads-up notification, honouring its repeat option | ✅ built |
 | Alarms still fire after the phone is restarted | ✅ built |
 | When the OS will not let an alarm fire, the Alarms screen says so and offers the fix | ✅ built |
+| A friendly greeting notification the first time the app is opened on a calendar day | ✅ built |
 
 > **Implementation status is deliberately explicit.** The note feature is complete: every row above
 > is code that exists, and this table was updated in the same change that landed each piece — a
@@ -217,7 +218,8 @@ com/example/skeleton/
 │   │   ├── PostMapper.kt
 │   │   └── UserActionMapper.kt
 │   ├── notification/
-│   │   └── AlarmNotifier.kt                #   Builds and posts the alarm's heads-up notification; owns the channel
+│   │   ├── AlarmNotifier.kt                #   Builds and posts the alarm's heads-up notification; owns the channel
+│   │   └── GreetingNotifier.kt             #   Posts the once-a-day greeting on its own channel; owns the read-decide-post-write sequence
 │   ├── receiver/
 │   │   ├── AlarmReceiver.kt                #   Fires the notification, then re-arms tomorrow's occurrence
 │   │   └── BootReceiver.kt                 #   Re-arms every stored alarm after a restart; the one exported receiver
@@ -243,6 +245,8 @@ com/example/skeleton/
 │   ├── enums/
 │   │   ├── AlarmRepeatMode.kt              #   ONE_TIME, DAILY, CUSTOM — decides both the next-fire math and the re-arm
 │   │   └── BottomBarDestination.kt         #   Home, Calendar, Alarms, Setting — declaration order is tab order
+│   ├── greeting/
+│   │   └── GreetingDecision.kt             #   Pure once-a-day decision behind an injected Clock; the only tested part of the greeting
 │   ├── model/                              #   Models the UI and repositories agree on
 │   │   ├── Alarm.kt                        #     An alarm: a message, a time of day, and how it repeats
 │   │   ├── BlankAlarmMessageException.kt   #     The "an alarm must say something" rule saying no, carried as a value
@@ -267,6 +271,7 @@ com/example/skeleton/
 │   ├── DatastoreModule.kt
 │   ├── LocaleModule.kt
 │   ├── NetworkModule.kt
+│   ├── NotificationModule.kt                #   Binds GreetingNotifier
 │   ├── RepositoryModule.kt
 │   ├── SchedulerModule.kt                   #   Binds AlarmScheduler -> AlarmManagerAlarmScheduler, and AlarmNotifier
 │   └── ViewModelModule.kt

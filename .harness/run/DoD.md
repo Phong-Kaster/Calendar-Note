@@ -70,31 +70,26 @@
 
 ### Human verification
 
-16. [human] Fresh install, first open of a calendar day — install the debug APK with app data cleared and
+15. [human] Fresh install, first open of a calendar day — install the debug APK with app data cleared and
     launch it. Expect a notification with a friendly greeting, legible, with a proper icon (not the
     launcher mipmap).
-17. [human] Second open, same day — close the app to the background and bring it back to the foreground
+16. [human] Second open, same day — close the app to the background and bring it back to the foreground
     (or relaunch it) without crossing local midnight. Expect no second notification.
-18. [human] Force-stop and relaunch, same day — Settings → App info → Force stop, then relaunch from the
+17. [human] Force-stop and relaunch, same day — Settings → App info → Force stop, then relaunch from the
     launcher on the same day. Expect still no notification, proving the fact survived process death, not
     just backgrounding.
-19. [human] Next calendar day — advance the device's date by one day (or wait past local midnight) and
+18. [human] Next calendar day — advance the device's date by one day (or wait past local midnight) and
     open the app. Expect the greeting appears again with no action from the user.
-20. [human] Home's permission sheet no longer mentions location — with notifications off (and, on Android
+19. [human] Home's permission sheet no longer mentions location — with notifications off (and, on Android
     12+, exact alarms not permitted), open Home. Expect the sheet shows only the Notification row and, on
     Android 12+, the Exact alarms row — no Location row, no leftover gap — and toggling each row still
     opens the correct system dialog/screen.
-21. [human] Alarms screen's own permission notice is unchanged — open the Alarms tab with a permission
+20. [human] Alarms screen's own permission notice is unchanged — open the Alarms tab with a permission
     missing, then with it granted. Expect the same banner text, the same fix buttons landing on the same
     system screens, and the banner drawing nothing once both permissions are in order.
-22. [human] The app still installs and opens after the permission removal — install the debug APK and tap
+21. [human] The app still installs and opens after the permission removal — install the debug APK and tap
     the launcher icon. Expect Home appears with no crash and the notes list renders. (There is no
     emulator/device/Robolectric in this repository, so this cannot be proven by command.)
-23. [human] An alarm still produces a heads-up notification with sound after `VIBRATE` is removed — set an
-    alarm a minute out on a real device. Expect the heads-up banner and sound still occur; note whether
-    the buzz is still felt. This is a known, PRD-accepted risk: `AlarmNotifier.kt` sets vibration
-    independently, and losing the permission may silently drop only the buzz, not the heads-up, because a
-    sound is also set.
 
 ## Constraints
 
@@ -130,13 +125,11 @@
 | 11 | machine | grep `app/src/main/java` for the listed location symbols — zero hits | n/a |
 | 12 | machine | grep `HomePermissionBottomSheet.kt` | n/a |
 | 13 | machine | diff names no file under `ui/fragment/alarms/`; `validateDebugScreenshotTest` 23/23 | n/a |
-| 14 | machine | `AlarmNotifier.kt`'s `VIBRATION_PATTERN` KDoc text | n/a |
-| 15 | machine | one Gradle invocation's console output + `TEST-*.xml` + lint report + screenshot report | n/a |
-| 16 | human | fresh install, first open of the day → greeting notification appears | ☐ |
-| 17 | human | second open same day → no notification | ☐ |
-| 18 | human | force-stop + relaunch same day → no notification | ☐ |
-| 19 | human | next calendar day → greeting appears again | ☐ |
-| 20 | human | Home permission sheet has no Location row; other rows still work | ☐ |
-| 21 | human | Alarms permission notice unchanged | ☐ |
-| 22 | human | app installs and opens after permission removal | ☐ |
-| 23 | human | an alarm still heads-up with sound after VIBRATE removal | ☐ |
+| 14 | machine | one Gradle invocation's console output + `TEST-*.xml` + lint report + screenshot report | n/a |
+| 15 | human | fresh install, first open of the day → greeting notification appears | ☐ |
+| 16 | human | second open same day → no notification | ☐ |
+| 17 | human | force-stop + relaunch same day → no notification | ☐ |
+| 18 | human | next calendar day → greeting appears again | ☐ |
+| 19 | human | Home permission sheet has no Location row; other rows still work | ☐ |
+| 20 | human | Alarms permission notice unchanged | ☐ |
+| 21 | human | app installs and opens after permission removal | ☐ |

@@ -14,7 +14,7 @@
 
 ## D-001 - Approve the Definition of Done for the greeting-notification / permission-cleanup run
 
-- **Status:** pending
+- **Status:** answered
 - **Type:** DoD approval
 - **Iteration:** 1
 - **Timestamp:** 2026-09-15
@@ -71,4 +71,7 @@ None. No new capability is requested for this run.
 
 ### Decision
 
-<!-- Answered in `.harness/run/DECISIONS.md`, under a heading `## D-001` - never here. -->
+Answered 2026-09-15 in `.harness/run/DECISIONS.md` under `## D-001`. Archived in full in `HISTORY.md`
+under "Archived Decisions". Summary: approved with one change — `android.permission.VIBRATE` is kept;
+`DoD.md` revised (criterion 9's VIBRATE clause dropped, the KDoc-correction and VIBRATE-heads-up-check
+criteria dropped and remaining criteria renumbered); T-001 and T-002 unblocked.

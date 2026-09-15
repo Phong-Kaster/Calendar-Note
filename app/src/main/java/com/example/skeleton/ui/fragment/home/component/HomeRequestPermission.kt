@@ -24,10 +24,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.skeleton.ui.util.LogUtil
-import com.example.skeleton.ui.util.PermissionUtil.isLocationGranted
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -35,7 +33,6 @@ import com.google.accompanist.permissions.rememberPermissionState
 fun HomeRequestPermission(
     enable: Int,
     onNotificationGranted: () -> Unit = {},
-    onLocationGranted: () -> Unit = {},
     onExactAlarmGranted: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -43,15 +40,8 @@ fun HomeRequestPermission(
     var showBottomSheet by remember { mutableStateOf(false) }
 
     val notificationPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
-    val locationPermissions = rememberMultiplePermissionsState(
-        listOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-        )
-    )
 
     var hasRequestedNotification by rememberSaveable { mutableStateOf(false) }
-    var hasRequestedLocation by rememberSaveable { mutableStateOf(false) }
 
     var exactAlarmGranted by remember { mutableStateOf(canScheduleExactAlarm(context)) }
 
@@ -60,8 +50,7 @@ fun HomeRequestPermission(
      */
     LaunchedEffect(enable) {
         val notificationGranted = isNotificationGranted(context)
-        val locationGranted = isLocationGranted(context)
-        showBottomSheet = !notificationGranted || !locationGranted || !exactAlarmGranted
+        showBottomSheet = !notificationGranted || !exactAlarmGranted
     }
 
     /**
@@ -73,10 +62,9 @@ fun HomeRequestPermission(
     LaunchedEffect(lifecycleState) {
         if (lifecycleState == Lifecycle.State.RESUMED) {
             val notificationGranted = isNotificationGranted(context)
-            val locationGranted = isLocationGranted(context)
             exactAlarmGranted = canScheduleExactAlarm(context)
             if (exactAlarmGranted) onExactAlarmGranted()
-            showBottomSheet = !notificationGranted || !locationGranted || !exactAlarmGranted
+            showBottomSheet = !notificationGranted || !exactAlarmGranted
         }
     }
 
@@ -90,25 +78,14 @@ fun HomeRequestPermission(
     }
 
     /**
-     * When user grants location from in-app dialog, update UI and callback.
-     */
-    LaunchedEffect(locationPermissions.allPermissionsGranted) {
-        if (locationPermissions.allPermissionsGranted) {
-            onLocationGranted()
-        }
-    }
-
-    /**
      * Keep bottom sheet visibility in sync with current permission state (e.g. after in-app grant).
      */
     LaunchedEffect(
         notificationPermission.status,
-        locationPermissions.allPermissionsGranted,
         exactAlarmGranted
     ) {
         val notificationGranted = isNotificationGranted(context)
-        val locationGranted = locationPermissions.allPermissionsGranted
-        showBottomSheet = !notificationGranted || !locationGranted || !exactAlarmGranted
+        showBottomSheet = !notificationGranted || !exactAlarmGranted
     }
 
 
@@ -156,47 +133,6 @@ fun HomeRequestPermission(
     }
 
     /**
-     * Request Location
-     */
-    fun requestLocation() {
-
-        if (locationPermissions.allPermissionsGranted) {
-            onLocationGranted()
-            return
-        }
-
-        if (locationPermissions.shouldShowRationale) {
-
-            LogUtil.logcat(
-                "User denied once -> show permission dialog again",
-                "location"
-            )
-
-            locationPermissions.launchMultiplePermissionRequest()
-            return
-        }
-
-        if (!hasRequestedLocation) {
-
-            LogUtil.logcat(
-                "First time requesting location permission",
-                "location"
-            )
-
-            hasRequestedLocation = true
-            locationPermissions.launchMultiplePermissionRequest()
-            return
-        }
-
-        LogUtil.logcat(
-            "Permission permanently denied -> open settings",
-            "location"
-        )
-
-        openAppSettings(context)
-    }
-
-    /**
      * Request Exact Alarm (Android 12+). Opens app settings so user can enable "Alarms & reminders".
      */
     fun requestExactAlarm() {
@@ -222,11 +158,9 @@ fun HomeRequestPermission(
     HomePermissionBottomSheet(
         enable = showBottomSheet,
         isNotificationEnable = isNotificationGranted(context),
-        isLocationEnable = isLocationGranted(context),
         isExactAlarmEnable = exactAlarmGranted,
         onDismiss = { showBottomSheet = false },
         onGrantNotification = { requestNotification() },
-        onGrantLocation = { requestLocation() },
         onGrantExactAlarm = { requestExactAlarm() },
     )
 }

@@ -25,9 +25,7 @@
     <string name="thanks_for_your_feedback">Vielen Dank für dein Feedback!</string>
 
     <string name="notification">Benachrichtigung</string>
-    <string name="location">Standort</string>
     <string name="allow_notification_to_send_you">Erlaube Benachrichtigungen, um dir wichtige Updates und Hinweise zu senden</string>
-    <string name="allow_location_to_help_you">Erlaube den Standortzugriff, um dir relevante Funktionen und eine bessere Erfahrung zu bieten</string>
     <string name="exact_alarm">Alarme &amp; Erinnerungen</string>
     <string name="allow_exact_alarm_for_prayer_time">Erlaube exakte Alarme, damit Benachrichtigungen rechtzeitig ausgelöst werden</string>
 
@@ -97,4 +95,7 @@
     <string name="every_day">Täglich</string>
     <string name="one_time">Einmalig</string>
     <string name="custom">Benutzerdefiniert</string>
+
+    <string name="daily_greeting">Täglicher Gruß</string>
+    <string name="hello_what_will_you_write_today">Hallo! Was schreibst du heute?</string>
 </resources>

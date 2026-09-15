@@ -80,19 +80,4 @@ object PermissionUtil {
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
     }
-
-    /**
-     * Returns true if both location permissions (coarse and fine) are granted.
-     * Used for features that need location (e.g. prayer times, nearby places).
-     *
-     * @param context The application context.
-     * @return True if ACCESS_COARSE_LOCATION and ACCESS_FINE_LOCATION are granted.
-     */
-    fun isLocationGranted(context: Context): Boolean {
-        return hasPermissions(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    }
 }

@@ -4,6 +4,7 @@ import com.example.skeleton.common.Language
 import com.example.skeleton.data.datastore.SettingDatastore
 import com.example.skeleton.domain.repository.SettingRepository
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 class SettingRepositoryImpl(
     private val settingDatastore: SettingDatastore
@@ -21,6 +22,12 @@ class SettingRepositoryImpl(
     override val enableDarkModeFlow: Flow<Boolean>
         get() = settingDatastore.enableDarkModeFlow
 
+    // A straight pass-through, like every other field here: the datastore already turns the stored
+    // text into a `LocalDate`, so there is nothing left for this class to add. Transforming it a
+    // second time here would only create somewhere else for the two to disagree.
+    override val lastGreetedDateFlow: Flow<LocalDate?>
+        get() = settingDatastore.lastGreetedDateFlow
+
     override suspend fun setEnableIntro(value: Boolean) =
         settingDatastore.setEnableIntro(value)
 
@@ -32,4 +39,7 @@ class SettingRepositoryImpl(
 
     override suspend fun setEnableDarkMode(value: Boolean) =
         settingDatastore.setEnableDarkMode(value)
+
+    override suspend fun setLastGreetedDate(date: LocalDate) =
+        settingDatastore.setLastGreetedDate(date = date)
 }

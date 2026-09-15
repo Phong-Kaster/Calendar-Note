@@ -24,9 +24,7 @@
     <string name="thanks_for_your_feedback">Thanks for your feedback !</string>
 
     <string name="notification">Notification</string>
-    <string name="location">Location</string>
     <string name="allow_notification_to_send_you">Allow notification to send you important updates and alerts</string>
-    <string name="allow_location_to_help_you">Allow location access to provide you with relevant features and better experience</string>
     <string name="exact_alarm">Alarms &amp; reminders</string>
     <string name="allow_exact_alarm_for_prayer_time">Allow exact alarms so notifications can trigger on time</string>
 
@@ -110,4 +108,7 @@
     <string name="every_day">Every day</string>
     <string name="one_time">One-time</string>
     <string name="custom">Custom</string>
+
+    <string name="daily_greeting">Daily greeting</string>
+    <string name="hello_what_will_you_write_today">Hello! What will you write today?</string>
 </resources>

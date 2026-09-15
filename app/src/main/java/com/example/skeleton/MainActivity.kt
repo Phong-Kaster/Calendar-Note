@@ -5,13 +5,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.skeleton.core.CoreActivity
 import com.example.skeleton.data.notification.AlarmNotifier
+import com.example.skeleton.data.notification.GreetingNotifier
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class MainActivity : CoreActivity() {
     private lateinit var navController: NavController
+
+    /**
+     * The daily hello. Reached through Koin rather than built here, because it is the **one**
+     * instance in the app: the `Mutex` that stops two greetings going out at once lives inside it, so
+     * a second copy made here would hold a second, useless lock.
+     */
+    private val greetingNotifier: GreetingNotifier by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +35,32 @@ class MainActivity : CoreActivity() {
         // intent on every recreation, so without this guard a single tap would throw the user back
         // onto Alarms after every rotation for as long as the activity instance lives.
         if (savedInstanceState == null) openAlarmsIfRequested(intent = intent)
+    }
+
+    /**
+     * "The app is on screen now."
+     *
+     * `onStart` is this app's foreground signal. It fires on a cold launch, when the user comes back
+     * to the app from somewhere else — and also on every configuration change, because a rotation or
+     * a switch in the in-app language picker recreates the activity and starts it again. That third
+     * case is on purpose rather than tolerated: [GreetingNotifier.greetIfFirstForegroundToday] is
+     * built to be asked on every single foreground and to answer "already done today" itself, so
+     * there is nothing to decide here.
+     *
+     * (`ProcessLifecycleOwner` would be the tidier signal, and it is not used: it comes from
+     * `androidx.lifecycle:lifecycle-process`, a dependency this app does not have.)
+     *
+     * The greeting is launched rather than awaited because it reads from storage, and blocking the
+     * main thread on a disk read is how a launch turns into a freeze. `lifecycleScope` ties that
+     * coroutine to this activity, so an app closed a moment after opening does not leave work
+     * running behind it.
+     */
+    override fun onStart() {
+        super.onStart()
+
+        lifecycleScope.launch {
+            greetingNotifier.greetIfFirstForegroundToday()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -48,11 +48,9 @@ import com.example.skeleton.ui.theme.ColorBlue
 fun HomePermissionBottomSheet(
     enable: Boolean,
     isNotificationEnable: Boolean = false,
-    isLocationEnable: Boolean = false,
     isExactAlarmEnable: Boolean = true,
     onDismiss: () -> Unit = {},
     onGrantNotification: () -> Unit = {},
-    onGrantLocation: () -> Unit = {},
     onGrantExactAlarm: () -> Unit = {},
 ) {
     if (!enable) return
@@ -68,10 +66,8 @@ fun HomePermissionBottomSheet(
         PhotosPermissionBottomSheetLayout(
             onDismiss = onDismiss,
             isNotificationEnable = isNotificationEnable,
-            isLocationEnable = isLocationEnable,
             isExactAlarmEnable = isExactAlarmEnable,
             onGrantNotification = onGrantNotification,
-            onGrantLocation = onGrantLocation,
             onGrantExactAlarm = onGrantExactAlarm,
         )
     }
@@ -81,10 +77,8 @@ fun HomePermissionBottomSheet(
 private fun PhotosPermissionBottomSheetLayout(
     onDismiss: () -> Unit = {},
     isNotificationEnable: Boolean = false,
-    isLocationEnable: Boolean = false,
     isExactAlarmEnable: Boolean = true,
     onGrantNotification: () -> Unit = {},
-    onGrantLocation: () -> Unit = {},
     onGrantExactAlarm: () -> Unit = {},
 ) {
     Column {
@@ -126,20 +120,6 @@ private fun PhotosPermissionBottomSheetLayout(
                 description = stringResource(R.string.allow_notification_to_send_you),
                 checked = isNotificationEnable,
                 onCheckedChange = { onGrantNotification() },
-            )
-
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(16.dp)
-            )
-
-            // Location switch & rationale
-            PermissionSwitch(
-                title = stringResource(R.string.location),
-                description = stringResource(R.string.allow_location_to_help_you),
-                checked = isLocationEnable,
-                onCheckedChange = { onGrantLocation() },
             )
 
             // Exact alarm (Android 12+): needed for on-time prayer notifications

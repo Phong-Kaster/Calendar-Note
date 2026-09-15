@@ -21,7 +21,6 @@ import com.example.skeleton.ui.fragment.home.component.isNotificationGranted
 import com.example.skeleton.ui.fragment.note.NoteFragment
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
-import com.example.skeleton.ui.util.PermissionUtil.isLocationGranted
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.LocalDate
 
@@ -40,13 +39,8 @@ class HomeFragment : CoreFragment() {
     private fun checkPermission() {
 
         val notiEnable = isNotificationGranted(requireContext())
-        val locationEnable = isLocationGranted(requireContext())
 
         if (!notiEnable) {
-            triggerRequestPermission++
-        }
-
-        if (!locationEnable) {
             triggerRequestPermission++
         }
     }
@@ -94,14 +88,11 @@ class HomeFragment : CoreFragment() {
             },
         )
 
-        // Request notification, location and exact alarm permissions
+        // Request notification and exact alarm permissions
         HomeRequestPermission(
             enable = triggerRequestPermission,
             onNotificationGranted = {
                 // Handle notification granted (e.g. refresh UI)
-            },
-            onLocationGranted = {
-                // Handle location granted (e.g. refresh location-based data)
             },
             onExactAlarmGranted = {
                 // Handle exact alarm granted (e.g. reschedule alarms)

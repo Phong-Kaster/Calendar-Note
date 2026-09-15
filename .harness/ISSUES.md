@@ -5,11 +5,11 @@
 > This file sits beside `run/` rather than inside it, so it survives the Cleanup Commit that removes
 > `.harness/run/` when the run completes.
 
-_Last updated: 2026-09-15 - branch `loop/calendar-note-app` - iteration 1 (bootstrap, new goal)_
+_Last updated: 2026-09-15 - branch `loop/calendar-note-app` - iteration 2_
 
 ## Abandoned tasks
 
-None. This run has just been bootstrapped; no task has been attempted.
+None. Both T-001 and T-002 completed on attempt 1/3.
 
 ## Unreachable tasks
 
@@ -17,26 +17,42 @@ None.
 
 ## Decisions awaiting an answer
 
-| # | Question | Blocks |
-|---|---|---|
-| D-001 | Approve the Definition of Done for the greeting-notification / permission-cleanup run | T-001, T-002 |
+None. D-001 was answered and consumed this iteration.
 
 ## `human` criteria still unsigned
 
-All eight `human` criteria in the new `DoD.md` (16-23) are unsigned — no task has been attempted yet, so
-there is nothing to verify. They will be reachable once D-001 is approved and both tasks complete.
+All seven `human` criteria in `DoD.md` (15-21) are unsigned. Both tasks are complete and every `machine`
+criterion appears satisfied (DONE-candidate set in `STATE.md`), so the next invocation (the Verifier) is
+expected to re-prove the `machine` criteria and then raise a Human Verification Request for these seven:
+fresh install/first-open greeting (15), no second greeting same day (16), survives force-stop (17), greets
+again next calendar day (18), Home permission sheet has no Location row (19), Alarms permission notice
+unchanged (20), app still installs and opens (21).
 
 ## Review findings not fixed
 
-None yet this run.
+Three non-blocking findings from this iteration's Fresh-Context Review (verdict: APPROVE). None breaks a
+DoD criterion; none fixed, all reasoned through and accepted:
+
+1. **`GreetingNotifier.kt`'s default `Clock.systemDefaultZone()` binds the timezone at construction time**
+   (Koin singleton, built once at app start). A device timezone change while the process stays alive keeps
+   "today" computed against the old zone until the next process restart — one missed or one double
+   greeting in that window. Self-healing; matches this codebase's existing "a store owns its clock"
+   pattern elsewhere (e.g. `NoteRepositoryImpl`). Not fixed.
+2. **`SettingDatastore.kt`'s flows, including the new `lastGreetedDateFlow`, have no `.catch { IOException
+   -> emptyPreferences() }` guard**, which `.claude/repository-layer.md` documents as required on every
+   DataStore-backed flow. A pre-existing, repo-wide gap — every sibling flow in that file already lacks
+   it — not a deviation introduced by this run. Not fixed.
+3. **`HomeRequestPermission.kt`'s private `shouldShowRequestPermissionRationale` is dead code**, confirmed
+   via `git diff` to have already been an orphan before this run's diff (its would-be caller,
+   `requestLocation()`, used a different Accompanist symbol). Neither task's business to remove. Not fixed.
 
 ## Assumptions recorded
 
 See `.harness/run/STATE.md` § Assumptions: the greeting is written regardless of notification-permission
-grant state at post time; `VIBRATE` removal proceeds as the PRD instructs despite `AlarmNotifier.kt`'s
-independent vibration calls (a known, PRD-accepted risk, human-verified by DoD criterion 23); whether the
-two now-dead location string keys are removed from both locale files is still to be decided at Phase-1
-wiring time.
+grant state at post time; D-001 overrode the PRD's `VIBRATE` removal (kept, `DoD.md` revised and
+renumbered accordingly); the two now-dead location string keys (`location`,
+`allow_location_to_help_you`) were removed from both `res/values/strings.xml` and `res/values-de/strings.xml`
+in this iteration's checkpoint.
 
 ## Carried over from the previous goal (alarms) — not blocking this run
 
@@ -52,5 +68,5 @@ MSYS_NO_PATHCONV=1 git show fb4bf24:.harness/run/HISTORY.md
 ```
 
 Those sixteen items are still unverified by a person and are **not** part of this run's DoD or Decision
-Queue — this note exists only so they are not silently forgotten. Answering them is independent of D-001
-and can happen at any time.
+Queue — this note exists only so they are not silently forgotten. Answering them is independent of this
+run and can happen at any time.

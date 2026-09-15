@@ -3,6 +3,7 @@ package com.example.skeleton
 import android.app.Application
 import android.util.Log
 import com.example.skeleton.data.notification.AlarmNotifier
+import com.example.skeleton.data.notification.GreetingNotifier
 import com.example.skeleton.injection.appModule
 import com.example.skeleton.injection.databaseModule
 import com.example.skeleton.injection.datastoreModule
@@ -41,6 +42,11 @@ class MainApplication : Application() {
         // (see AlarmNotifier's own KDoc), and creating it at launch is what lets the user find it in
         // system settings and choose its sound or vibration before any alarm has ever gone off.
         koinApplication.koin.get<AlarmNotifier>().createChannelIfNeeded()
+
+        // Same reasoning as AlarmNotifier above: created here, through Koin's own instance, so the
+        // greeting channel — and the user's choices about it in system settings — exists from first
+        // launch, on its own channel the user can silence without also silencing their alarms.
+        koinApplication.koin.get<GreetingNotifier>().createChannelIfNeeded()
     }
 
     /**

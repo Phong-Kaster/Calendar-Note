@@ -113,8 +113,8 @@
 <div class="wrap">
 
 <header class="mast">
-  <p class="eyebrow" data-lang="vi">Cập nhật 15-09-2026 · nhánh loop/calendar-note-app</p>
-  <p class="eyebrow" data-lang="en">Updated 2026-09-15 · branch loop/calendar-note-app</p>
+  <p class="eyebrow" data-lang="vi">Cập nhật 15-09-2026 (lần lặp 2) · nhánh loop/calendar-note-app</p>
+  <p class="eyebrow" data-lang="en">Updated 2026-09-15 (iteration 2) · branch loop/calendar-note-app</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
   <p class="standfirst" data-lang="vi">Hai việc engine không được tự quyết trong lần chạy này: một câu hỏi đang chặn tiến độ, và những bài học có thể không thuộc về riêng repo này. Cả hai chỉ là đề nghị đọc — không có gì tự áp dụng.</p>
@@ -138,27 +138,27 @@
   <p data-lang="en"><strong>This is a read-only mirror of <span class="mono">ESCALATION.md</span>.</strong> Answer in <span class="mono">.harness/run/DECISIONS.md</span>, never here — this page exists to make the queue easy to read, not the channel the engine listens on.</p>
 </div>
 
-<details class="card esc" open>
+<details class="card esc">
   <summary>
     <div class="tagrow">
       <span class="id">D-001</span>
-      <span class="tag pending" data-lang="vi">Đang chờ · lần lặp 1</span>
-      <span class="tag pending" data-lang="en">Pending · iteration 1</span>
+      <span class="tag answered" data-lang="vi">Đã trả lời · lần lặp 2</span>
+      <span class="tag answered" data-lang="en">Answered · iteration 2</span>
     </div>
     <h3 data-lang="vi">Duyệt Định nghĩa Hoàn thành cho lần chạy "chào buổi sáng + dọn quyền"</h3>
     <h3 data-lang="en">Approve the Definition of Done for the greeting-notification / permission-cleanup run</h3>
   </summary>
   <div class="card-body">
-    <p data-lang="vi">Loại: Duyệt DoD. Chặn: T-001, T-002 (chặn toàn bộ việc có thể làm — đúng theo thiết kế, vì chưa có task nào tồn tại cho tới khi bài kiểm tra được duyệt).</p>
-    <p data-lang="en">Type: DoD approval. Blocks: T-001, T-002 (blocks everything executable — by design, since no task exists until the exam it will be graded against is approved).</p>
+    <p data-lang="vi">Loại: Duyệt DoD. Đã chặn: T-001, T-002 (đúng theo thiết kế, vì chưa có task nào tồn tại cho tới khi bài kiểm tra được duyệt). Cả hai đã hoàn thành ở lần lặp 2.</p>
+    <p data-lang="en">Type: DoD approval. Blocked: T-001, T-002 (by design, since no task exists until the exam it will be graded against is approved). Both completed in iteration 2.</p>
     <p data-lang="vi"><strong>Bối cảnh:</strong> <span class="mono">PRD.md</span> mô tả hai việc độc lập, đã được quyết sẵn: thông báo chào mỗi ngày ở lần mở ứng dụng đầu tiên, và gỡ ba quyền Android không dùng tới (<span class="mono">VIBRATE</span>, hai quyền vị trí) cùng mã yêu cầu chúng.</p>
     <p data-lang="en"><strong>Context:</strong> <span class="mono">PRD.md</span> describes two independent, pre-decided pieces of work: a once-a-day greeting notification on first foreground open, and removing three unused Android permissions (<span class="mono">VIBRATE</span> and two location permissions) plus the code that requests them.</p>
-    <p data-lang="vi">Năm vai trò phân tích (Capable tier, chỉ đọc) phát hiện một điểm căng đáng lưu ý dù không chặn quyết định này: lý do PRD đưa ra để gỡ <span class="mono">VIBRATE</span> ("không có <span class="mono">Vibrator</span> nào trong app") đúng nhưng chưa đủ — <span class="mono">AlarmNotifier.kt</span> tự gọi rung cho thông báo báo thức trên API 24-25. PRD vẫn yêu cầu gỡ, nên lần chạy vẫn thực hiện; tiêu chí DoD 23 (người kiểm tra) sẽ bắt nếu báo thức thực sự hỏng — rủi ro thực sự chỉ là mất tiếng rung, không phải mất thông báo.</p>
-    <p data-lang="en">Five analysis roles (Capable tier, read-only) found one real tension worth noting, though it does not block this decision: the PRD's stated reason for removing <span class="mono">VIBRATE</span> ("no <span class="mono">Vibrator</span> usage") is true but incomplete — <span class="mono">AlarmNotifier.kt</span> independently calls vibration for alarm heads-up notifications on API 24-25. The PRD still asks for the removal, so the run proceeds; DoD criterion 23 (human-verified) would catch a real regression — the actual risk is only losing the buzz, not the notification.</p>
-    <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
-      <p data-lang="vi">Duyệt như đã viết. Các tiêu chí bám sát trực tiếp yêu cầu của PRD, được phân loại machine/human qua hai lượt phản biện độc lập, và không tiêu chí nào vượt quá những gì PRD đã nêu.</p>
-      <p data-lang="en">Approve as written. The criteria are drawn directly from the PRD's own requirements, classified machine/human through two independent arm's-length passes, and none asks for anything beyond what the PRD already specified.</p></div>
-    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">T-001, T-002</span></div>
+    <p data-lang="vi">Năm vai trò phân tích (Capable tier, chỉ đọc) phát hiện một điểm căng đáng lưu ý: lý do PRD đưa ra để gỡ <span class="mono">VIBRATE</span> ("không có <span class="mono">Vibrator</span> nào trong app") đúng nhưng chưa đủ — <span class="mono">AlarmNotifier.kt</span> tự gọi rung cho thông báo báo thức trên API 24-25.</p>
+    <p data-lang="en">Five analysis roles (Capable tier, read-only) found one real tension worth noting: the PRD's stated reason for removing <span class="mono">VIBRATE</span> ("no <span class="mono">Vibrator</span> usage") is true but incomplete — <span class="mono">AlarmNotifier.kt</span> independently calls vibration for alarm heads-up notifications on API 24-25.</p>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Quyết định</span><span class="lbl" data-lang="en">Decision</span>
+      <p data-lang="vi">Duyệt, với một thay đổi: <strong>giữ lại</strong> <span class="mono">android.permission.VIBRATE</span>, vì <span class="mono">AlarmNotifier.kt</span> thực sự dùng nó. <span class="mono">DoD.md</span> được sửa lại (tiêu chí 9 bỏ mệnh đề VIBRATE; hai tiêu chí liên quan đến việc gỡ VIBRATE bị xoá hẳn; các tiêu chí còn lại đánh số lại). Phần còn lại được duyệt như đã viết: gỡ hai quyền vị trí và mã liên quan, xây thông báo chào như đã đặc tả.</p>
+      <p data-lang="en">Approved, with one change: <strong>keep</strong> <span class="mono">android.permission.VIBRATE</span> — <span class="mono">AlarmNotifier.kt</span> genuinely uses it. <span class="mono">DoD.md</span> was revised (criterion 9 no longer lists VIBRATE; the two criteria tied to removing it were dropped entirely; the remaining criteria renumbered). Everything else approved as written: remove the two location permissions and their code, build the greeting notification as specified.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Đã chặn</span><span class="lbl" data-lang="en">Blocked</span><span class="mono">T-001, T-002 — cả hai đã xong / both complete</span></div>
   </div>
 </details>
 

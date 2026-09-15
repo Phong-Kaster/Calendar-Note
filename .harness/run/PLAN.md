@@ -30,10 +30,10 @@ all Capable-tier `loop-analyst`) converged on:
   scope: `domain/greeting/`, `data/notification/GreetingNotifier.kt`, `data/datastore/SettingDatastore.kt`,
   `domain/repository/SettingRepository.kt`, `data/repository/impl/SettingRepositoryImpl.kt`,
   `injection/NotificationModule.kt`, `MainActivity.kt` - tier: Capable
-- T-002 - the app no longer requests or declares the three unused permissions (depends on: -) -
+- T-002 - the app no longer requests or declares the two unused location permissions (depends on: -) -
   scope: `AndroidManifest.xml`, `ui/fragment/home/component/HomeRequestPermission.kt`,
   `ui/fragment/home/component/HomePermissionBottomSheet.kt`, `ui/fragment/home/HomeFragment.kt`,
-  `ui/util/PermissionUtil.kt`, `data/notification/AlarmNotifier.kt` (KDoc only) - tier: Capable
+  `ui/util/PermissionUtil.kt` - tier: Capable
 
 ## Phase Grouping
 
@@ -43,9 +43,9 @@ all Capable-tier `loop-analyst`) converged on:
 
 ## Known Risks
 
-- Removing `VIBRATE` may silently drop alarm vibration on API 24-25 while the heads-up itself survives
-  (a sound is also set, satisfying Constraint C-10's "priority plus sound **or** vibration"). PRD
-  pre-decided the removal; DoD criterion 23 is the human check that would catch a real regression.
+- D-001 (2026-09-15) overrode the PRD's `VIBRATE` removal: `AlarmNotifier.kt` independently calls
+  `.setVibrate(...)`/`channel.enableVibration(true)`, so the permission backs a real feature. `VIBRATE`
+  stays declared; only the two location permissions are removed. This risk is closed, not open.
 - `onStart()` fires on every configuration recreation (rotation, the in-app language picker), not only on
   a genuine foreground return — handled by making the check-and-write sequence idempotent-safe under
   concurrent calls (DoD criterion 4), not by trying to distinguish "real" opens from recreations.

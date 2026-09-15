@@ -273,8 +273,8 @@ and a trip through system settings.
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — 251 tests across 15 classes, 0 failures (alarms run, iteration 8) |
-| Lint | `./gradlew :app:lintDebug` | **yes** — `0 errors, 72 warnings` (alarms run, iteration 8) |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — 288 tests across 18 classes, 0 failures (greeting/permission-cleanup run, this iteration) |
+| Lint | `./gradlew :app:lintDebug` | **yes** — `0 errors, 75 warnings` (greeting/permission-cleanup run, this iteration) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — ~15s, **23 of 23** cases green (alarms run, iteration 8) |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes**, but **not granted to the engine** — see below |
 
@@ -285,8 +285,14 @@ and the lint summary from
 
 All three figures come from **one** invocation of
 `:app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest` whose own
-`BUILD SUCCESSFUL` was observed (the alarms run, iteration 8 — `TASKS/A-006.md` § Evidence). The tree
-agrees: 251 `@Test`s in `app/src/test/`, 23 `@PreviewTest`s in `app/src/screenshotTest/`.
+`BUILD SUCCESSFUL` was observed (the greeting/permission-cleanup run, this iteration). The tree agrees:
+288 `@Test`s across 18 classes in `app/src/test/`, 23 `@PreviewTest`s in `app/src/screenshotTest/`.
+**The previous "251 tests across 15 classes" figure recorded here (alarms run, iteration 8) was already
+stale before this run started** — the tree at the start of this run already held 272 tests across 16
+classes, 21 more than the cached figure, with no record of when they were added. Read this table's count
+as a floor to compare a *future* run's own fresh measurement against, not as a diff base to reason from —
+this cache is corrected opportunistically when a run happens to measure it, not on every commit that adds
+a test.
 
 **The standing capability ledger is installed** at `.harness/knowledge/capabilities.json` (re-installed by
 the human on approving D-001, migrated verbatim from the previous run's `knowledge/capabilities.json`,
