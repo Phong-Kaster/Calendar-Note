@@ -11,14 +11,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.skeleton.MainActivity
 import com.example.skeleton.R
-import com.example.skeleton.domain.greeting.greetingDueOn
+import com.example.skeleton.domain.greeting.greetOnceADay
 import com.example.skeleton.domain.repository.SettingRepository
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import java.time.Clock
 
 /**
@@ -42,12 +40,22 @@ import java.time.Clock
  * greetings side by side in the shade. The lock makes the whole read-decide-post-write run happen one
  * at a time, so the second one reads what the first one wrote and stays quiet.
  *
+ * **The day is written down only when the greeting was really shown.** That is not a detail; it is the
+ * bug this class was fixed for. `NotificationManagerCompat.notify(...)` on Android 13 and up quietly
+ * does **nothing** when `POST_NOTIFICATIONS` has never been granted — no exception, nothing to notice —
+ * and on a fresh install the app comes to the front before the user has been asked for it. Writing the
+ * date regardless meant the first foreground recorded a greeting nobody saw, and the user was never
+ * greeted on the day they installed the app. So [postGreeting] now answers *whether the system took
+ * it*, and [greetOnceADay] records the day only on a `true`.
+ *
  * **Nothing in here can be unit tested on this toolchain** — `NotificationManager`,
- * `NotificationChannel` and `PendingIntent` are all stubs that silently answer `0` / `null`, so an
- * assertion about them would pass whatever the code did. That is precisely why the *decision* lives in
- * `domain/greeting/GreetingDecision.kt` as a plain function with a test of its own, and why the
- * numbers that decide how the notification behaves are named constants below with
- * `GreetingNotifierConstantsTest` pinning them.
+ * `NotificationChannel`, `NotificationManagerCompat` and `PendingIntent` are all stubs that silently
+ * answer `0` / `false` / `null`, so an assertion about them would pass whatever the code did. That is
+ * precisely why both the *decision* and the *sequence* live in `domain/greeting/` as plain functions
+ * with tests of their own — `GreetingDecision.kt` for "is one due?" and `GreetOnceADay.kt` for
+ * "post, and record only if it landed" — and why the numbers that decide how the notification behaves
+ * are named constants below with `GreetingNotifierConstantsTest` pinning them. What is left in this
+ * class is only the Android arm: build the thing, hand it over, say whether it was taken.
  *
  * @param context used to read strings, build the tap target and reach the notification service. The
  *   application context is the right one to hand over — a notification outlives any screen.
@@ -91,12 +99,17 @@ class GreetingNotifier(
     }
 
     /**
-     * The sequence itself: read the stored day, decide, post, write the new day.
+     * The sequence itself: read the stored day, hand the rest to [greetOnceADay].
      *
      * Private, and **only ever called from inside [greetingMutex]** — see
      * [greetIfFirstForegroundToday], which is the only caller. Split out of that function rather
-     * than written inline purely for readability: it lets the "nothing to do today" case leave
-     * through an ordinary guard clause instead of nesting the real work inside an `if`.
+     * than written inline purely for readability: it keeps the lock statement down to one line.
+     *
+     * The three steps that make up "greet once a day" — decide, post, record — are *not* written out
+     * here. They live in `domain/greeting/GreetOnceADay.kt`, where they are ordinary Kotlin and can
+     * be tested; this function only supplies the two Android-shaped pieces they need. Duplicating
+     * them here would mean the tested version and the shipped version could drift apart, and the day
+     * they did is the day the user gets greeted five times before breakfast.
      */
     private suspend fun greetOnceToday() {
         try {
@@ -105,28 +118,16 @@ class GreetingNotifier(
             // right now, and the collection ends there.
             val lastGreetedDate = settingRepository.lastGreetedDateFlow.first()
 
-            // The whole decision, and the only part of this class that is tested. `null` means the
-            // user has already heard from us today.
-            val greetingDate = greetingDueOn(lastGreetedDate = lastGreetedDate, clock = clock)
-            if (greetingDate == null) return
-
-            // --- Why finishing is not optional once the decision is made (simple story) ---
-            //
-            // This runs in the activity's own scope, which is cancelled when the activity stops — and
-            // a rotation stops it. Cancelled *between* posting the greeting and writing the day down,
-            // the app would have greeted the user without remembering it, and the very next
-            // foreground would greet them all over again. `NonCancellable` keeps these two lines
-            // together: either the greeting is shown and recorded, or neither happens.
-            withContext(NonCancellable) {
-                postGreeting()
-
-                // Written whether or not the notification actually reached the shade. On Android 13+
-                // a post without POST_NOTIFICATIONS goes nowhere, and telling the user about that is
-                // the permission notice's job, not this class's — exactly as `AlarmNotifier` treats
-                // it. Retrying it on the next foreground would only greet them repeatedly on the day
-                // they finally grant the permission.
-                settingRepository.setLastGreetedDate(date = greetingDate)
-            }
+            greetOnceADay(
+                lastGreetedDate = lastGreetedDate,
+                clock = clock,
+                postGreeting = {
+                    postGreeting()
+                },
+                recordGreetedOn = { date ->
+                    settingRepository.setLastGreetedDate(date = date)
+                },
+            )
         } catch (e: CancellationException) {
             // Re-thrown, never swallowed: a cancelled read is the screen going away, not a failure,
             // and swallowing it breaks coroutine cancellation for everything above.
@@ -168,13 +169,41 @@ class GreetingNotifier(
     }
 
     /**
-     * Builds the greeting and hands it to the system.
+     * Builds the greeting, hands it to the system, and says whether the system took it.
      *
-     * Private on purpose: posting a greeting without first asking [greetingDueOn] and then writing
-     * the day down is exactly the bug this feature exists to avoid, so there is no way to do it from
-     * outside.
+     * Private on purpose: posting a greeting without first going through [greetOnceADay] — which asks
+     * whether one is due and writes the day down afterwards — is exactly the bug this feature exists
+     * to avoid, so there is no way to do it from outside.
+     *
+     * **The return value is load-bearing.** `true` means the system accepted the greeting for display;
+     * `false` means it showed the user nothing, and the caller must then *not* record the day, so that
+     * the next foreground today tries again. Getting this wrong is invisible — see the class KDoc.
+     *
+     * @return `true` when the greeting was accepted for display, `false` when it went nowhere.
      */
-    private fun postGreeting() {
+    private fun postGreeting(): Boolean {
+        /* --- Asking first, because notify() will not tell us (simple story) ---
+         *
+         * `notify(...)` is a one-way door: on Android 13+ without POST_NOTIFICATIONS it accepts the
+         * notification, shows nothing, and reports success. There is no return value and no exception
+         * to read. The only way to know whether a post is going to reach anybody is to ask beforehand,
+         * and `areNotificationsEnabled()` is the one question that covers both cases that matter here:
+         * the permission never granted on API 33+, and the user having switched this app's
+         * notifications off entirely.
+         *
+         * **A user who muted only the greeting channel deliberately counts as delivered**, and that is
+         * not an oversight. `areNotificationsEnabled()` stays `true` when a single channel is muted, so
+         * the post below is a silent no-op and the day *is* written down. That user looked at this
+         * notification and decided they did not want it; honouring that means the app stops trying.
+         * The user who has not yet been asked for the permission has made no such choice — which is
+         * exactly why the two are treated differently.
+         */
+        val notificationsAllowed = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        if (!notificationsAllowed) {
+            Log.w(TAG, "the greeting was not posted; this app may not show notifications yet")
+            return false
+        }
+
         createChannelIfNeeded()
 
         val greeting = context.getString(R.string.hello_what_will_you_write_today)
@@ -195,12 +224,18 @@ class GreetingNotifier(
             .setContentIntent(openAppIntent())
             .build()
 
-        try {
-            // On Android 13+ this quietly posts nothing when POST_NOTIFICATIONS was never granted.
-            // All that matters here is that it does not throw on the way back into the activity.
+        return try {
+            // The guard above has already established that this app is allowed to show notifications,
+            // so reaching this line and returning normally is as close to "the user saw it" as
+            // anything in the framework will ever say.
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+            true
         } catch (e: SecurityException) {
+            // The narrow race the guard cannot close: the permission was revoked between the question
+            // above and this line. Not delivered, so nothing gets written down and the next foreground
+            // today tries again.
             Log.w(TAG, "the greeting was not posted; permission is missing", e)
+            false
         }
     }
 

@@ -260,6 +260,35 @@ Found in the Phase-5 Fresh-Context Review (iteration 7, `AMENDMENTS.md` A-14 #1)
 notifications-only change). No command in this repository can observe the real behaviour — it needs a phone
 and a trip through system settings.
 
+### C-18 — `notify()` does not tell you it failed, so "I did it" must never be written down before it was done.
+
+`NotificationManagerCompat.notify(...)` on Android 13+ with `POST_NOTIFICATIONS` ungranted **accepts the
+notification, shows the user nothing, and reports success.** No return value, no exception, no log. The
+`try { notify() } catch (e: SecurityException)` shape that looks like careful error handling catches
+essentially nothing: the common failure does not throw.
+
+The trap is what gets written down next. `GreetingNotifier` recorded "the user was greeted today"
+immediately after posting, whether or not the post landed — and on a fresh install the app reaches the
+foreground *before* the user has been asked for the permission, so the very first `onStart` recorded a
+greeting nobody saw and the once-a-day guard then suppressed every later attempt that day. **The user was
+never greeted on the day they installed the app.** Every unit test was green, lint was clean, and a
+device check passed — because it was run on a device where the permission was already granted, which is
+the other branch. Found by a human on DoD criterion 15, one run after the feature shipped.
+
+The rule, and it generalises past notifications to any "once per X" record: **ask first, and record only
+what you can honestly claim happened.** `NotificationManagerCompat.from(context).areNotificationsEnabled()`
+is the one question that covers both the ungranted permission on API 33+ and app-level notifications
+switched off, and it is cheap enough to ask on every attempt. Nothing delivered → nothing written →
+the next attempt today tries again.
+
+One deliberate exception, which is a design decision and not an oversight: a user who mutes **one
+channel** leaves `areNotificationsEnabled()` at `true`, so that post is a silent no-op and the day *is*
+recorded. That is intended — they made a choice about that notification and the app should stop trying.
+The user who has not yet been asked has made no choice. Preserve that distinction if you touch this.
+
+Evidence: `domain/greeting/GreetOnceADay.kt` (the sequence, as plain Kotlin), `GreetOnceADayTest`
+(`failure then success on the same day…` is criterion 15 written as a test), `GreetingNotifier.postGreeting`.
+
 ---
 
 # REFERENCE
@@ -273,7 +302,7 @@ and a trip through system settings.
 |---|---|---|
 | Build (debug APK) | `./gradlew :app:assembleDebug` | **yes** — `BUILD SUCCESSFUL`; ~60s cold, ~10s warm |
 | Compile only (faster) | `./gradlew :app:compileDebugKotlin` | **yes** — runs as part of the above |
-| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — 288 tests across 18 classes, 0 failures (greeting/permission-cleanup run, this iteration) |
+| Unit tests (JVM) | `./gradlew :app:testDebugUnitTest` | **yes** — 296 tests across 19 classes, 0 failures (greeting/permission-cleanup run, iteration 4) |
 | Lint | `./gradlew :app:lintDebug` | **yes** — `0 errors, 75 warnings` (greeting/permission-cleanup run, this iteration) |
 | Screenshot tests — validate | `./gradlew :app:validateDebugScreenshotTest` | **yes** — ~15s, **23 of 23** cases green (alarms run, iteration 8) |
 | Screenshot tests — re-record | `./gradlew :app:updateDebugScreenshotTest` | **yes**, but **not granted to the engine** — see below |
@@ -494,7 +523,9 @@ confirmed against the code that exists.
     testable here**: `Dispatchers.setMain(UnconfinedTestDispatcher())` from `kotlinx-coroutines-test`
     replaces the `Dispatchers.Main` that `viewModelScope` posts to, and every `launch` then runs to
     completion where it is started, so a test can call a function and assert on `uiState.value` on the next
-    line. Fakes are hand-written classes in the same file — there is no mocking framework. The established
+    line. **`runTest` needs no `@OptIn(ExperimentalCoroutinesApi::class)` at coroutines 1.10.2** — the
+    annotation on `NoteRepositoryImplTest` / `CalendarViewModelTest` is there for `UnconfinedTestDispatcher`,
+    not `runTest`, and adding it to a test that only uses `runTest` earns an "unnecessary @OptIn" warning. Fakes are hand-written classes in the same file — there is no mocking framework. The established
     pattern includes a *second*, deliberately-failing fake (`BrokenNoteDao`) as the only way to reach a
     repository's catch blocks, and a fake that returns a **jumbled** list so the repository's own sort is
     what is under test rather than SQL.
@@ -553,9 +584,22 @@ confirmed against the code that exists.
     `PendingIntent` carries `CLEAR_TOP or SINGLE_TOP` instead, and the activity handles the intent in both
     `onCreate` and `onNewIntent` (C-16).
   - Still **absent**, and still true: no `WorkManager`, no `setFullScreenIntent`, no do-not-disturb
-    override, no `USE_EXACT_ALARM`. And `ui/fragment/home/component/HomeRequestPermission.kt` remains a
-    *Home-screen* Accompanist flow wired into `HomeFragment` with all three callbacks empty — read C-15
-    before reusing anything out of it.
+    override, no `USE_EXACT_ALARM`. `ui/fragment/home/component/HomeRequestPermission.kt` remains a
+    *Home-screen* Accompanist flow wired into `HomeFragment` — read C-15 before reusing anything out of
+    it. Its callbacks are **no longer all empty**: `onNotificationGranted` now asks the Koin-injected
+    `GreetingNotifier` for the day's greeting (T-003), and two things about that file's callback shape
+    are worth knowing before wiring the third one. `onNotificationGranted` fires from **two** places —
+    the `LaunchedEffect(notificationPermission.status)` and `requestNotification()`'s
+    `PermissionStatus.Granted` branch — so a callback wired there must be idempotent. And
+    `onExactAlarmGranted` fires on **every** `RESUMED` transition where the permission reads granted,
+    not on the false→true transition, so wiring alarm re-arming through this screen would re-arm the
+    whole list on every resume — exactly what C-17 says not to do.
+  - **The greeting feature** now spans `domain/greeting/` (two Android-free files: `GreetingDecision.kt`
+    answers "is one due, and for which day?", `GreetOnceADay.kt` is the whole sequence including the
+    delivery rule of **C-18**) and `data/notification/GreetingNotifier.kt`, which is only the Android
+    arm: build the notification, hand it over, say whether the system took it. Both domain files have a
+    JVM test; the notifier has only its constants pinned, because everything else in it is a stub under
+    this toolchain (C-06).
 - **`README.md`** exists at the repository root with the package tree `CLAUDE.md` requires and a feature
   table marking each feature built vs. planned — keep that table honest in the same change that lands a
   feature.

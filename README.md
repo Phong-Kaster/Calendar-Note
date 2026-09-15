@@ -219,7 +219,7 @@ com/example/skeleton/
 │   │   └── UserActionMapper.kt
 │   ├── notification/
 │   │   ├── AlarmNotifier.kt                #   Builds and posts the alarm's heads-up notification; owns the channel
-│   │   └── GreetingNotifier.kt             #   Posts the once-a-day greeting on its own channel; owns the read-decide-post-write sequence
+│   │   └── GreetingNotifier.kt             #   Posts the once-a-day greeting on its own channel; the Android arm of domain/greeting/
 │   ├── receiver/
 │   │   ├── AlarmReceiver.kt                #   Fires the notification, then re-arms tomorrow's occurrence
 │   │   └── BootReceiver.kt                 #   Re-arms every stored alarm after a restart; the one exported receiver
@@ -246,7 +246,8 @@ com/example/skeleton/
 │   │   ├── AlarmRepeatMode.kt              #   ONE_TIME, DAILY, CUSTOM — decides both the next-fire math and the re-arm
 │   │   └── BottomBarDestination.kt         #   Home, Calendar, Alarms, Setting — declaration order is tab order
 │   ├── greeting/
-│   │   └── GreetingDecision.kt             #   Pure once-a-day decision behind an injected Clock; the only tested part of the greeting
+│   │   ├── GreetOnceADay.kt                #   The whole greet-once-a-day sequence as plain Kotlin; records the day only if the greeting was really shown
+│   │   └── GreetingDecision.kt             #   Pure once-a-day decision behind an injected Clock; answers "is a greeting due, and for which day?"
 │   ├── model/                              #   Models the UI and repositories agree on
 │   │   ├── Alarm.kt                        #     An alarm: a message, a time of day, and how it repeats
 │   │   ├── BlankAlarmMessageException.kt   #     The "an alarm must say something" rule saying no, carried as a value

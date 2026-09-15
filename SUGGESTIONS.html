@@ -114,7 +114,7 @@
 
 <header class="mast">
   <p class="eyebrow" data-lang="vi">Cập nhật 15-09-2026 (lần lặp 3) · nhánh loop/calendar-note-app</p>
-  <p class="eyebrow" data-lang="en">Updated 2026-09-15 (iteration 3) · branch loop/calendar-note-app</p>
+  <p class="eyebrow" data-lang="en">Updated 2026-09-15 (iteration 4) · branch loop/calendar-note-app</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
   <p class="standfirst" data-lang="vi">Mọi tiêu chí máy chấm được đã được chứng minh lại từ đầu. Còn lại <strong>bảy việc chỉ con người nhìn được</strong> — engine không có máy thật để chạy app. Ký xong bảy mục đó là lần chạy này kết thúc.</p>
@@ -138,17 +138,27 @@
   <p data-lang="en"><strong>This is a read-only mirror of <span class="mono">ESCALATION.md</span>.</strong> Answer in <span class="mono">.harness/run/DECISIONS.md</span>, never here — this page exists to make the queue easy to read, not the channel the engine listens on.</p>
 </div>
 
-<details class="card esc" open>
+<div class="lead">
+  <p data-lang="vi"><strong>Hiện không có câu hỏi nào đang chờ bạn.</strong> D-002 đã được trả lời và tiêu thụ ở lần lặp 4. Tiêu chí 15 <strong>trượt</strong>, và nguyên nhân đã được sửa (T-003). Lần chạy tiếp theo sẽ gửi <em>một</em> yêu cầu kiểm tra thủ công gộp chung cho các tiêu chí 15-20.</p>
+  <p data-lang="en"><strong>Nothing is waiting on you right now.</strong> D-002 was answered and consumed in iteration 4. Criterion 15 came back <strong>FAIL</strong> and its cause is fixed (T-003). The next run will queue <em>one</em> consolidated human check covering criteria 15-20 — not one request per criterion.</p>
+</div>
+
+<details class="card esc">
   <summary>
     <div class="tagrow">
       <span class="id">D-002</span>
-      <span class="tag pending" data-lang="vi">Đang chờ bạn · lần lặp 3</span>
-      <span class="tag pending" data-lang="en">Waiting on you · iteration 3</span>
+      <span class="tag answered" data-lang="vi">Đã trả lời một phần · lần lặp 4</span>
+      <span class="tag answered" data-lang="en">Answered in part · iteration 4</span>
     </div>
     <h3 data-lang="vi">Kiểm tra bằng tay: bảy việc chỉ con người nhìn được</h3>
     <h3 data-lang="en">Human Verification Request: seven things only a person can look at</h3>
   </summary>
   <div class="card-body">
+    <div class="ask esc"><span class="lbl" data-lang="vi">Kết quả</span><span class="lbl" data-lang="en">Outcome</span>
+      <p data-lang="vi">Trả lời ngày 2026-09-15: tiêu chí 16, 17, 21 <strong>đạt</strong>; tiêu chí 15 <strong>trượt</strong>; tiêu chí 18, 19, 20 chưa trả lời được. Tiêu chí 15 trượt đã trở thành task T-003 và đã sửa xong trong cùng lần lặp 4. Tiêu chí 16 và 17 <em>bị huỷ chữ ký</em> vì T-003 đã đổi chính đoạn mã mà chúng từng kiểm tra (ENGINE.md §11). Tiêu chí 21 vẫn còn hiệu lực.</p>
+      <p data-lang="en">Answered 2026-09-15: criteria 16, 17 and 21 <strong>pass</strong>; criterion 15 <strong>FAIL</strong>; criteria 18, 19 and 20 could not be answered. The 15 failure became task T-003 and was fixed in iteration 4. Criteria 16 and 17 are <em>unsigned again</em>, because T-003 changed the very code they were checking (ENGINE.md §11 — the thing that was looked at no longer exists). Criterion 21 stands.</p></div>
+    <p data-lang="vi"><strong>Vì sao tiêu chí 15 trượt:</strong> ứng dụng ghi lại "đã chào hôm nay" ngay sau khi gửi thông báo, kể cả khi thông báo không tới được ai. Trên Android 13+ mà chưa có quyền <span class="mono">POST_NOTIFICATIONS</span>, lệnh gửi <em>im lặng không làm gì cả</em> — không lỗi, không ngoại lệ. Nên trên máy vừa cài mới, lần mở đầu tiên ghi nhận một lời chào không ai thấy, và người dùng không bao giờ được chào trong ngày họ cài ứng dụng.</p>
+    <p data-lang="en"><strong>Why 15 failed:</strong> the app recorded "greeted today" right after posting, whether or not the notification reached anybody. On Android 13+ without <span class="mono">POST_NOTIFICATIONS</span>, posting is a <em>silent no-op</em> — no error, no exception. So on a fresh install the first open recorded a greeting nobody saw, and the user was never greeted on the day they installed the app. Now written down as Constraint C-18.</p>
     <p data-lang="vi">Loại: Yêu cầu kiểm tra thủ công (ENGINE.md §11). <strong>Chặn:</strong> chính việc báo <span class="mono">DONE</span>. Không còn task nào — T-001 và T-002 đã xong, không có gì bị bỏ dở, và cả mười bốn tiêu chí máy chấm được đã được lần chạy này chứng minh lại từ đầu. Bảy chữ ký này là thứ duy nhất còn lại.</p>
     <p data-lang="en">Type: Human Verification Request (ENGINE.md §11). <strong>Blocks:</strong> the <span class="mono">DONE</span> report itself. No task remains — T-001 and T-002 are complete, nothing was abandoned, and all fourteen machine criteria were re-proved fresh by this invocation. These seven signatures are the only thing left.</p>
     <p data-lang="vi">Repo này không có emulator, không có thiết bị, không có Robolectric — nên không lệnh nào engine chạy được từng <em>nhìn thấy</em> app chạy thật. Một lần chạy trước ở chính repo này đã giao một nút xoá nối dây đúng nhưng <em>vô hình</em> trên đúng nền của nó, với toàn bộ test xanh. Danh sách này tồn tại để bắt đúng loại lỗi đó.</p>
@@ -253,6 +263,24 @@ alarms       AlarmNotifier.kt, ui/fragment/alarms/ and AlarmNotifierConstantsTes
 <h2 data-lang="en">The suggestions</h2>
 <p class="note" data-lang="vi">Còn lại từ lần chạy trước, chưa được quyết. Mỗi mục đều đã phải trả giá bằng một lần hỏng thật.</p>
 <p class="note" data-lang="en">Carried over from the previous run, still undecided. Every one was paid for by a real failure.</p>
+
+<details class="card" open>
+  <summary>
+    <div class="tagrow"><span class="id">S-10</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+    <h3 data-lang="vi">Bằng chứng lấy từ nhánh dễ không phải là bằng chứng — điều kiện tiên quyết của một tiêu chí phải được dựng thật</h3>
+    <h3 data-lang="en">Evidence from the easy branch is not evidence — a criterion's precondition must actually be established</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Khi một mục kiểm tra thủ công nêu rõ điều kiện ("cài mới, đã xoá dữ liệu ứng dụng, cấp quyền khi được hỏi"), thì điều kiện đó <em>là</em> phần lớn nội dung của phép kiểm tra. Chạy phép kiểm tra trên một máy đã sẵn có quyền là kiểm tra một nhánh khác — và đúng vào nhánh mà lỗi không tồn tại.</p>
+    <p data-lang="en">When a human-verification item names a precondition — "fresh install, app data cleared, permission granted when asked" — that precondition <em>is</em> most of the test. Running it on a device where the permission was already granted exercises a different branch, and it is exactly the branch where the bug does not live.</p>
+    <div class="ask"><span class="lbl" data-lang="vi">Chuyện đã xảy ra</span><span class="lbl" data-lang="en">What happened</span>
+      <p data-lang="vi">Tiêu chí 15 của lần chạy này được đánh dấu "đạt" dựa trên bằng chứng từ một máy đã cài ứng dụng trước đó, nên quyền thông báo đã được cấp từ trước. Trên nhánh đó mọi thứ hoạt động. Trên nhánh mà tiêu chí thực sự mô tả, lời chào không bao giờ xuất hiện. Con người tự phát hiện và tự sửa lại đánh giá của chính mình — nhưng chỉ sau khi lần chạy đã báo "mọi tiêu chí máy chấm được đều đạt".</p>
+      <p data-lang="en">This run's criterion 15 was marked pass on evidence from a device where the app had been installed before, so the notification permission was already granted. On that branch everything works. On the branch the criterion actually describes, the greeting never arrives at all. The human caught and corrected their own verdict — but only after the run had already reported every machine criterion green.</p></div>
+    <div class="ask"><span class="lbl" data-lang="vi">Đề nghị</span><span class="lbl" data-lang="en">The suggestion</span>
+      <p data-lang="vi">ENGINE.md §11 đã yêu cầu mỗi mục <span class="mono">human</span> phải nói rõ <em>mở gì, làm gì, mong đợi gì</em>. Đề nghị bổ sung phần thứ tư khi tiêu chí có điều kiện tiên quyết: <strong>dựng lại trạng thái ban đầu thế nào</strong>, viết thành thao tác cụ thể ("xoá dữ liệu ứng dụng trước"), và yêu cầu người trả lời xác nhận đã dựng. Điều này thuộc tầng loop, không phải gói Android: mọi tiêu chí "lần đầu tiên", "lần chạy đầu", "sau khi cài mới" ở bất kỳ nền tảng nào đều mang cùng cái bẫy.</p>
+      <p data-lang="en">ENGINE.md §11 already requires every <span class="mono">human</span> item to say <em>what to open, what to do, what to expect</em>. Suggest a fourth part whenever the criterion has a precondition: <strong>how to establish the starting state</strong>, written as a concrete action ("clear the app's data first"), with the answer confirming it was established. This belongs at the loop tier rather than in a platform pack — every "first time", "first run", "after a fresh install" criterion on any platform carries the same trap.</p></div>
+  </div>
+</details>
 
 <details class="card">
   <summary>

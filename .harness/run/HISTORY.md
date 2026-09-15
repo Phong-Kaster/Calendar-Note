@@ -138,7 +138,83 @@
   correctly-wired, invisible delete button with every test green.
 - **Reported:** `ESCALATE` — no executable task remains and a decision is queued (§6.11).
 
+## Iteration 4 — 2026-09-15 — a human found the bug every green test had missed
+
+- **Recovered:** nothing to recover. The working tree held only `.harness/TELEMETRY.tsv` (the Runtime's)
+  and `.harness/run/DECISIONS.md` (the human's answer). No crash debris, no source change since the
+  `loop(verify)` commit — confirmed with `git diff --name-only 88f2151 -- app/`, which was empty.
+- **Consumed D-002.** Criteria 16, 17, 21 signed; **15 FAIL**; 18, 19, 20 not answered and carried
+  forward. The human also corrected their own earlier evidence, which is the part worth remembering: the
+  pass previously recorded on criterion 15 came from a device where `POST_NOTIFICATIONS` was already
+  granted before the first open. That is the easy branch. Criterion 15 describes the other one.
+- **Cleared the DONE-candidate** iteration 3 had set. A failed acceptance criterion is not something
+  candidacy survives, and clearing it is what let this invocation continue past §6.3 into an ordinary
+  Iteration instead of verifying a run that was no longer complete.
+- **Reconciled (§8):** the failure is a Tier-1 discovery — cause known, inside the existing design, no
+  human input needed. Filed as **T-003** and Phase 2 (`AMENDMENTS.md` A-15). No `DoD.md` change: the
+  criterion was right and the code was wrong.
+- **Phase 2, one Worker, Capable tier.** Recorded the greeting day only on delivery; pulled the sequence
+  into `domain/greeting/GreetOnceADay.kt` as plain Kotlin so it could be tested at all; wired
+  `HomeFragment`'s empty `onNotificationGranted` hook so the greeting arrives in the same session as the
+  grant instead of on the next app open. Scope check passed: the reported file set, the Declared File
+  Scope and `git status` all named the same four files.
+- **Evidence:** `BUILD SUCCESSFUL`, no `UP-TO-DATE` marker on any of the four tasks. 296 tests across 19
+  classes, 0 failures (was 288/18). Lint 0 errors, 75 warnings. Screenshots 23/23, no orphans.
+- **Fresh-Context Review:** APPROVE, zero blocking findings. Two of its three non-blocking findings were
+  wired by the Iteration in this same checkpoint (A-16): a KDoc in `GreetingDecisionTest.kt` that still
+  claimed to mirror the shipped sequence — the drift hazard was the *claim*, and left standing it would
+  have invited a future reader to "restore consistency" by deleting the very guard T-003 added — and
+  `README.md`'s package tree, which had not learned about the new file.
+- **Learned, and written down as Constraint C-18:** `NotificationManagerCompat.notify()` does not report
+  the failure that matters. Without `POST_NOTIFICATIONS` on Android 13+ it accepts the notification, shows
+  nothing, and returns normally — so the `catch (SecurityException)` that looks like careful error
+  handling catches essentially nothing, and writing "done" immediately after posting records something
+  that did not happen. Recorded in the same checkpoint as the fix, not the next one.
+- **Reported:** `CONTINUE`. A DONE-candidate is recorded, but this invocation wrote the implementation and
+  may not certify it (invariant 8). The next one is the Verifier.
+
 ## Archived Decisions
+
+### D-002 - Human Verification Request: seven things only a person can look at
+
+**Queued:** Iteration 3, 2026-09-15. **Answered:** 2026-09-15. **Consumed:** Iteration 4, 2026-09-15.
+
+**Question:** Work through DoD criteria 15-21 on a real device and mark each pass or fail — the seven
+classed `human` at bootstrap, because this repository has no emulator, no device and no Robolectric, so
+nothing the engine can run ever sees the app actually running.
+
+**Decision — partial, and explicitly labelled so ("Do not treat this entry as complete").** Four items
+answered, three not.
+
+- **15 FAIL.** App data cleared, app opened, notification permission granted when asked, app closed and
+  reopened — no greeting, ever. The human read the cause out of the code themselves:
+  `greetOnceToday()` wrote the greeted date inside `withContext(NonCancellable)` regardless of whether
+  `postGreeting()` had reached anybody, and `postGreeting()` quietly posts nothing on Android 13+ without
+  the permission. They also rejected the comment that defended it — "retrying would only greet them
+  repeatedly on the day they finally grant the permission" does not hold, because `greetingDueOn` already
+  guarantees the once. **They deliberately did not prescribe the fix**, naming instead the two questions
+  it had to answer: what "actually delivered" can honestly be checked as, and what should happen for a
+  user who has switched the greeting channel off on purpose.
+- **16, 17 pass**, on instrumented evidence: the notification record's `when` was byte-identical across
+  two further foregrounds and the count stayed at one; and after `am force-stop` plus a confirmed
+  relaunch to the foreground, `dumpsys notification` showed zero greetings.
+- **21 pass**, with one carve-out (the notes list was not scrolled). The installed package requests
+  `POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, INTERNET, ACCESS_NETWORK_STATE, SCHEDULE_EXACT_ALARM,
+  VIBRATE` — neither location permission present, `VIBRATE` present, which is D-001 visible at package
+  level on a real device.
+- **18, 19, 20 not answered.** 18 needs the device's system date moved forward a day on a daily-driver
+  phone. 19 and 20 need taps the device refuses to inject (`SecurityException: Injecting input events
+  requires ... INJECT_EVENTS`, MIUI's "USB debugging (Security settings)" gate).
+
+**How the evidence was qualified, and why that mattered.** The human stated plainly that 16, 17 and 21
+were read out of `dumpsys notification`, `dumpsys package` and `logcat` rather than seen on a screen —
+"It proves what the system recorded. It does **not** prove how anything looked" — and carved out the
+appearance half of every item accordingly. That is what made the 15 FAIL legible as a behaviour failure
+rather than a rendering one, and it is why the fix could be designed from it directly.
+
+**Applied:** `ESCALATION.md` D-002 marked answered-in-part; `STATE.md` sign-off table rewritten (16 and
+17 are **unsigned again**, because T-003 changed the code they were looking at — §11; 21 stands);
+DONE-candidate cleared, then re-set after T-003; T-003 filed and shipped. See `AMENDMENTS.md` A-15/A-16.
 
 ### D-001 - Approve the Definition of Done for the greeting-notification / permission-cleanup run
 

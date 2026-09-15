@@ -8,10 +8,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
+import com.example.skeleton.data.notification.GreetingNotifier
 import com.example.skeleton.domain.model.Note
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
@@ -21,11 +23,20 @@ import com.example.skeleton.ui.fragment.home.component.isNotificationGranted
 import com.example.skeleton.ui.fragment.note.NoteFragment
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.LocalDate
 
 class HomeFragment : CoreFragment() {
     private val viewModel: HomeViewModel by viewModel()
+
+    /**
+     * The daily hello. Reached through Koin rather than built here, because it is the **one** instance
+     * in the app: the `Mutex` that stops two greetings going out at once lives inside it, so a second
+     * copy made here would hold a second, useless lock — and `MainActivity` is holding the first one.
+     */
+    private val greetingNotifier: GreetingNotifier by inject()
 
     // Enable request permission
     var triggerRequestPermission by mutableIntStateOf(0)
@@ -42,6 +53,23 @@ class HomeFragment : CoreFragment() {
 
         if (!notiEnable) {
             triggerRequestPermission++
+        }
+    }
+
+    /**
+     * Asks for today's greeting now that the app is allowed to show one.
+     *
+     * Launched and not awaited: it reads from storage, and blocking the thread that draws the screen
+     * on a disk read is how a tap turns into a freeze. `lifecycleScope` is the fragment's own scope,
+     * the same one `CoreFragment` and `MainActivity` use, so an app closed a moment later does not
+     * leave work running behind it — and the post-and-record pair inside is `NonCancellable`, so a
+     * greeting already on its way out still gets written down.
+     *
+     * @author Phong-Kaster
+     */
+    private fun greetOnFirstOpportunity() {
+        lifecycleScope.launch {
+            greetingNotifier.greetIfFirstForegroundToday()
         }
     }
 
@@ -92,7 +120,20 @@ class HomeFragment : CoreFragment() {
         HomeRequestPermission(
             enable = triggerRequestPermission,
             onNotificationGranted = {
-                // Handle notification granted (e.g. refresh UI)
+                // --- The greeting the user missed by installing the app (simple story) ---
+                //
+                // On a fresh install the app reaches the front *before* anybody has been asked about
+                // notifications, so `MainActivity.onStart` already tried to greet and the system
+                // showed nothing. Nothing was written down for that failed attempt (see
+                // `domain/greeting/GreetOnceADay.kt`), so the greeting is still owed — and this is the
+                // first moment it can actually be delivered. Without this line the user would have to
+                // close the app and open it again to hear from it at all on their first day.
+                //
+                // This fires on every composition where the permission reads granted, not only on the
+                // moment it changes, and that is fine on purpose:
+                // `greetIfFirstForegroundToday()` advertises itself as safe to ask on every
+                // foreground and answers "already done today" all by itself.
+                greetOnFirstOpportunity()
             },
             onExactAlarmGranted = {
                 // Handle exact alarm granted (e.g. reschedule alarms)

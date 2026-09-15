@@ -183,12 +183,17 @@ class GreetingDecisionTest {
     }
 
     /**
-     * One foreground of the app, start to finish.
+     * One foreground of the app **on a phone where notifications work**, start to finish.
      *
-     * Deliberately the **same four steps, in the same order**, as `GreetingNotifier`'s guarded
-     * sequence: read what was stored, ask [greetingDueOn], and — only when one is due — greet and
-     * write the day down. The real one also posts a notification and holds a `Mutex` while it does
-     * all this; neither of those can be observed on this toolchain, and neither changes the answer.
+     * Read what was stored, ask [greetingDueOn], and — only when one is due — write the day down.
+     * That is the decision and the storage round trip, which is all this file is about.
+     *
+     * **It is not the shipped sequence, and must not be read as a copy of it.** The real one posts a
+     * notification first and writes the day down **only if the system actually showed it**, because
+     * a post without `POST_NOTIFICATIONS` is a silent no-op on Android 13+ and recording it cost one
+     * user their install-day greeting. That rule lives in `GreetOnceADay.kt` and is tested by
+     * `GreetOnceADayTest` — not here. This helper simply assumes every greeting lands, which is the
+     * uninteresting case for the questions below and the only case in which the two agree.
      *
      * @return `true` when the user would have been greeted on this foreground.
      */

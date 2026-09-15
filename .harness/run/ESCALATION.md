@@ -80,7 +80,14 @@ criteria dropped and remaining criteria renumbered); T-001 and T-002 unblocked.
 
 ## D-002 - Human Verification Request: seven things only a person can look at
 
-- **Status:** queued
+- **Status:** answered (2026-09-15, consumed iteration 4) — **partially**. Criterion 15 came back
+  **FAIL** and became task T-003, shipped in this iteration's checkpoint. Criteria 16, 17 and 21 were
+  signed off. Criteria **18, 19 and 20 were not answered** and are carried forward: 18 needs the device's
+  system date moved forward a day on what is the human's daily-driver phone, and 19/20 need taps that
+  MIUI's "USB debugging (Security settings)" gate refuses to inject. They are restated in the next Human
+  Verification Request rather than left dangling here. Note also that signing off 16 and 17 was undone by
+  T-003 changing `GreetingNotifier` — ENGINE.md §11: a signed item whose implementation later changes is
+  unsigned again, because the thing that was looked at no longer exists.
 - **Type:** Human Verification Request (ENGINE.md §11)
 - **Iteration:** 3
 - **Timestamp:** 2026-09-15

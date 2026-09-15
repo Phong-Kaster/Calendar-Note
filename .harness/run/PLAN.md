@@ -34,12 +34,19 @@ all Capable-tier `loop-analyst`) converged on:
   scope: `AndroidManifest.xml`, `ui/fragment/home/component/HomeRequestPermission.kt`,
   `ui/fragment/home/component/HomePermissionBottomSheet.kt`, `ui/fragment/home/HomeFragment.kt`,
   `ui/util/PermissionUtil.kt` - tier: Capable
+- T-003 - the greeting day is recorded only when the greeting was actually delivered (depends on: T-001) -
+  scope: `domain/greeting/GreetOnceADay.kt` (new), `test/.../GreetOnceADayTest.kt` (new),
+  `data/notification/GreetingNotifier.kt`, `ui/fragment/home/HomeFragment.kt` - tier: Capable.
+  Added in iteration 4 (A-15) from the human's **FAIL** on DoD criterion 15. Capable because the delivery
+  rule is a judgement call the human explicitly declined to prescribe, and because it moves a
+  cancellation-sensitive sequence across a layer boundary.
 
 ## Phase Grouping
 
 | Phase | Tasks | Shared files the Iteration wires itself |
 |---|---|---|
 | 1 | T-001, T-002 | `res/values/strings.xml`, `res/values-de/strings.xml`, `MainApplication.kt`, `injection/AppModule.kt`, `README.md` |
+| 2 | T-003 | `README.md`, `app/src/test/.../GreetingDecisionTest.kt` (a sibling test whose KDoc T-003 made stale) |
 
 ## Known Risks
 
