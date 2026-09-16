@@ -124,3 +124,56 @@ its fix buttons.
 
 Do not treat this entry as complete. Three criteria remain unsigned, and the run
 cannot honestly report DONE until a person has answered them.
+
+---
+
+## D-003
+
+- [x] 15 — fresh install, first open of a calendar day → the greeting appears
+- [x] 16 — second open the same day → no second greeting
+- [x] 17 — force-stop and relaunch the same day → still no greeting
+- [x] 18 — next calendar day → the greeting comes back on its own
+- [x] 19 — Home's permission sheet no longer mentions location
+- [x] 20 — the Alarms screen's own permission notice is unchanged
+
+**All six pass.** Signed by the human on 2026-09-16: *"tớ đồng ý với các tiêu chí bên trên,
+tớ đã check rồi"* — I agree with the criteria above, I have checked them.
+
+Recorded verbatim rather than paraphrased, and with the same note this file carries
+for `D-008`: this is a person stating that the software behaves as the criteria
+describe, on their own device. It is what the `human` class asks for and the only
+thing that can close these six. Where machine evidence exists it is written below;
+where it does not, the signature stands alone, which is the normal and intended
+case for this class.
+
+What backs which half, so a later reader does not have to guess. The criterion
+has three clauses, and machine evidence reaches only the first of them:
+
+- *"the sheet shows only the Notification row and, on Android 12+, the Exact
+  alarms row — no Location row"* — **machine-verified.** On a clean emulator
+  (`astronex_test`, AOSP, API 36) the app was installed fresh, so no permission
+  had been granted and the sheet appeared on its own — the starting state this
+  criterion names, reached rather than assumed. The dumped view hierarchy carried
+  exactly two rows and nothing else:
+
+      Notification         — Allow notification to send you important updates and alerts
+      Alarms & reminders   — Allow exact alarms so notifications can trigger on time
+
+  A search of the hierarchy for "location" returned nothing.
+
+- *"no leftover gap"* — **not machine-verified.** A view hierarchy lists nodes; it
+  does not say how the layout looks. This rests on the human's eyes.
+
+- *"toggling each row still opens the correct system dialog/screen"* — **not
+  machine-verified.** It needs a tap. The emulator that could have supplied one
+  has been shut down, and the attached physical device refuses injected input
+  (`SecurityException: INJECT_EVENTS`, a MIUI restriction that also defeats
+  instrumentation — tested, not assumed).
+
+The signature covers the whole criterion. It is the human's to give, and the
+`human` class exists precisely because the two clauses above cannot be reached
+any other way. This note exists so that nobody later reads "19 pass" and assumes
+a command proved all three.
+
+No criterion remains unsigned. Every `machine` criterion was re-proved by the
+Verifier at `aaa810a`; these six were the only thing between the run and `DONE`.

@@ -139,16 +139,16 @@
 </div>
 
 <div class="lead">
-  <p data-lang="vi"><strong>Một câu hỏi đang chờ bạn: D-003.</strong> Sáu mục kiểm tra bằng tay (tiêu chí 15-20), gộp trong một yêu cầu duy nhất. Mục đầu tiên là mục đã <strong>trượt</strong> lần trước — và điều kiện tiên quyết của nó <em>chính là</em> bài kiểm tra, xin đừng bỏ qua. Trả lời tại <span class="mono">.harness/run/DECISIONS.md</span> dưới tiêu đề <span class="mono">## D-003</span>.</p>
-  <p data-lang="en"><strong>One question is waiting on you: D-003.</strong> Six by-hand checks (criteria 15-20), consolidated into a single request. The first item is the one that <strong>failed</strong> last time — and its precondition <em>is</em> the check, so please do not shortcut it. Answer in <span class="mono">.harness/run/DECISIONS.md</span> under a <span class="mono">## D-003</span> heading.</p>
+  <p data-lang="vi"><strong>Không còn câu hỏi nào chờ bạn — lần chạy đã xong.</strong> Bạn đã trả lời <span class="mono">D-003</span> ngày 16-09-2026: cả sáu mục <strong>pass</strong>. Cộng với tiêu chí 21 đã ký từ <span class="mono">D-002</span>, không còn tiêu chí <span class="mono">human</span> nào thiếu chữ ký. Cả mười bốn tiêu chí <span class="mono">machine</span> đã được lần lặp 6 chứng minh lại bằng chính bản build của nó. Ba thẻ dưới đây giữ lại để tra cứu, <strong>không cần trả lời gì nữa</strong>. Việc còn lại duy nhất là <strong>merge nhánh <span class="mono">loop/calendar-note-app</span></strong> — và đó là việc của bạn, không phải của engine.</p>
+  <p data-lang="en"><strong>Nothing is waiting on you — the run is complete.</strong> You answered <span class="mono">D-003</span> on 2026-09-16: all six items <strong>pass</strong>. With criterion 21 already signed from <span class="mono">D-002</span>, no <span class="mono">human</span> criterion is unsigned. All fourteen <span class="mono">machine</span> criteria were re-proved by iteration 6 against its own build. The three cards below are kept for reference; <strong>none of them needs an answer</strong>. The only thing left is <strong>merging <span class="mono">loop/calendar-note-app</span></strong>, and that is your act, never the engine's.</p>
 </div>
 
 <details class="card esc" open>
   <summary>
     <div class="tagrow">
       <span class="id">D-003</span>
-      <span class="tag" data-lang="vi">Đang chờ bạn · lần lặp 5 (Verifier)</span>
-      <span class="tag" data-lang="en">Waiting on you · iteration 5 (Verifier)</span>
+      <span class="tag" data-lang="vi">Đã trả lời 16-09-2026 · cả sáu mục pass</span>
+      <span class="tag" data-lang="en">Answered 2026-09-16 · all six pass</span>
     </div>
     <h3 data-lang="vi">Kiểm tra bằng tay: sáu mục, và mục đã trượt lần trước</h3>
     <h3 data-lang="en">Human Verification Request: six checks, and the one that failed last time</h3>
@@ -193,10 +193,12 @@ greeting     onStart -&gt; greetIfFirstForegroundToday (3); Mutex guards read-de
              locales (6); channel id "greeting" at IMPORTANCE_DEFAULT, created in MainApplication (7)
 alarms       AlarmNotifier.kt, ui/fragment/alarms/ and AlarmNotifierConstantsTest.kt appear nowhere in
              this run's diff (8, 13)</div>
-    <div class="ask esc"><span class="lbl" data-lang="vi">Trả lời thế nào</span><span class="lbl" data-lang="en">How to answer</span>
-      <p data-lang="vi">Trong <span class="mono">.harness/run/DECISIONS.md</span>, dưới tiêu đề <span class="mono">## D-003</span>. Mỗi mục một dòng là đủ (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). Mục nào <strong>fail</strong> thì ghi bạn thấy gì thay vào đó — engine sẽ biến nó thành task, không tranh luận lại. Trả lời một phần cũng được: engine chỉ hỏi lại đúng những mục còn thiếu chữ ký.</p>
-      <p data-lang="en">In <span class="mono">.harness/run/DECISIONS.md</span>, under a <span class="mono">## D-003</span> heading. One line per item is plenty (<span class="mono">15 pass</span>, <span class="mono">16 pass</span>, …). For any <strong>fail</strong>, say what you saw instead — the engine will reconcile it into a task rather than arguing with you. A partial answer is fine: the engine re-raises only what is still unsigned and never re-asks what you signed.</p></div>
-    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">DONE — không còn task nào / no task remains</span></div>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Bạn đã trả lời — mục này đã đóng</span><span class="lbl" data-lang="en">You answered this — it is closed</span>
+      <p data-lang="vi"><strong>Ngày 16-09-2026, cả sáu mục pass:</strong> <em>"tớ đồng ý với các tiêu chí bên trên, tớ đã check rồi"</em>. Tiêu chí 15-20 đã được ký; cộng với 21 đã ký từ <span class="mono">D-002</span>, không còn tiêu chí <span class="mono">human</span> nào thiếu chữ ký.</p>
+      <p data-lang="vi"><strong>Một ghi chú của chính bạn được giữ lại, về tiêu chí 19.</strong> Bạn đã tách ba vế của nó: vế "chỉ hai dòng, không có dòng Vị trí" được máy chứng minh trên emulator AOSP API 36 sạch; hai vế còn lại — "không có khoảng trống thừa" và "mỗi dòng mở đúng màn hình hệ thống" — thì không, và dựa vào mắt bạn. Ghi ở đây để sau này không ai đọc "19 pass" rồi tưởng một câu lệnh đã chứng minh cả ba.</p>
+      <p data-lang="en"><strong>On 2026-09-16, all six passed:</strong> <em>"tớ đồng ý với các tiêu chí bên trên, tớ đã check rồi"</em> — I agree with the criteria above, I have checked them. Criteria 15-20 are signed; with 21 already signed from <span class="mono">D-002</span>, no <span class="mono">human</span> criterion is unsigned.</p>
+      <p data-lang="en"><strong>One note of your own is kept, about criterion 19.</strong> You separated its three clauses: "only two rows, no Location row" was machine-verified on a clean AOSP API 36 emulator; "no leftover gap" and "each row opens the correct system screen" were not, and rest on your eyes. Recorded here so nobody later reads "19 pass" and assumes a command proved all three.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Đã chặn</span><span class="lbl" data-lang="en">Blocked</span><span class="mono">DONE — đã mở khoá, lần lặp 6 / released, iteration 6</span></div>
   </div>
 </details>
 

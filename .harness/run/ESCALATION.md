@@ -223,7 +223,12 @@ Answered 2026-09-15, consumed iteration 4. See `.harness/run/DECISIONS.md` § D-
 
 ## D-003 - Human Verification Request: six checks, and the one that failed last time
 
-- **Status:** queued
+- **Status:** answered (2026-09-16, consumed iteration 6) — **in full**. All six items came back
+  **pass**, signed by the human: *"tớ đồng ý với các tiêu chí bên trên, tớ đã check rồi"* — I agree with
+  the criteria above, I have checked them. Criteria 15-20 are signed in `STATE.md`; with 21 already
+  standing from D-002, no `human` criterion remains unsigned. This was the last thing between the run and
+  `DONE`. Full text and the human's own note on which clauses machine evidence reaches (and which rest on
+  their eyes) is archived in `HISTORY.md`.
 - **Type:** Human Verification Request (ENGINE.md §11)
 - **Iteration:** 5 (Verifier)
 - **Timestamp:** 2026-09-15

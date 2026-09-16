@@ -513,6 +513,13 @@ confirmed against the code that exists.
   closed rather than flagged — nothing is left for a human to relocate.
 - **Android SDK** path comes from git-ignored `local.properties`; a fresh clone will not build without it.
 - `compileSdk 36`, `targetSdk 36`, `minSdk 24`, `jvmTarget 11`.
+- **The source package and the installed package are two different names, and both are correct.**
+  `app/build.gradle.kts:11` sets `namespace = "com.example.skeleton"` — that is the Kotlin package, so
+  every source path is `app/src/main/java/com/example/skeleton/…`. `:21` sets
+  `applicationId = "com.example.myapplication"` — that is what the device knows the app by, so every
+  `adb`, `dumpsys` and `logcat` command names *that* one. A grep written from an `adb` transcript will
+  find no files, and a grep written from the source tree will match no device output; neither is evidence
+  of anything being wrong. Reconciled at iteration 6 after the two looked like a contradiction.
 - **No CI configuration exists.** No lint baseline, no ktlint, no detekt — "lint" means AGP lint.
 - **`adb` IS installed and a device HAS been attached; there is no Robolectric.** The previous version
   of this line read *"No emulator, no device, no `adb`, no Robolectric — there is no command here that

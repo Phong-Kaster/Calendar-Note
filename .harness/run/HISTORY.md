@@ -289,3 +289,72 @@ permissions plus their code, and build the greeting notification as specified.
 
 **Applied:** See `AMENDMENTS.md`, 2026-09-15 entry, for the full list of files this decision touched
 (`DoD.md`, `PLAN.md`, `TASKS/T-002.md`, `STATE.md`, `ESCALATION.md`).
+
+### Iteration 6 - 2026-09-16 (Verifier — final)
+
+- **Phase:** none. The task graph was already empty: T-001, T-002, T-003 all complete, nothing abandoned,
+  nothing unreachable, nothing deferred. This invocation wrote no source file, which is what gives it
+  standing to declare completion (ENGINE.md invariant 8).
+- **Recovered:** working tree carried one modification, `.harness/run/DECISIONS.md` — the human's answer
+  to `D-003`. Not crash debris: that file is theirs alone and the Runtime denies the engine both Edit and
+  Write on it. Nothing to salvage, nothing to revert.
+- **Consumed `D-003` (§6.2).** All six items pass. See `AMENDMENTS.md` A-17 for the decision, the human's
+  verbatim rationale, and their own clause-by-clause note on criterion 19.
+- **Re-verified all fourteen `machine` criteria on its own fresh evidence (§11.1).** It did not read
+  iteration 5's table as an input. `RESUME.md` advised skipping the re-run because no commit had touched
+  `app/` since `8b67f40`; that advice was not taken. §11 says the Verifier runs the build itself, the
+  spec outranks a derived cache, and this is the invocation that removes `.harness/run/` and reports
+  `DONE` — it should stand on evidence it produced.
+
+  ```
+  :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:validateDebugScreenshotTest --rerun-tasks
+    -> BUILD SUCCESSFUL in 3m 11s, 61 actionable tasks: 61 executed
+  unit tests   296 across 19 classes, 0 failures, 0 errors, 0 skipped (baseline was 251)
+  lint         0 errors, 75 warnings
+  screenshots  23 rendered, 0 diffs; 23 reference PNGs on disk == 23 rendered, no orphan, no new file
+  ```
+
+  Not one `UP-TO-DATE` marker on any task line. That, and not the `BUILD SUCCESSFUL` line, is what makes
+  the evidence this invocation's own — the trap recorded in `PROJECT.md` and re-read before trusting it.
+  The per-criterion table is in `STATE.md`. All fourteen hold; no gap was found, so no task was filed and
+  the DONE-candidate flag had nothing to clear.
+- **Learned:** the app's `namespace` is `com.example.skeleton` but its `applicationId` is
+  `com.example.myapplication`. D-002's adb evidence names the latter and the source tree the former, and
+  the two look like a contradiction until you read `app/build.gradle.kts:11,21`. They agree. Recorded in
+  `PROJECT.md` so a later reader does not spend the same minutes on it.
+- **Completed.** Every `machine` criterion re-proved by an invocation that wrote none of the
+  implementation; every `human` criterion signed by a person. Cleanup Commit created (`.harness/run/`
+  removed from the branch tip; `.harness/ISSUES.md` kept). Reported `DONE`. Merging is the human's act.
+
+---
+
+## Archived decision exchanges
+
+### D-003 - Human Verification Request: six checks, and the one that failed last time
+
+**Queued:** Iteration 5, 2026-09-15. **Answered:** 2026-09-16. **Consumed:** Iteration 6, 2026-09-16.
+
+**Question:** Work through DoD criteria **15-20** on a real device and mark each pass or fail. Criterion
+21 was deliberately excluded — it was signed on 2026-09-15 and nothing since had touched the manifest or
+the permission code, and re-asking a settled question is noise, not diligence.
+
+**Context:** criterion 15 came back **FAIL** from D-002 — a fresh install never greeted, because the app
+wrote down "greeted today" whether or not the system had actually shown anything, burning the day's one
+greeting on the very first foreground, which on a fresh install happens *before* the user has been asked
+for the notification permission. T-003 (`8b67f40`) fixed it: `areNotificationsEnabled()` is asked first
+and the day is recorded only on an accepted post. That fix changed `GreetingNotifier`, which unsigned 16
+and 17 under §11 even though they had passed — the code that was looked at no longer existed.
+
+**Decision:** **all six pass**, signed 2026-09-16: *"tớ đồng ý với các tiêu chí bên trên, tớ đã check
+rồi"* — I agree with the criteria above, I have checked them.
+
+The human added a note of their own on criterion 19, separating what a command proved from what their
+eyes did: the two-rows-and-no-Location-row clause was machine-verified on a clean AOSP API 36 emulator
+where the sheet appeared on its own; the "no leftover gap" clause and the "each row opens the correct
+system screen" clause were not, and rest on the signature. Their words for why that is fine: the `human`
+class "exists precisely because the two clauses above cannot be reached any other way." Kept verbatim in
+`AMENDMENTS.md` A-17 so that nobody later reads "19 pass" and assumes a command proved all three.
+
+**Applied:** `ESCALATION.md` D-003 marked answered-in-full; `STATE.md` sign-off table completed (15-20
+signed 2026-09-16, 21 standing from 2026-09-15); `ISSUES.md` regenerated; `SUGGESTIONS.html`'s Escalate
+tab emptied. No task filed — nothing failed.

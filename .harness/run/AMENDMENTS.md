@@ -86,3 +86,37 @@ Both sat outside T-003's Declared File Scope, so the Iteration made them itself 
 2. `README.md`'s package tree gained `domain/greeting/GreetOnceADay.kt`, and two stale one-line notes
    were corrected (`GreetingNotifier` no longer "owns the read-decide-post-write sequence"; and
    `GreetingDecision.kt` is no longer "the only tested part of the greeting").
+
+### A-17 (Tier 1) — D-003 consumed: the last six `human` criteria signed
+
+**Decision:** `D-003`, answered 2026-09-16. All six items (DoD criteria 15-20) returned **pass**.
+
+**The human's rationale, recorded verbatim rather than paraphrased** — it is the whole of what closes a
+`human` criterion: *"tớ đồng ý với các tiêu chí bên trên, tớ đã check rồi"* ("I agree with the criteria
+above, I have checked them"). A person with the app on their own device states that the software behaves
+as the six criteria describe. That is exactly what the `human` Verification Class asks for, and the only
+thing that can close these items.
+
+**The human also drew the line for us on criterion 19, and it is worth keeping.** They separated the
+three clauses of that criterion by what backs each:
+
+- *"only the Notification row and, on Android 12+, the Exact alarms row — no Location row"* —
+  **machine-verified** on a clean emulator (`astronex_test`, AOSP, API 36), installed fresh so the sheet
+  appeared on its own rather than being assumed into existence. The dumped hierarchy carried exactly two
+  rows; a search for "location" returned nothing.
+- *"no leftover gap"* — **not machine-verified.** A view hierarchy lists nodes, not how they look.
+- *"toggling each row still opens the correct system dialog/screen"* — **not machine-verified.** It needs
+  a tap; the emulator is gone and the physical device refuses injected input (`SecurityException:
+  INJECT_EVENTS`, a MIUI restriction that also defeats instrumentation — tested, not assumed).
+
+The signature covers the whole criterion. The note exists so that nobody later reads "19 pass" and
+assumes a command proved all three clauses.
+
+**Applied:** `ESCALATION.md` D-003 marked answered-in-full; `STATE.md`'s sign-off table shows all seven
+`human` criteria signed and carries this iteration's own re-measurement of all fourteen `machine`
+criteria; `ISSUES.md` regenerated with no outstanding problem; `SUGGESTIONS.html`'s Escalate tab shows an
+empty queue. No task was filed: nothing failed. No PRD change, no DoD change, no architecture change.
+
+**Not an amendment to anything executable** — the task graph was already empty. Logged here because §6.2
+requires every consumed decision to be logged with the human's rationale, and because this is the entry a
+reader will look for when asking why the run stopped.
