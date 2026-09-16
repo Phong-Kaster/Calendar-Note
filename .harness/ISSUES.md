@@ -122,6 +122,20 @@ MSYS_NO_PATHCONV=1 git show fb4bf24:.harness/run/ESCALATION.md
 MSYS_NO_PATHCONV=1 git show fb4bf24:.harness/run/HISTORY.md
 ```
 
-Those sixteen items are still unverified by a person and are **not** part of this run's DoD or Decision
-Queue — this note exists only so they are not silently forgotten. Answering them is independent of this
-run and can happen at any time.
+### SIGNED OFF by the human, 2026-09-16
+
+All sixteen are **confirmed passing**. Recorded verbatim, because that is what was said and nothing
+more should be read into it: *"tớ đã kiểm tra rồi, tất cả ok"* — I have checked them, everything is fine.
+
+What this signature is, exactly: a person who has the app on a real device states that the sixteen
+`human` criteria of the alarms run hold. It is **not** backed by machine evidence in this repository,
+and none was produced for it — the alarms run's `machine` criteria were separately re-proved by its
+own Verifier at the time. Anyone re-opening this should know which half rests on which.
+
+The alarms feature therefore has no outstanding verification debt. It remains unmerged on
+`loop/calendar-note-app`; merging is a separate act.
+
+**What would reopen this:** a change to the alarm scheduling, notification or boot-receiver code. A
+signature covers the build it was given, not the file forever — these sixteen were signed against the
+tree at `3506b33`, and the greeting work since then touched `AndroidManifest.xml` and the notification
+package, though not the alarm path itself.

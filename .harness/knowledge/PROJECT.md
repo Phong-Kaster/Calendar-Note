@@ -514,9 +514,30 @@ confirmed against the code that exists.
 - **Android SDK** path comes from git-ignored `local.properties`; a fresh clone will not build without it.
 - `compileSdk 36`, `targetSdk 36`, `minSdk 24`, `jvmTarget 11`.
 - **No CI configuration exists.** No lint baseline, no ktlint, no detekt — "lint" means AGP lint.
-- **No emulator, no device, no `adb`, no Robolectric.** Anything requiring the app to actually run —
-  a notification appearing, an alarm firing, a reboot surviving, a screen rendering on a phone — is a
-  `human` verification item, not a machine one. There is no command here that can prove it.
+- **`adb` IS installed and a device HAS been attached; there is no Robolectric.** The previous version
+  of this line read *"No emulator, no device, no `adb`, no Robolectric — there is no command here that
+  can prove it"*, and three runs classified every criterion needing a running app as `human` on the
+  strength of it. It was false. `adb` sits at `~/AppData/Local/Android/Sdk/platform-tools/adb`, a
+  physical device answered `adb devices`, and `adb install`, `dumpsys notification`, `dumpsys package`
+  and `logcat -b crash` all ran against it — proving a notification's title, text, channel and
+  importance, the installed package's real permission list, and the absence of a crash.
+  **Re-run `adb devices` before trusting this line either way** (`POLICIES.md`: an absence is the one
+  claim that rots silently, because nothing ever fails to remind you of it).
+- **Two things `adb` could not do here, both worth knowing before planning around it.** The attached
+  phone is a MIUI device that refuses injected input entirely — every `adb shell input` answers
+  `SecurityException: INJECT_EVENTS` — so nothing can be *tapped* on it, only inspected. And a
+  force-stopped app could not be relaunched from `adb` afterwards. Both argue for a Gradle managed
+  emulator over the physical device; see the `android/device-verification` stack pack.
+- **`app/src/androidTest/` exists and is wired**: `testInstrumentationRunner =
+  androidx.test.runner.AndroidJUnitRunner`, with `androidx.junit`, `espresso.core` and
+  `compose.ui.test.junit4` already on `androidTestImplementation`. It contains exactly one file, the
+  template's `ExampleInstrumentedTest.kt` stub. The harness for instrumented tests is present and
+  unused — it does not need to be invented, only written into.
+- **What this means for Verification Classes.** A criterion needing the app to run is
+  `machine-then-human`, not `human-only`: the Verifier drives it at the DONE-candidate gate and a
+  person still signs it (ADR-025). `human-only` is reserved for perception — contrast, readability,
+  whether a control can actually be seen. The greeting's `Clock` seam is the worked example: because it
+  is injected, *"a new calendar day greets again"* is proved by a plain JVM test with no device at all.
 - **Test surface — three source sets, two of which need no device:**
   - `app/src/test/` — plain JVM unit tests. These **can** touch Compose's non-`@Composable` API
     (`darkColorScheme()`, `Color`, reflection over `ColorScheme`) with no Android context. **A ViewModel is
