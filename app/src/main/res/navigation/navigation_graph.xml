@@ -3,7 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/navigation_graph"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/musicFragment">
+
+    <fragment
+        android:id="@+id/musicFragment"
+        android:name="com.example.skeleton.ui.fragment.music.MusicFragment"
+        android:label="Music Fragment" />
 
     <fragment
         android:id="@+id/homeFragment"
@@ -22,12 +27,20 @@
 
     <!-- FOUR MAIN SCREEN-->
     <action
+        android:id="@+id/toMusic"
+        app:destination="@id/musicFragment"
+        app:enterAnim="@anim/enter_fade_in"
+        app:exitAnim="@anim/exit_fade_out"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/navigation_graph" />
+
+    <action
         android:id="@+id/toHome"
         app:destination="@id/homeFragment"
         app:enterAnim="@anim/enter_fade_in"
         app:exitAnim="@anim/exit_fade_out"
         app:launchSingleTop="true"
-        app:popUpTo="@id/navigation_graph" />
+        app:popUpTo="@id/musicFragment" />
 
     <action
         android:id="@+id/toSetting"
@@ -35,7 +48,7 @@
         app:enterAnim="@anim/enter_fade_in"
         app:exitAnim="@anim/exit_fade_out"
         app:launchSingleTop="true"
-        app:popUpTo="@id/homeFragment" />
+        app:popUpTo="@id/musicFragment" />
 
     <!--CONTENT FRAGMENTS-->
     <action
