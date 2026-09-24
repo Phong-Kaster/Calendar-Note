@@ -37,3 +37,9 @@
 - Re-review: 0 blocking; fixed by Iteration: skip redundant `toMusic` when Music is current (cold start), two missing `@author` tags. Recorded: notification extra replays on reopen from Recents (harmless while Music is the start destination).
 - Build/test/lint green: 34 tests, lint 0 errors. Device disconnected mid-install (serial now `10AECY1ZXG003MQ`, then gone) — no device check.
 - Assumptions A-001/3/4: SHA `e3d77de` + revert filled. All tasks complete → PARTIAL-candidate recorded.
+
+### Iteration 4 - 2026-09-24 (Verifier)
+- Recovery: tree clean apart from runtime files (`.harness/loop/`, `.claude/agents/`, left untracked). No new decisions.
+- Re-proved fresh: `assembleDebug testDebugUnitTest lintDebug` → BUILD SUCCESSFUL, 34 tests / 0 failures, lint 0 errors (DoD 1); SongMapperTest + AudioPermissionTest + MusicViewModelTest cover DoD 3, 4, 5, 8; merged manifest has audio permissions (`maxSdkVersion=32`), FGS permissions and the exported `mediaPlayback` MediaSessionService (DoD 4, 9); README tree lists every new package in `git diff --stat main` (DoD 15).
+- DoD 2 not re-provable: `adb devices` empty. No closable gap → no task filed.
+- Wrote the "Awaiting a person" checklist (DoD 6, 7, 10–14) into `ISSUES.md`. Reported `DONE_PARTIAL`, no Cleanup Commit.

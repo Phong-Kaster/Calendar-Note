@@ -5,12 +5,12 @@
 
 ## Current
 
-- **Stage:** verifying — Phase 3 done (iteration 3), no pending task; DoD APPROVED (D-001)
+- **Stage:** ended DONE_PARTIAL — Verifier (iteration 4) re-proved machine criteria 1, 3, 4, 5, 8, 9, 15; DoD 2 unprovable (no device)
 - **Run Mode:** Autonomous
 - **Loop Branch:** loop/music-player (from `main` @ `027d3ea`)
-- **Next Phase:** none — next invocation is the Verifier (PARTIAL-candidate, §14.4)
+- **Next Phase:** none — run ended `DONE_PARTIAL` (iteration 4)
 - **DONE-candidate:** no
-- **PARTIAL-candidate:** yes (iteration 3) — all tasks complete; `human` criteria 6, 7, 10, 11, 12, 13, 14 unsigned (Autonomous mode: reported, not queued)
+- **PARTIAL-candidate:** verified (iteration 4) — `human` criteria 6, 7, 10, 11, 12, 13, 14 unsigned, checklist in `.harness/ISSUES.md` § Awaiting a person; `machine` DoD 2 not re-provable without a device
 
 ## Progress
 
