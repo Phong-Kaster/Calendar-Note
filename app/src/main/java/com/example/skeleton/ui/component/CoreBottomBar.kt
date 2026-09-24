@@ -61,7 +61,7 @@ fun CoreBottomBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        listOf(BottomBarDestination.Home).forEach { item ->
+        listOf(BottomBarDestination.Music, BottomBarDestination.Home).forEach { item ->
             BottomBarElement(
                 enable = currentDestination?.hierarchy?.any { it.id == item.destinationId } == true,
                 drawableId = item.drawableId,

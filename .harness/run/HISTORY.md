@@ -8,4 +8,15 @@
 - Learned: `main` lint is red; `CoreBottomBar.kt` hard-codes its tab lists; `PermissionUtil.kt` would be touched by two tasks → both made Iteration-owned; `seekToPrevious` restarts after ~3 s → ForwardingPlayer in T-003; media-session notifications are exempt from POST_NOTIFICATIONS on 33+.
 - Reconciled: critique folded in — DoD 3/4 rewritten to target plain-Kotlin seams; DoD 9 adds exported + intent-filter; DoD 7 adds "grant loads without restart"; DoD 10 adds "previous after 10 s"; DoD 12 adds "no second copy"; DoD 13 notes MIUI. Kept T-003 whole (the a/b split would share the same screen files and run sequentially anyway). Kept T-001 separate (disjoint scope, runs in parallel with T-002). Tiers: T-001 Fast (both analysts agree), others Capable. Knowledge: PROJECT.md created with C-01…C-05. Assumptions A-001…A-006. Queued D-001.
 
+### Iteration 1 - 2026-09-24
+- **Phase:** 1 — T-001 (Fast, `haiku`), T-002 (Capable, `opus`), dispatched in parallel.
+- Recovery: tree clean apart from runtime-provisioned `DECISIONS.md` (committed), `.harness/loop/`, `.claude/agents/` (runtime files, left untracked).
+- Consumed D-001 (approved as proposed). Scope check: both manifests disjoint and inside scope; union matched `git status`.
+- Wired: coroutines-test dep, audio permissions, nav (`musicFragment` start, `toMusic`, pops to Music), `BottomBarDestination.Music` + `CoreBottomBar`, Koin, 7 new strings en+de + 4 missing German strings (A-006), README created (none existed).
+- Build/test/lint green first time: 25 tests, lint 0 errors. Device: launch OK, no crash; `pm grant` / `install -g` refused (MIUI).
+- Review (Capable, fresh): 0 Critical, 3 Major, 5 Minor. Fixed: permission dead-tap/dismiss (M1), system bars dark in light mode (M2), marquee instead of ellipsis (M3), surface ramp (m4), unused import (m8). Recorded: `title ASC` case-sensitivity (m5), `formatDuration` layer (m6), `SongRow` name clash (m7). Re-verified green.
+- Knowledge: C-06 (single-line text = marquee), C-07 (always-dark system bars), device facts (no `pm grant`). Suggestion S-01 added.
+
 ## Archived Decisions
+
+- **D-001** (DoD approval, bootstrap) — answered 2026-09-24: "Approved as proposed … all 7 `human` criteria (6, 7, 10, 11, 12, 13, 14) accepted in full. Assumptions A-001 … A-006 are not overturned." Applied iteration 1.

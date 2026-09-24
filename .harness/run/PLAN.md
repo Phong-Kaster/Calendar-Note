@@ -26,7 +26,7 @@ over `ContentResolver`), `domain/repository/PlayerRepository` (+ impl over a Med
 `AndroidManifest.xml`, `res/navigation/navigation_graph.xml`, `gradle/libs.versions.toml`,
 `app/build.gradle.kts`, `injection/*.kt`, `domain/enums/BottomBarDestination.kt`,
 `ui/component/CoreBottomBar.kt`, `ui/util/PermissionUtil.kt`, `res/values/strings.xml`,
-`res/values-de/strings.xml`, `README.md`.
+`res/values-de/strings.xml`, `README.md`, `core/CoreActivity.kt`, `res/values/themes.xml` (added iteration 1).
 
 ## Task Graph
 

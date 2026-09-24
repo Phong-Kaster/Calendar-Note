@@ -42,14 +42,21 @@
   that; never write a test whose subject is `Cursor`, `Uri`, `MediaController`, `Build`, `Log`.
 - **C-05 — A Worker holds no git/build/test capability and cannot delete files.** Pick every file name
   before writing it.
+- **C-06 — Single-line `Text` uses `maxLines = 1` + `Modifier.basicMarquee(iterations = Int.MAX_VALUE)`, never
+  `TextOverflow.Ellipsis` alone** (`.claude/jetpack-compose-ui.md` § Text; an ellipsis leaves no way to read the
+  rest). Evidence: iteration-1 review finding on `ui/fragment/music/component/SongRow.kt` (the brief asked for ellipsis).
+- **C-07 — The app is always dark: never make a system bar or window follow the phone's light mode.**
+  `core/CoreActivity.kt` forces `SystemBarStyle.dark(...)` and `res/values/themes.xml` sets
+  `windowLightStatusBar=false`; do not reintroduce `enableEdgeToEdge()` defaults or `isSystemInDarkTheme()`
+  branches. Evidence: iteration-1 review (dark status-bar icons on the black ground in system light mode).
 
 ## Toolchain (verified commands)
 
 | Purpose | Command | Verified |
 |---|---|---|
 | Build | `./gradlew :app:assembleDebug` | **yes** (2026-09-24) — APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | **yes** — 1 test (`ExampleUnitTest`), 0 failures |
-| Lint | `./gradlew :app:lintDebug` | runs; **red on main**: 4 errors (all `MissingTranslation`), 58 warnings |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | **yes** — 25 tests after iteration 1, 0 failures |
+| Lint | `./gradlew :app:lintDebug` | **green** since iteration 1: 0 errors, 59 warnings (main had 4 `MissingTranslation` errors, fixed per A-006) |
 | Device | `~/AppData/Local/Android/Sdk/platform-tools/adb devices` | **yes** — one device `b56e2819` attached |
 
 - Success is the literal `BUILD SUCCESSFUL`. Never trust a piped exit code; run unpiped or with
@@ -67,7 +74,7 @@
   `@Composable ComposeView()`, which `CoreFragment` wraps in `MyApplicationTheme`. Screen files in
   `ui/fragment/<screen>/` (`XxxFragment`, `XxxUiState`, `XxxViewModel`, `component/`). Use `core/CoreLayout`
   (topBar / bottomBar / content), `CoreTopBar(title)`.
-- Bottom bar: `CoreBottomBar()` hard-codes the tab lists (`listOf(BottomBarDestination.Home)` left,
+- Bottom bar: `CoreBottomBar()` hard-codes the tab lists (`listOf(Music, Home)` left since iteration 1,
   `listOf(...Setting)` right); adding an enum entry alone shows nothing.
 - DI is Koin: `injection/AppModule.kt` includes database/datastore/repository/viewModel/network/locale
   modules; a new module must be added to that `includes`. Bind repositories by interface with named args;
@@ -86,11 +93,15 @@
 
 - Windows 11, Git Bash + PowerShell, Gradle wrapper, AGP 9.0.1, Kotlin 2.2.10, compileSdk/targetSdk 36,
   minSdk 24, jvmTarget 11. Android SDK path from git-ignored `local.properties`.
-- Dependencies via `gradle/libs.versions.toml`. Test deps on main: `junit 4.13.2` only (no
-  `kotlinx-coroutines-test`). No Media3, no screenshot-test plugin on main.
+- Dependencies via `gradle/libs.versions.toml`. Test deps: `junit 4.13.2`, `kotlinx-coroutines-test 1.10.2`
+  (added iteration 1). No Media3, no screenshot-test plugin on main.
 - The attached device (per the calendar run's record) is MIUI and refuses injected input
   (`adb shell input` → `SecurityException: INJECT_EVENTS`): installable and inspectable (`dumpsys`,
   `logcat -b crash`), not tappable. Re-run `adb devices` before relying on it.
+- The device **refuses `adb shell pm grant/revoke`** (`SecurityException: … GRANT_RUNTIME_PERMISSIONS`) and
+  `adb install -g` grants nothing (verified iteration 1, API 35). Only the "permission not granted" launch path
+  can be exercised by command; a granted path needs a person (or MIUI "USB debugging (Security settings)").
+- `adb shell dumpsys activity top | grep MusicFragment` shows which fragment is on screen without input injection.
 - `.kotlin/` appears untracked after a build (Kotlin daemon data) and is not in `.gitignore`; do not commit it.
 - `git show <ref>:.harness/...` needs `MSYS_NO_PATHCONV=1` under Git Bash.
 

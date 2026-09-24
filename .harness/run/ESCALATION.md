@@ -11,7 +11,7 @@
 
 ## D-001 - Approve the Definition of Done for the music player
 
-- **Status:** pending
+- **Status:** answered (2026-09-24, iteration 1) — approved as proposed
 - **Type:** DoD approval
 - **Iteration:** 0 (bootstrap)
 - **Timestamp:** 2026-09-24
@@ -52,4 +52,4 @@ None — Autonomous mode runs under the Deny List (ENGINE.md §14.3).
 
 ### Decision
 
-<!-- Answered in `.harness/run/DECISIONS.md`, under a heading `## D-001` - never here. -->
+Answered in `DECISIONS.md` § D-001: approved as proposed; archived to `HISTORY.md` (iteration 1).

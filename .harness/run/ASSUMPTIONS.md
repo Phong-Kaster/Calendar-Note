@@ -42,7 +42,7 @@ skeleton's "follow official recommendations" rule. Version pinned in `gradle/lib
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** — (T-002)
+- **First dependent checkpoint:** iteration 1 (Phase 1 checkpoint; SHA filled next iteration)
 - **Revert:** —
 
 ### Question
@@ -103,7 +103,7 @@ Option 1 — every control always does something visible, which matches "next/pr
 
 - **Tier:** 2 (plan — changes the skeleton theme)
 - **Iteration:** 0
-- **First dependent checkpoint:** — (T-001)
+- **First dependent checkpoint:** iteration 1 (Phase 1 checkpoint; SHA filled next iteration)
 - **Revert:** —
 
 ### Question
@@ -124,7 +124,7 @@ Option 1: smallest change, no skeleton screen breaks, and dark is conventional f
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** — (Phase 1)
+- **First dependent checkpoint:** iteration 1 (Phase 1 checkpoint; SHA filled next iteration)
 - **Revert:** —
 
 ### Question

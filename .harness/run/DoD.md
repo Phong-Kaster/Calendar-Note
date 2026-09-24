@@ -9,7 +9,7 @@
 
 ## Status
 
-- [ ] APPROVED — approve via the pending `.harness/run/ESCALATION.md` (D-001); edit criteria freely before approving.
+- [x] APPROVED — D-001, answered in `.harness/run/DECISIONS.md` on 2026-09-24 ("Approved as proposed"), all 15 criteria and classes unchanged.
       Approval covers the Verification Class of each criterion, not only its wording.
 
 ## Acceptance Criteria

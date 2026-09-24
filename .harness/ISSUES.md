@@ -1,6 +1,6 @@
 # LOOP ISSUES REPORT
 
-_Last updated: 2026-09-24 - branch `loop/music-player` - iteration 0 (bootstrap)_
+_Last updated: 2026-09-24 - branch `loop/music-player` - iteration 1 (Phase 1)_
 
 ## Abandoned tasks
 
@@ -12,18 +12,24 @@ None.
 
 ## Decisions awaiting an answer
 
-| # | Question | Blocks |
-|---|---|---|
-| D-001 | Approve the Definition of Done (`.harness/run/DoD.md`) | T-001, T-002, T-003, T-004 |
+None (D-001 approved 2026-09-24).
 
 ## Review findings not fixed
 
-None.
+| Sev | Where | Finding |
+|---|---|---|
+| Minor | `data/mapper/SongMapper.kt:41` | Sort `title ASC` may be case-sensitive in MediaStore's SQLite (lowercase titles after uppercase). Unverified — no music-file check possible by command. |
+| Minor | `ui/fragment/music/component/SongRow.kt` | UI imports `formatDuration` from `data.mapper` (UI → data dependency). Noted in T-003. |
+| Minor | `data/mapper/SongMapper.kt:54` | Data class `SongRow` shares its simple name with the `SongRow` composable. |
 
 ## Awaiting a person
 
 Not yet — the checklist is written by the Verifier once every `machine` criterion holds. `human` criteria 6, 7, 10, 11, 12, 13, 14 are all unsigned.
 
+## Known verification limits
+
+- DoD 2 (launch with permission granted *and* revoked): the device refuses `pm grant` / `pm revoke` and `install -g`, so only the not-granted launch was proved by command (MainActivity resumed, `MusicFragment` on top, 0 crashes).
+
 ## Assumptions recorded
 
-See `.harness/run/ASSUMPTIONS.md` (A-001 … A-006). Pre-existing defect noted: `main` fails `lintDebug` with 4 `MissingTranslation` errors (fixed in Phase 1 per A-006).
+See `.harness/run/ASSUMPTIONS.md` (A-001 … A-006). Tier-1 amendments in `AMENDMENTS.md` (iteration 1).
