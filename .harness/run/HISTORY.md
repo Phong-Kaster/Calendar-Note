@@ -29,3 +29,11 @@
 - First build hit a Windows file lock on `classes.jar` (environment); `gradlew --stop` + rerun → green. 32 tests.
 - Review (Capable, fresh): 1 blocking (B-1 shared connection released by old ViewModel), 3 major (M-1 dead controller, M-2 stale state, M-3 evidence gap only — DoD 10/11 are human), 3 minor (exported service accepts any controller — accepted; trailing content lambdas — fixed; README — fixed by Iteration). Re-dispatched Worker (attempt 2) with B-1/M-1/M-2/minor → green, 34 tests, lint 0 errors; device relaunch 0 crashes.
 - Knowledge: C-08 (shared singleton connections are ref-counted, never torn down by one screen). Assumptions: A-002/5/6 SHA `ccf22b3` filled; A-001/3/4 first built on here.
+
+### Iteration 3 - 2026-09-24
+- **Phase:** 3 — T-004 (Capable, `opus`), one Worker.
+- Recovery: tree clean apart from runtime files (`.harness/loop/`, `.claude/agents/`, left untracked). No new decisions.
+- Attempt 1: green build, rejected by fresh review (B-1 notification did not land on Music; N-1 `stopSelf` blocked by bound controller; N-2 failed player counted as playing). Tier-1: scope + `MainActivity.kt`. Attempt 2: extra + `CLEAR_TOP|SINGLE_TOP`, `onNewIntent` → `toMusic`, `pauseAllPlayersAndStopSelf()`, IDLE excluded → green.
+- Re-review: 0 blocking; fixed by Iteration: skip redundant `toMusic` when Music is current (cold start), two missing `@author` tags. Recorded: notification extra replays on reopen from Recents (harmless while Music is the start destination).
+- Build/test/lint green: 34 tests, lint 0 errors. Device disconnected mid-install (serial now `10AECY1ZXG003MQ`, then gone) — no device check.
+- Assumptions A-001/3/4: SHA `e3d77de` + revert filled. All tasks complete → PARTIAL-candidate recorded.

@@ -60,7 +60,7 @@
 | Purpose | Command | Verified |
 |---|---|---|
 | Build | `./gradlew :app:assembleDebug` | **yes** (2026-09-24) — APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | **yes** — 34 tests after iteration 2, 0 failures |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | **yes** — 34 tests after iteration 3, 0 failures |
 | Lint | `./gradlew :app:lintDebug` | **green** since iteration 1: 0 errors, 63 warnings after iteration 2 (main had 4 `MissingTranslation` errors, fixed per A-006) |
 | Device | `~/AppData/Local/Android/Sdk/platform-tools/adb devices` | **yes** — one device `b56e2819` attached |
 
@@ -101,13 +101,15 @@
 - Windows 11, Git Bash + PowerShell, Gradle wrapper, AGP 9.0.1, Kotlin 2.2.10, compileSdk/targetSdk 36,
   minSdk 24, jvmTarget 11. Android SDK path from git-ignored `local.properties`.
 - Dependencies via `gradle/libs.versions.toml`. Test deps: `junit 4.13.2`, `kotlinx-coroutines-test 1.10.2`
-  (added iteration 1). No Media3, no screenshot-test plugin on main. Added on the loop branch (iteration 2): Media3 1.8.0 (`media3-exoplayer`, `media3-session`, `media3-common`; Guava `ListenableFuture` comes transitively), `material-icons-extended` via the Compose BOM (BOM 2024.09.00 core icons have no Pause/SkipNext/SkipPrevious). `ForwardingPlayer` is `@UnstableApi` → `@androidx.annotation.OptIn(UnstableApi::class)`.
+  (added iteration 1). No Media3, no screenshot-test plugin on main. Added on the loop branch (iteration 2): Media3 1.8.0 (`media3-exoplayer`, `media3-session`, `media3-common`; Guava `ListenableFuture` comes transitively), `material-icons-extended` via the Compose BOM (BOM 2024.09.00 core icons have no Pause/SkipNext/SkipPrevious). `ForwardingPlayer` is `@UnstableApi` → `@androidx.annotation.OptIn(UnstableApi::class)`. `MediaSessionService.pauseAllPlayersAndStopSelf()` exists in 1.8.0 (compiled, iteration 3) — use it, not bare `stopSelf()`, which cannot end a service the app's `MediaController` still binds. Media3 jars are zipped `.aar`s in the Gradle cache: a Worker cannot inspect the API, only a build can.
 - The attached device (per the calendar run's record) is MIUI and refuses injected input
   (`adb shell input` → `SecurityException: INJECT_EVENTS`): installable and inspectable (`dumpsys`,
   `logcat -b crash`), not tappable. Re-run `adb devices` before relying on it.
 - The device **refuses `adb shell pm grant/revoke`** (`SecurityException: … GRANT_RUNTIME_PERMISSIONS`) and
   `adb install -g` grants nothing (verified iteration 1, API 35). Only the "permission not granted" launch path
   can be exercised by command; a granted path needs a person (or MIUI "USB debugging (Security settings)").
+- Opening the app on Music from outside (notification, future deep link): `Intent(..., MainActivity::class.java).putExtra(MainActivity.EXTRA_OPEN_MUSIC, true)` with `NEW_TASK|CLEAR_TOP|SINGLE_TOP`; `MainActivity` navigates via the global `toMusic` action (pops to graph root) in `onCreate`/`onNewIntent` (iteration 3).
+- The attached device changes: iteration 3 saw serial `10AECY1ZXG003MQ` (not `b56e2819`), which then disconnected mid-install. Always re-run `adb devices`.
 - `adb shell dumpsys activity top | grep MusicFragment` shows which fragment is on screen without input injection.
 - `.kotlin/` appears untracked after a build (Kotlin daemon data) and is not in `.gitignore`; do not commit it.
 - `git show <ref>:.harness/...` needs `MSYS_NO_PATHCONV=1` under Git Bash.

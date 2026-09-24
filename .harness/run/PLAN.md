@@ -33,7 +33,7 @@ over `ContentResolver`), `domain/repository/PlayerRepository` (+ impl over a Med
 - T-001 - App renders a fixed dark theme that matches the black ground (depends on: -) - scope: `ui/theme/Theme.kt`, `ui/theme/Color.kt` - tier: Fast
 - T-002 - Music screen lists the device's songs, with permission and empty states (depends on: -) - scope: see TASKS/T-002.md - tier: Capable
 - T-003 - Tapping a song plays it in a foreground media service; now-playing bar controls it (depends on: T-002) - scope: see TASKS/T-003.md - tier: Capable
-- T-004 - Notification opens the app and swipe-away stops a paused player (depends on: T-003) - scope: `data/service/MusicPlaybackService.kt` - tier: Capable
+- T-004 - Notification opens the app and swipe-away stops a paused player (depends on: T-003) - scope: `data/service/MusicPlaybackService.kt`, `MainActivity.kt` (amended iteration 3) - tier: Capable
 
 ## Phase Grouping
 

@@ -17,8 +17,8 @@
 
 - **Tier:** 2 (plan/architecture — new external dependency)
 - **Iteration:** 0 (bootstrap)
-- **First dependent checkpoint:** iteration 2 (Phase 2 checkpoint, T-003; SHA filled next iteration)
-- **Revert:** —
+- **First dependent checkpoint:** `e3d77de` (iteration 2, Phase 2)
+- **Revert:** `git revert e3d77de` (the Phase 2 checkpoint carries T-003 as one commit; T-004 at the Phase 3 checkpoint builds on it and must be reverted first)
 
 ### Question
 
@@ -62,8 +62,8 @@ Option 1: the PRD asks for a music player, nothing about removing existing scree
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** iteration 2 (Phase 2 checkpoint, T-003; SHA filled next iteration)
-- **Revert:** —
+- **First dependent checkpoint:** `e3d77de` (iteration 2, Phase 2)
+- **Revert:** `git revert e3d77de` (the Phase 2 checkpoint carries T-003 as one commit; T-004 at the Phase 3 checkpoint builds on it and must be reverted first)
 
 ### Question
 
@@ -83,8 +83,8 @@ button is easy to add later if wanted.
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** iteration 2 (Phase 2 checkpoint, T-003; SHA filled next iteration)
-- **Revert:** —
+- **First dependent checkpoint:** `e3d77de` (iteration 2, Phase 2)
+- **Revert:** `git revert e3d77de` (the Phase 2 checkpoint carries T-003 as one commit; T-004 at the Phase 3 checkpoint builds on it and must be reverted first)
 
 ### Question
 
