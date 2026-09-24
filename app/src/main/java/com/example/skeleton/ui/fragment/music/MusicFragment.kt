@@ -64,6 +64,9 @@ class MusicFragment : CoreFragment() {
     /** When the last permission dialog was asked for (ms since boot), to spot a blocked dialog. */
     private var permissionRequestedAtMs: Long = 0L
 
+    /** True once the notification dialog was shown on this screen, so it is asked only once. */
+    private var notificationPermissionAsked: Boolean = false
+
     override fun onResume() {
         super.onResume()
         checkPermission()
@@ -113,6 +116,29 @@ class MusicFragment : CoreFragment() {
     }
 
     /**
+     * Plays a song. On Android 13+ the first play also asks for the notification permission,
+     * because some phones hide the player controls in the notification shade without it.
+     * The song plays whatever the answer is.
+     * @param song The tapped song.
+     * @param launcher The launcher that shows the notification permission dialog.
+     * @author Phong-Kaster
+     */
+    private fun playSong(song: Song, launcher: ActivityResultLauncher<String>) {
+        val isGranted = ContextCompat.checkSelfPermission(requireContext(), PERMISSION_POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        val shouldAsk = shouldAskNotificationPermission(
+            sdkInt = Build.VERSION.SDK_INT,
+            isGranted = isGranted,
+            alreadyAsked = notificationPermissionAsked,
+        )
+        if (shouldAsk) {
+            notificationPermissionAsked = true
+            launcher.launch(PERMISSION_POST_NOTIFICATIONS)
+        }
+        viewModel.onSongClick(song = song)
+    }
+
+    /**
      * Opens this app's page in the system settings so the user can allow the permission there.
      * @author Phong-Kaster
      */
@@ -135,6 +161,12 @@ class MusicFragment : CoreFragment() {
                 handlePermissionResult(granted = granted)
             },
         )
+        // The answer does not change playback: without it the song still plays, only the
+        // notification controls may stay hidden on some phones.
+        val notificationPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = { },
+        )
 
         MusicLayout(
             uiState = uiState,
@@ -146,7 +178,7 @@ class MusicFragment : CoreFragment() {
                 openAppSettings()
             },
             onSongClick = { song ->
-                viewModel.onSongClick(song = song)
+                playSong(song = song, launcher = notificationPermissionLauncher)
             },
             onPrevious = {
                 viewModel.onPrevious()
