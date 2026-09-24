@@ -9,8 +9,10 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -28,10 +30,12 @@ import androidx.core.content.ContextCompat
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
+import com.example.skeleton.domain.model.PlaybackState
 import com.example.skeleton.domain.model.Song
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.fragment.music.component.MusicPermissionNotice
+import com.example.skeleton.ui.fragment.music.component.NowPlayingBar
 import com.example.skeleton.ui.fragment.music.component.SongRow
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.theme.customizedTextStyle
@@ -142,7 +146,16 @@ class MusicFragment : CoreFragment() {
                 openAppSettings()
             },
             onSongClick = { song ->
-                // T-003 wires playback.
+                viewModel.onSongClick(song = song)
+            },
+            onPrevious = {
+                viewModel.onPrevious()
+            },
+            onTogglePlayPause = {
+                viewModel.onTogglePlayPause()
+            },
+            onNext = {
+                viewModel.onNext()
             },
         )
     }
@@ -160,6 +173,9 @@ class MusicFragment : CoreFragment() {
  * @param onRequestPermission Show the system permission dialog.
  * @param onOpenSettings Open this app's settings page.
  * @param onSongClick A song row was tapped.
+ * @param onPrevious Now-playing bar: previous button tapped.
+ * @param onTogglePlayPause Now-playing bar: play / pause button tapped.
+ * @param onNext Now-playing bar: next button tapped.
  * @author Phong-Kaster
  */
 @Composable
@@ -169,12 +185,31 @@ private fun MusicLayout(
     onRequestPermission: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onSongClick: (Song) -> Unit = {},
+    onPrevious: () -> Unit = {},
+    onTogglePlayPause: () -> Unit = {},
+    onNext: () -> Unit = {},
 ) {
     CoreLayout(
         modifier = Modifier,
         showLoading = uiState.content == MusicScreenContent.Loading,
         topBar = { CoreTopBar(title = stringResource(R.string.music)) },
-        bottomBar = { CoreBottomBar() },
+        bottomBar = {
+            // The now-playing bar sits right above the tab bar, so it never scrolls away.
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                content = {
+                    if (uiState.showNowPlayingBar) {
+                        NowPlayingBar(
+                            playback = uiState.playback,
+                            onPrevious = onPrevious,
+                            onTogglePlayPause = onTogglePlayPause,
+                            onNext = onNext,
+                        )
+                    }
+                    CoreBottomBar()
+                },
+            )
+        },
         content = {
             when (uiState.content) {
                 MusicScreenContent.Loading -> {
@@ -223,20 +258,21 @@ private fun MusicSongList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
-    ) {
-        items(
-            items = songs,
-            key = { song -> "Song_${song.id}" },
-            itemContent = { song ->
-                SongRow(
-                    song = song,
-                    onClick = {
-                        onSongClick(song)
-                    },
-                )
-            },
-        )
-    }
+        content = {
+            items(
+                items = songs,
+                key = { song -> "Song_${song.id}" },
+                itemContent = { song ->
+                    SongRow(
+                        song = song,
+                        onClick = {
+                            onSongClick(song)
+                        },
+                    )
+                },
+            )
+        },
+    )
 }
 
 @Preview(name = "Song list")
@@ -250,6 +286,31 @@ private fun MusicLayoutListPreview() {
                     songs = listOf(
                         Song(1, "Yesterday", "The Beatles", 125_000, "content://media/external/audio/media/1"),
                         Song(2, "A very long song title that does not fit on a single line at all", null, 245_000, "content://media/external/audio/media/2"),
+                    ),
+                ),
+            )
+        }
+    )
+}
+
+@Preview(name = "Song list, now playing")
+@Composable
+private fun MusicLayoutNowPlayingPreview() {
+    MyApplicationTheme(
+        content = {
+            MusicLayout(
+                uiState = MusicUiState(
+                    permissionState = MusicPermissionState.Granted,
+                    songs = listOf(
+                        Song(1, "Yesterday", "The Beatles", 125_000, "content://media/external/audio/media/1"),
+                        Song(2, "Imagine", "John Lennon", 183_000, "content://media/external/audio/media/2"),
+                    ),
+                    playback = PlaybackState(
+                        songId = 1,
+                        title = "Yesterday",
+                        artist = "The Beatles",
+                        isPlaying = true,
+                        hasQueue = true,
                     ),
                 ),
             )

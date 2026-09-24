@@ -43,4 +43,8 @@
     <string name="allow_access">Allow access</string>
     <string name="open_settings">Open settings</string>
     <string name="allow_access_to_your_music_to_play_songs">Allow access to your music to play the songs on this device.</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="next_song">Next song</string>
+    <string name="previous_song">Previous song</string>
 </resources>

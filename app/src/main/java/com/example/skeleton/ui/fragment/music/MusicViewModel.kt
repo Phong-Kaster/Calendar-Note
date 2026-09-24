@@ -3,26 +3,33 @@ package com.example.skeleton.ui.fragment.music
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skeleton.common.Outcome
+import com.example.skeleton.domain.model.Song
+import com.example.skeleton.domain.repository.PlayerRepository
 import com.example.skeleton.domain.repository.SongRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
- * Drives the Music screen: remembers whether we may read music and loads the device's songs.
+ * Drives the Music screen: remembers whether we may read music, loads the device's songs and
+ * forwards play / pause / next / previous to the player.
  *
  * The Fragment checks the permission (on every resume and after the system dialog) and
  * reports it with [onPermissionResult]. This class never touches Android APIs, so it can be
  * unit-tested on the JVM.
  *
- * Example: `viewModel.onPermissionResult(granted = true)` → loading → song list or empty state.
+ * Example: `viewModel.onPermissionResult(granted = true)` → loading → song list or empty state;
+ * `viewModel.onSongClick(song)` → the list plays from that song.
  * @param songRepository Where the songs come from.
+ * @param playerRepository Remote control of the background music player.
  * @author Phong-Kaster
  */
 class MusicViewModel(
     private val songRepository: SongRepository,
+    private val playerRepository: PlayerRepository,
 ) : ViewModel() {
 
     private val TAG = "MusicViewModel"
@@ -32,6 +39,77 @@ class MusicViewModel(
 
     /** The running song load, so a newer load can replace an older one. */
     private var loadSongsJob: Job? = null
+
+    init {
+        connectPlayer()
+        collectPlaybackState()
+    }
+
+    /**
+     * Connects to the background player so commands and state updates can flow.
+     * @author Phong-Kaster
+     */
+    private fun connectPlayer() {
+        playerRepository.connect()
+    }
+
+    /**
+     * Mirrors every player update into [uiState].
+     * @author Phong-Kaster
+     */
+    private fun collectPlaybackState() {
+        viewModelScope.launch {
+            playerRepository.playbackState.collectLatest { playback ->
+                _uiState.value = _uiState.value.copy(playback = playback)
+            }
+        }
+    }
+
+    /**
+     * Plays the whole shown list, starting with the tapped [song].
+     * A song that is not in the list (stale tap) is ignored.
+     * @param song The tapped song.
+     * @author Phong-Kaster
+     */
+    fun onSongClick(song: Song) {
+        val songs = _uiState.value.songs
+        val index = songs.indexOf(song)
+        if (index < 0) return
+        playerRepository.playQueue(songs = songs, startIndex = index)
+    }
+
+    /**
+     * Play when paused, pause when playing.
+     * @author Phong-Kaster
+     */
+    fun onTogglePlayPause() {
+        playerRepository.togglePlayPause()
+    }
+
+    /**
+     * Skip to the next song.
+     * @author Phong-Kaster
+     */
+    fun onNext() {
+        playerRepository.next()
+    }
+
+    /**
+     * Go back to the previous song.
+     * @author Phong-Kaster
+     */
+    fun onPrevious() {
+        playerRepository.previous()
+    }
+
+    /**
+     * Disconnects from the player when the screen is gone for good. Music keeps playing.
+     * @author Phong-Kaster
+     */
+    override fun onCleared() {
+        playerRepository.release()
+        super.onCleared()
+    }
 
     /**
      * Tells the screen whether the audio permission is granted.

@@ -17,5 +17,5 @@ val viewModelModule = module {
     viewModel { HomeViewModel(userActionRepository = get(), postRepository = get()) }
 
     // Music View Model
-    viewModel { MusicViewModel(songRepository = get()) }
+    viewModel { MusicViewModel(songRepository = get(), playerRepository = get()) }
 }

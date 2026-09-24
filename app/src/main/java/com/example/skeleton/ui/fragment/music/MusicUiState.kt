@@ -1,5 +1,6 @@
 package com.example.skeleton.ui.fragment.music
 
+import com.example.skeleton.domain.model.PlaybackState
 import com.example.skeleton.domain.model.Song
 
 /**
@@ -23,13 +24,18 @@ enum class MusicScreenContent { Loading, PermissionNeeded, Empty, SongList }
  * @param permissionState Whether we may read the music library.
  * @param isLoading True while the song list is being read for the first time after permission is granted.
  * @param songs Songs from the repository, in repository order (sorted by title).
+ * @param playback What the music player is doing right now (mirrored from the player).
  * @author Phong-Kaster
  */
 data class MusicUiState(
     val permissionState: MusicPermissionState = MusicPermissionState.Unknown,
     val isLoading: Boolean = false,
     val songs: List<Song> = emptyList(),
+    val playback: PlaybackState = PlaybackState.Idle,
 ) {
+    /** The now-playing bar shows only once the player holds a queue. */
+    val showNowPlayingBar: Boolean = playback.hasQueue
+
     /** The one view the screen shows, decided from the fields above. */
     val content: MusicScreenContent = when {
         permissionState == MusicPermissionState.Unknown -> MusicScreenContent.Loading

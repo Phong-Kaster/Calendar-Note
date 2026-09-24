@@ -20,3 +20,12 @@
 ## Archived Decisions
 
 - **D-001** (DoD approval, bootstrap) — answered 2026-09-24: "Approved as proposed … all 7 `human` criteria (6, 7, 10, 11, 12, 13, 14) accepted in full. Assumptions A-001 … A-006 are not overturned." Applied iteration 1.
+
+### Iteration 2 - 2026-09-24
+- **Phase:** 2 — T-003 (Capable, `opus`), one Worker.
+- Recovery: tree clean apart from runtime files (`.harness/loop/`, `.claude/agents/`, left untracked). No new decisions in `DECISIONS.md`.
+- Scope check: Worker files inside Declared File Scope; union matched `git status`.
+- Wired: Media3 1.8.0 (`exoplayer`, `session`, `common`) + `material-icons-extended` (BOM), manifest FGS permissions + `MusicPlaybackService`, Koin `PlayerRepository` + `MusicViewModel(playerRepository=)`, strings `play`/`pause`/`next_song`/`previous_song` en+de, README features/stack/tree.
+- First build hit a Windows file lock on `classes.jar` (environment); `gradlew --stop` + rerun → green. 32 tests.
+- Review (Capable, fresh): 1 blocking (B-1 shared connection released by old ViewModel), 3 major (M-1 dead controller, M-2 stale state, M-3 evidence gap only — DoD 10/11 are human), 3 minor (exported service accepts any controller — accepted; trailing content lambdas — fixed; README — fixed by Iteration). Re-dispatched Worker (attempt 2) with B-1/M-1/M-2/minor → green, 34 tests, lint 0 errors; device relaunch 0 crashes.
+- Knowledge: C-08 (shared singleton connections are ref-counted, never torn down by one screen). Assumptions: A-002/5/6 SHA `ccf22b3` filled; A-001/3/4 first built on here.

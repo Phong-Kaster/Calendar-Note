@@ -44,4 +44,8 @@
     <string name="allow_access">Zugriff erlauben</string>
     <string name="open_settings">Einstellungen öffnen</string>
     <string name="allow_access_to_your_music_to_play_songs">Erlaube den Zugriff auf deine Musik, um die Songs auf diesem Gerät abzuspielen.</string>
+    <string name="play">Abspielen</string>
+    <string name="pause">Pause</string>
+    <string name="next_song">Nächster Titel</string>
+    <string name="previous_song">Vorheriger Titel</string>
 </resources>

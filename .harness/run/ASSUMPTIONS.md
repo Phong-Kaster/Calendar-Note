@@ -17,7 +17,7 @@
 
 - **Tier:** 2 (plan/architecture — new external dependency)
 - **Iteration:** 0 (bootstrap)
-- **First dependent checkpoint:** — (T-003)
+- **First dependent checkpoint:** iteration 2 (Phase 2 checkpoint, T-003; SHA filled next iteration)
 - **Revert:** —
 
 ### Question
@@ -42,8 +42,8 @@ skeleton's "follow official recommendations" rule. Version pinned in `gradle/lib
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** iteration 1 (Phase 1 checkpoint; SHA filled next iteration)
-- **Revert:** —
+- **First dependent checkpoint:** `ccf22b3` (iteration 1, Phase 1)
+- **Revert:** `git revert ccf22b3` (the Phase 1 checkpoint also carries T-001/T-002 as one commit)
 
 ### Question
 
@@ -62,7 +62,7 @@ Option 1: the PRD asks for a music player, nothing about removing existing scree
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** — (T-003, T-004)
+- **First dependent checkpoint:** iteration 2 (Phase 2 checkpoint, T-003; SHA filled next iteration)
 - **Revert:** —
 
 ### Question
@@ -83,7 +83,7 @@ button is easy to add later if wanted.
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** — (T-003)
+- **First dependent checkpoint:** iteration 2 (Phase 2 checkpoint, T-003; SHA filled next iteration)
 - **Revert:** —
 
 ### Question
@@ -103,8 +103,8 @@ Option 1 — every control always does something visible, which matches "next/pr
 
 - **Tier:** 2 (plan — changes the skeleton theme)
 - **Iteration:** 0
-- **First dependent checkpoint:** iteration 1 (Phase 1 checkpoint; SHA filled next iteration)
-- **Revert:** —
+- **First dependent checkpoint:** `ccf22b3` (iteration 1, Phase 1)
+- **Revert:** `git revert ccf22b3` (the Phase 1 checkpoint also carries T-001/T-002 as one commit)
 
 ### Question
 
@@ -124,8 +124,8 @@ Option 1: smallest change, no skeleton screen breaks, and dark is conventional f
 
 - **Tier:** Missing information
 - **Iteration:** 0
-- **First dependent checkpoint:** iteration 1 (Phase 1 checkpoint; SHA filled next iteration)
-- **Revert:** —
+- **First dependent checkpoint:** `ccf22b3` (iteration 1, Phase 1)
+- **Revert:** `git revert ccf22b3` (the Phase 1 checkpoint also carries T-001/T-002 as one commit)
 
 ### Question
 

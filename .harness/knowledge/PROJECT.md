@@ -49,14 +49,19 @@
   `core/CoreActivity.kt` forces `SystemBarStyle.dark(...)` and `res/values/themes.xml` sets
   `windowLightStatusBar=false`; do not reintroduce `enableEdgeToEdge()` defaults or `isSystemInDarkTheme()`
   branches. Evidence: iteration-1 review (dark status-bar icons on the black ground in system light mode).
+- **C-08 — A Koin `single` that holds a connection (e.g. `PlayerRepositoryImpl`'s `MediaController`) is shared by
+  every screen: one screen's teardown must never close it for the others.** Pair every `connect()` with one
+  `release()` and reference-count inside the repository; handle `MediaController.Listener.onDisconnected` and
+  `isConnected == false` by rebuilding on next use. Evidence: iteration-2 review B-1 — `toMusic` pops to the graph,
+  so Music → Home → Music clears the old `MusicViewModel` *after* the new one connected, silently dropping updates.
 
 ## Toolchain (verified commands)
 
 | Purpose | Command | Verified |
 |---|---|---|
 | Build | `./gradlew :app:assembleDebug` | **yes** (2026-09-24) — APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | **yes** — 25 tests after iteration 1, 0 failures |
-| Lint | `./gradlew :app:lintDebug` | **green** since iteration 1: 0 errors, 59 warnings (main had 4 `MissingTranslation` errors, fixed per A-006) |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | **yes** — 34 tests after iteration 2, 0 failures |
+| Lint | `./gradlew :app:lintDebug` | **green** since iteration 1: 0 errors, 63 warnings after iteration 2 (main had 4 `MissingTranslation` errors, fixed per A-006) |
 | Device | `~/AppData/Local/Android/Sdk/platform-tools/adb devices` | **yes** — one device `b56e2819` attached |
 
 - Success is the literal `BUILD SUCCESSFUL`. Never trust a piped exit code; run unpiped or with
@@ -64,6 +69,8 @@
 - Test counts: `app/build/test-results/testDebugUnitTest/TEST-*.xml` (console prints nothing on pass).
 - Lint text report: `app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt`.
 - Cold build of all three ≈ 2m20s.
+- A `FileSystemException … classes.jar … used by another process` is a Windows lock (stale daemon / IDE), not a code
+  error: `./gradlew --stop`, then rerun (iteration 2).
 
 ## Architecture Conventions
 
@@ -94,7 +101,7 @@
 - Windows 11, Git Bash + PowerShell, Gradle wrapper, AGP 9.0.1, Kotlin 2.2.10, compileSdk/targetSdk 36,
   minSdk 24, jvmTarget 11. Android SDK path from git-ignored `local.properties`.
 - Dependencies via `gradle/libs.versions.toml`. Test deps: `junit 4.13.2`, `kotlinx-coroutines-test 1.10.2`
-  (added iteration 1). No Media3, no screenshot-test plugin on main.
+  (added iteration 1). No Media3, no screenshot-test plugin on main. Added on the loop branch (iteration 2): Media3 1.8.0 (`media3-exoplayer`, `media3-session`, `media3-common`; Guava `ListenableFuture` comes transitively), `material-icons-extended` via the Compose BOM (BOM 2024.09.00 core icons have no Pause/SkipNext/SkipPrevious). `ForwardingPlayer` is `@UnstableApi` → `@androidx.annotation.OptIn(UnstableApi::class)`.
 - The attached device (per the calendar run's record) is MIUI and refuses injected input
   (`adb shell input` → `SecurityException: INJECT_EVENTS`): installable and inspectable (`dumpsys`,
   `logcat -b crash`), not tappable. Re-run `adb devices` before relying on it.
