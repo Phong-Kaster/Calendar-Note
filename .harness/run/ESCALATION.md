@@ -188,7 +188,7 @@ After creating the files, add `## D-002` with "done" (or the option chosen) to `
 
 ## D-003 - Human Verification Request: try the music player on a phone (DoD #8–#16)
 
-- **Status:** pending
+- **Status:** answered (iteration 6 — all 14 rows PASS)
 - **Type:** Human verification (ADR-015)
 - **Iteration:** 5 (Verifier)
 - **Timestamp:** 2026-09-25

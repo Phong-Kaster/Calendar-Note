@@ -5,6 +5,16 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 6 - 2026-09-25 (Verifier)
+- **Phase:** none — Verifier (§11); wrote no implementation.
+- Recover: no tracked changes except `skills-lock.json` (not the engine's); same untracked non-loop files. No debris.
+- Consumed D-003: all 14 rows PASS → DoD #8–#16 signed off.
+- Re-proved `machine` criteria: #1 `assembleDebug` OK; #2 `testDebugUnitTest --rerun` OK, 10/12/6/10/4
+  tests, 0 failures; #3 `lintDebug --rerun` 0 errors, 63 warnings; #4 merged manifest complete; #5
+  `PlaybackQueuePolicy` in the four seek overrides, `PlaybackStopPolicy` in `onTaskRemoved`; #6 device
+  `b56e2819`: installed, launched, `MusicFragment` present, no crash entry for `com.example.myapplication`; #7 README.
+- Reconciled: no gaps → Cleanup Commit (removes `.harness/run/`), status `DONE`.
+
 ### Iteration 5 - 2026-09-25 (Verifier)
 - **Phase:** none — Verifier (§11); wrote no implementation.
 - Recover: tree clean apart from the same untracked non-loop files as iteration 4 and `skills-lock.json`;
@@ -98,6 +108,10 @@
   `data/model` → `data/mediastore`; natural end-of-queue behaviour stated (repeat-all). Knowledge updates → PROJECT.md.
 
 ## Archived Decisions
+
+### D-003 (answered, iteration 6)
+- **Q:** Human Verification Request — 14-row phone checklist for DoD #8–#16.
+- **A:** All 14 rows PASS. Rationale in `AMENDMENTS.md`.
 
 ### D-001 (answered, iteration 1)
 - **Q:** Approve the DoD (16 criteria + Constraints) and the standing / goal-scoped toolchain capabilities.

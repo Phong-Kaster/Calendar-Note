@@ -5,9 +5,9 @@
 
 ## Current
 
-- **Stage:** awaiting human verification (Phases 1–3 complete; Verifier ran iteration 5)
+- **Stage:** complete (iteration 6 Verifier: all criteria proved / signed off → Cleanup Commit)
 - **Loop Branch:** loop/music-player-v2 (from `main` @ `027d3ea`)
-- **Next Phase:** none — waiting for D-003 (Human Verification Request, DoD #8–#16)
+- **Next Phase:** none — run complete
 - **DONE-candidate:** yes (recorded iteration 4; iteration 5 Verifier re-proved every `machine` criterion
   #1–#7 with fresh evidence; all 9 `human` criteria unsigned → D-003 queued)
 
@@ -33,4 +33,4 @@ All product choices the PRD left open are written into `DoD.md` § Constraints. 
 
 ## Human sign-offs
 
-- none yet
+- DoD #8–#16 — PASS, signed off by the human via D-003 (all 14 checklist rows), 2026-09-25.

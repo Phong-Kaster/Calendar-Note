@@ -4,6 +4,13 @@
 
 <!-- Newest first. -->
 
+### Iteration 6 - applied D-003 (2026-09-25)
+- **Decision:** All 14 checklist rows PASS — DoD #8–#16 signed off by the human.
+- **Human rationale:** "The human tested the app on the phone and reported every row as passing. Nothing
+  else noted."
+- **Effect:** every `human` criterion signed off (recorded in `STATE.md`); no task created. Verifier
+  re-proved #1–#7 and made the Cleanup Commit.
+
 ### Iteration 1 - applied D-001 (2026-09-25)
 - **Decision:** Option 1 — approve as written. `DoD.md` approved (16 criteria, Verification Classes and
   Constraints unchanged; the human ticked the APPROVED box). Standing capabilities (gradle
