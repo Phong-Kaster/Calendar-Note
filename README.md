@@ -13,8 +13,11 @@ already stored on the phone and plays them with a foreground media service.
 - **Tap to play** — tapping a song plays the whole list from that song (repeat-all). A now-playing bar
   shows the title and artist with Previous, Play/Pause and Next; the playing row is highlighted.
   Next on the last song wraps to the first; Previous always goes to the previous song (wraps to the last).
-- **Media notification** — while playing, the Media3 notification shows the song with the same
-  Previous / Play-Pause / Next controls, and music keeps playing in the background.
+- **Now Playing screen** — tapping the mini bar opens a full screen with the album picture, title and
+  artist, a seek slider with elapsed/total time, and large Material 3 Previous / Play-Pause / Next buttons.
+- **Media notification** — while playing, the standard Media3 notification shows the song and its album
+  art with the same Previous / Play-Pause / Next controls, the app's own music-note icon and accent
+  colour, and music keeps playing in the background.
   - On Android 13+, the first song tap of a visit asks to allow notifications; music plays either way.
   - Tapping the notification opens the app on the Music tab.
   - Swiping the app away from Recents keeps music playing; if it was paused, the service stops and the
@@ -46,7 +49,8 @@ skeleton/
 │   ├── database/local/        # Room database, DAOs, entities, converters
 │   ├── datastore/             # DataStore preference classes
 │   ├── mapper/                # toDomain()/toEntity() extensions
-│   │   ├── MediaItemMapper.kt # Song ↔ Media3 MediaItem
+│   │   ├── AlbumArtUri.kt     # album id → MediaStore album-art address (plain Kotlin)
+│   │   ├── MediaItemMapper.kt # Song ↔ Media3 MediaItem (including album art)
 │   │   └── SongMapper.kt      # raw MediaStore row → Song (drops broken rows, cleans title/artist)
 │   ├── mediastore/            # raw MediaStore column holders (plain Kotlin, unit-testable)
 │   │   └── SongRow.kt
@@ -65,6 +69,7 @@ skeleton/
 │       └── SongRepository.kt  # "give me the songs on this phone"
 ├── injection/                 # Koin modules (repositories, view models, network, database…)
 ├── service/                   # Android services
+│   ├── MusicNotificationProvider.kt # Media3's standard notification with the app's small icon and accent colour
 │   ├── MusicPlaybackService.kt # Media3 MediaSessionService: ExoPlayer + media notification (tap opens Music)
 │   └── PlaybackStopPolicy.kt  # pure rule: stop the service on swipe-away only when paused or empty
 ├── ui/                        # screens, shared components, theme
@@ -77,6 +82,12 @@ skeleton/
 │   │   │   ├── MusicFragment.kt
 │   │   │   ├── MusicUiState.kt
 │   │   │   └── MusicViewModel.kt
+│   │   ├── nowplaying/        # full Now Playing screen, opened by tapping the mini bar
+│   │   │   ├── component/     # NowPlayingTopBar, NowPlayingArtwork, NowPlayingSongInfo, NowPlayingSeekBar, NowPlayingControls
+│   │   │   ├── model/         # PlaybackTime (clock text, slider ↔ position maths, when to tick)
+│   │   │   ├── NowPlayingFragment.kt
+│   │   │   ├── NowPlayingUiState.kt
+│   │   │   └── NowPlayingViewModel.kt
 │   │   └── setting/           # Setting tab and its language sub-screen
 │   ├── modifier/              # custom Compose modifiers
 │   ├── theme/                 # the fixed dark colour scheme, typography (customizedTextStyle)

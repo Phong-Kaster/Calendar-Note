@@ -16,6 +16,7 @@ private const val EXTRA_DURATION_MS = "com.example.skeleton.extra.DURATION_MS"
  * - uri = the song's `content://` address (also copied into requestMetadata so the
  *   service can rebuild the address if it gets lost on the way).
  * - metadata = title, artist, album (the notification shows these), plus the length in extras.
+ * - artworkUri = the album cover address, only when the song has one (the notification shows it).
  *
  * Example:
  * ```kotlin
@@ -29,6 +30,14 @@ fun Song.toMediaItem(): MediaItem {
     val extras = Bundle()
     extras.putLong(EXTRA_DURATION_MS, durationMs)
 
+    val metadataBuilder = MediaMetadata.Builder()
+        .setTitle(title)
+        .setArtist(artist)
+        .setAlbumTitle(album)
+        .setExtras(extras)
+    // Only songs with a known album get a cover picture; the others keep the default look.
+    albumArtUri?.let { artworkUri -> metadataBuilder.setArtworkUri(Uri.parse(artworkUri)) }
+
     return MediaItem.Builder()
         .setMediaId(id.toString())
         .setUri(uri)
@@ -37,14 +46,7 @@ fun Song.toMediaItem(): MediaItem {
                 .setMediaUri(uri)
                 .build()
         )
-        .setMediaMetadata(
-            MediaMetadata.Builder()
-                .setTitle(title)
-                .setArtist(artist)
-                .setAlbumTitle(album)
-                .setExtras(extras)
-                .build()
-        )
+        .setMediaMetadata(metadataBuilder.build())
         .build()
 }
 
@@ -73,6 +75,7 @@ fun MediaItem.toSongOrNull(): Song? {
         album = mediaMetadata.albumTitle?.toString(),
         durationMs = mediaMetadata.extras?.getLong(EXTRA_DURATION_MS) ?: 0L,
         contentUri = uri.toString(),
+        albumArtUri = mediaMetadata.artworkUri?.toString(),
     )
 }
 

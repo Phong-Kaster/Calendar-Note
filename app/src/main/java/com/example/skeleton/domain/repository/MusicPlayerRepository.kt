@@ -50,4 +50,14 @@ interface MusicPlayerRepository {
 
     /** Jumps to the previous song (before the first song comes the last). */
     fun skipToPrevious()
+
+    /**
+     * Where the player is inside the current song right now, in milliseconds.
+     * Returns 0 when not connected or nothing is loaded. Ask again to get a fresh value;
+     * the position is not part of [state] because it changes all the time.
+     */
+    fun currentPositionMs(): Long
+
+    /** Jumps to [positionMs] inside the current song. Waits for the connection like other commands. */
+    fun seekTo(positionMs: Long)
 }

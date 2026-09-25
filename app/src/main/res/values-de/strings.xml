@@ -48,4 +48,8 @@
     <string name="pause">Pause</string>
     <string name="next">Weiter</string>
     <string name="previous">Zurück</string>
+    <string name="now_playing">Wird gespielt</string>
+    <string name="open_now_playing">„Wird gespielt“ öffnen</string>
+    <string name="back">Zurück</string>
+    <string name="song_position">Songposition</string>
 </resources>

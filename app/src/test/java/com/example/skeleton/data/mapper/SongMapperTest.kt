@@ -4,6 +4,7 @@ import com.example.skeleton.data.mediastore.SongRow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -20,6 +21,7 @@ class SongMapperTest {
         album: String? = "Help!",
         durationMs: Long = 125_000L,
         displayName: String? = "yesterday.mp3",
+        albumId: Long? = null,
     ): SongRow = SongRow(
         id = 42L,
         title = title,
@@ -28,6 +30,7 @@ class SongMapperTest {
         durationMs = durationMs,
         displayName = displayName,
         contentUri = "content://media/external/audio/media/42",
+        albumId = albumId,
     )
 
     @Test
@@ -96,5 +99,18 @@ class SongMapperTest {
     @Test
     fun nullArtist_mapsToNull() {
         assertNull(row(artist = null).toDomain()!!.artist)
+    }
+
+    @Test
+    fun albumId_mapsToAlbumArtUri() {
+        val albumArtUri = row(albumId = 7L).toDomain()!!.albumArtUri
+
+        assertNotNull(albumArtUri)
+        assertTrue(albumArtUri!!.endsWith("/albumart/7"))
+    }
+
+    @Test
+    fun noAlbumId_mapsToNullAlbumArtUri() {
+        assertNull(row().toDomain()!!.albumArtUri)
     }
 }

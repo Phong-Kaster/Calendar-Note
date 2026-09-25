@@ -20,8 +20,9 @@ import com.google.common.util.concurrent.ListenableFuture
 
 /**
  * The background music service. It owns the real ExoPlayer and a MediaSession, so music keeps
- * playing when the user leaves the screen, and Media3 shows its default media notification
- * (title, artist, previous / play-pause / next) while music plays.
+ * playing when the user leaves the screen, and Media3 shows its standard media notification
+ * (title, artist, previous / play-pause / next) while music plays. [MusicNotificationProvider]
+ * gives that notification the app's music-note icon and accent colour.
  *
  * The player is set up for music: music audio attributes, it pauses for phone calls and other
  * apps (audio focus), it pauses when headphones are unplugged, and the queue repeats forever.
@@ -63,6 +64,9 @@ class MusicPlaybackService : MediaSessionService() {
             .setCallback(PlayableItemsCallback())
             .setSessionActivity(buildOpenMusicPendingIntent())
             .build()
+
+        // Standard Media3 notification, dressed in the app's icon and accent colour.
+        setMediaNotificationProvider(MusicNotificationProvider(context = this))
     }
 
     /**

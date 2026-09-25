@@ -19,4 +19,9 @@
 
 ## D-001
 
-<!-- Your decision and rationale. -->
+**Decision:** Option 1 — approve `.harness/run/DoD.md` as written (all 13 criteria, their Verification Classes,
+and the Constraints unchanged) and grant the proposed goal capability. The ledger entry is now written in
+`.harness/run/capabilities.json` (installDebug + am start of MainActivity only).
+
+**Rationale:** The DoD matches the PRD and the choices already fixed there (full Now Playing screen; standard
+MediaStyle notification with art, small icon, M3 accent/icons). Letting the engine prove #6 saves a manual step.

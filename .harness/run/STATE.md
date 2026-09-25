@@ -5,19 +5,20 @@
 
 ## Current
 
-- **Stage:** escalated (bootstrap done; waiting for D-001 — DoD approval)
+- **Stage:** executing (Phase 1 done; DoD approved via D-001)
 - **Loop Branch:** loop/music-player-v2 (run 2; PRD says continue on this branch, no new branch)
-- **Next Phase:** Phase 1 — T-001, T-002, T-003 (after D-001)
+- **Next Phase:** Phase 2 — T-004, T-005
 - **DONE-candidate:** no
 
 ## Progress
 
 | Task | Status | Declared File Scope | Evidence |
 |---|---|---|---|
-| T-001 | blocked (D-001) | `data/mediastore/SongRow.kt`, `data/repository/impl/SongRepositoryImpl.kt`, `domain/model/Song.kt`, `data/mapper/{SongMapper,MediaItemMapper,AlbumArtUri}.kt` | - |
-| T-002 | blocked (D-001) | `service/MusicPlaybackService.kt`, `service/MusicNotificationProvider.kt` | - |
-| T-003 | blocked (D-001) | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/music/{MusicFragment,component/NowPlayingBar}.kt`, `ui/fragment/nowplaying/**` | - |
-| T-004 | blocked (D-001; depends T-001, T-003) | `ui/fragment/nowplaying/component/NowPlayingArtwork.kt` | - |
+| T-001 | complete | `data/mediastore/SongRow.kt`, `data/repository/impl/SongRepositoryImpl.kt`, `domain/model/Song.kt`, `data/mapper/{SongMapper,MediaItemMapper,AlbumArtUri}.kt` | Phase 1 commit; AlbumArtUriTest 4, SongMapperTest 14 |
+| T-002 | complete | `service/MusicPlaybackService.kt`, `service/MusicNotificationProvider.kt` | Phase 1 commit; grep DoD #4 |
+| T-003 | complete | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/music/{MusicFragment,component/NowPlayingBar}.kt`, `ui/fragment/nowplaying/**` | Phase 1 commit; PlaybackTimeTest 16 |
+| T-004 | ready | `ui/fragment/nowplaying/component/NowPlayingArtwork.kt` | - |
+| T-005 | ready | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/nowplaying/{NowPlayingViewModel,NowPlayingFragment,NowPlayingUiState}.kt` | - |
 
 ## Human sign-offs
 

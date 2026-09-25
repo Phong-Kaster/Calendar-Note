@@ -16,6 +16,8 @@ package com.example.skeleton.domain.model
  * @param isPlaying True while sound is coming out; false when paused or stopped.
  * @param currentIndex Position of [currentSong] in the queue; -1 when nothing is loaded.
  * @param queueSize How many songs are in the queue.
+ * @param durationMs Length of the loaded song as the player knows it, in milliseconds;
+ * 0 while the player does not know it yet (or nothing is loaded).
  * @author Phong-Kaster
  */
 data class NowPlaying(
@@ -23,4 +25,5 @@ data class NowPlaying(
     val isPlaying: Boolean = false,
     val currentIndex: Int = -1,
     val queueSize: Int = 0,
+    val durationMs: Long = 0L,
 )

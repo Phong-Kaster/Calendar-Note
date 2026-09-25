@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.annotation.OptIn
 import androidx.media3.common.Player
@@ -141,6 +142,25 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
         runOnController(
             commandName = "skipToPrevious",
             command = { readyController -> readyController.seekToPrevious() },
+        )
+    }
+
+    override fun currentPositionMs(): Long {
+        val readyController = controller ?: return 0L
+        if (!readyController.isConnected) return 0L
+        return try {
+            readyController.currentPosition.coerceAtLeast(0L)
+        } catch (e: Exception) {
+            Log.e(TAG, "currentPositionMs failed", e)
+            0L
+        }
+    }
+
+    override fun seekTo(positionMs: Long) {
+        val safePositionMs = positionMs.coerceAtLeast(0L)
+        runOnController(
+            commandName = "seekTo",
+            command = { readyController -> readyController.seekTo(safePositionMs) },
         )
     }
 
@@ -283,7 +303,20 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
             isPlaying = !Util.shouldShowPlayButton(player),
             currentIndex = if (currentItem == null) NO_INDEX else player.currentMediaItemIndex,
             queueSize = player.mediaItemCount,
+            durationMs = knownDurationMs(player = player),
         )
+    }
+
+    /**
+     * The song length the player knows, or 0 while it is still unknown
+     * (Media3 says "unknown" with [C.TIME_UNSET], which is a big negative number).
+     *
+     * @author Phong-Kaster
+     */
+    private fun knownDurationMs(player: Player): Long {
+        val duration = player.duration
+        if (duration == C.TIME_UNSET) return 0L
+        return duration.coerceAtLeast(0L)
     }
 
     /**

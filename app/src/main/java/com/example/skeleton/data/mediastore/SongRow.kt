@@ -27,6 +27,7 @@ package com.example.skeleton.data.mediastore
  * @param durationMs MediaStore `DURATION` column, in milliseconds.
  * @param displayName MediaStore `DISPLAY_NAME` column (the file name, e.g. "song.mp3").
  * @param contentUri The `content://` address built from [id], as a String.
+ * @param albumId MediaStore `ALBUM_ID` column; null when the phone does not know the album.
  * @author Phong-Kaster
  */
 data class SongRow(
@@ -37,4 +38,5 @@ data class SongRow(
     val durationMs: Long,
     val displayName: String?,
     val contentUri: String,
+    val albumId: Long? = null,
 )

@@ -78,6 +78,7 @@ class SongRepositoryImpl(
         val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
         val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
         val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
+        val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
 
         val rows = ArrayList<SongRow>(cursor.count)
         while (cursor.moveToNext()) {
@@ -94,10 +95,22 @@ class SongRepositoryImpl(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         id,
                     ).toString(),
+                    albumId = readNullableLong(cursor = cursor, columnIndex = albumIdColumn),
                 )
             )
         }
         return rows
+    }
+
+    /**
+     * Reads a number from the cursor, or null when the cell is empty.
+     * (A plain `getLong` would quietly turn an empty cell into 0.)
+     *
+     * @author Phong-Kaster
+     */
+    private fun readNullableLong(cursor: Cursor, columnIndex: Int): Long? {
+        if (cursor.isNull(columnIndex)) return null
+        return cursor.getLong(columnIndex)
     }
 
     companion object {
@@ -117,6 +130,7 @@ class SongRepositoryImpl(
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DISPLAY_NAME,
+            MediaStore.Audio.Media.ALBUM_ID,
         )
     }
 }

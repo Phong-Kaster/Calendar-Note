@@ -46,4 +46,8 @@
     <string name="pause">Pause</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+    <string name="now_playing">Now playing</string>
+    <string name="open_now_playing">Open now playing</string>
+    <string name="back">Back</string>
+    <string name="song_position">Song position</string>
 </resources>

@@ -76,10 +76,10 @@
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build | `./gradlew :app:assembleDebug` | 2026-09-25, iteration 4 (exit 0); APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, iteration 4 (47 tests, 0 failures) |
-| Lint | `./gradlew :app:lintDebug` | 2026-09-25, iteration 4 (0 errors, 63 warnings) |
-| Install / launch | `./gradlew :app:installDebug`; `adb shell am start -n com.example.myapplication/com.example.skeleton.MainActivity` | 2026-09-25, iteration 4 (device `b56e2819`, no on-device prompt) |
+| Build | `./gradlew :app:assembleDebug` | 2026-09-25, run 2 iteration 2 (`BUILD SUCCESSFUL`); APK at `app/build/outputs/apk/debug/app-debug.apk` |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, run 2 iteration 2 (69 tests, 0 failures) |
+| Lint | `./gradlew :app:lintDebug` | 2026-09-25, run 2 iteration 2 (0 errors, 68 warnings; 4 are `UnusedResources` on the deliberate `media3_icon_*` overrides) |
+| Install / launch | `./gradlew :app:installDebug`; `adb shell am start -n com.example.myapplication/com.example.skeleton.MainActivity` | 2026-09-25, run 2 iteration 2 (device `3H164700ALT00000`, no on-device prompt) |
 | Device | `adb devices` | 2026-09-25, iteration 2 |
 
 - Success is the literal `BUILD SUCCESSFUL`. Never trust a piped exit code; run unpiped or with
@@ -138,6 +138,20 @@
   output is ~150 KB — grep the persisted result for `MusicFragment{`.
 - Iteration 3 device: `10AECY1ZXG003MQ` — `installDebug` succeeded without an on-device prompt. `adb shell
   getprop` and `rm` are not allowed commands; write dumps inside the repo (`> file` outside it is refused).
+- Media3 1.8.0 notification (verified run 2 iteration 2): `DefaultMediaNotificationProvider.Builder(ctx).build()` +
+  `setSmallIcon(@DrawableRes)` compile; there is no accent-colour setter, so `service/MusicNotificationProvider.kt`
+  wraps it as a `MediaNotification.Provider` and sets `Notification.color` on the returned and every callback
+  notification. Notification buttons use library drawables `media3_icon_play|pause|next|previous` (present in
+  `app/build/intermediates/runtime_symbol_list/debug/processDebugResources/R.txt`); same-named app drawables override them.
+  That `R.txt` is the way to check a library resource name without opening the aar.
+- `Cursor.getLong` returns 0 for a NULL cell; read nullable columns with `cursor.isNull(index)` first
+  (`SongRepositoryImpl.readNullableLong`).
+- `CoreTopBar` hard-codes colours (C-01); a new screen builds its own top bar from theme colours
+  (see `ui/fragment/nowplaying/component/NowPlayingTopBar.kt`). `safeNavigate` / `safeNavigateUp` are imported as
+  `com.example.skeleton.ui.util.NavigationUtil.safeNavigate`.
+- Bash matcher (run 2 iteration 2): `cd <repo> && cat …` lines were accepted; lines chaining with `;`, `sed -i`,
+  `ls`/`find` outside the repo, and gradle with `> file` redirects were refused — run gradle bare, and capture adb
+  output with a single `adb … > file-in-repo.txt`.
 - Media3 1.8.0 compiled with `Util.handlePlayPauseButtonAction` / `Util.shouldShowPlayButton` (`@UnstableApi`)
   and Guava `ListenableFuture`/`Futures` arriving transitively — no extra dependency needed.
 - `adb logcat -d -b crash` on device `b56e2819` always holds `init` SIGABRT lines from boot; only lines naming

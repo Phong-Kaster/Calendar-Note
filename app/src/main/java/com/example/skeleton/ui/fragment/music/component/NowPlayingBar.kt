@@ -3,6 +3,8 @@ package com.example.skeleton.ui.fragment.music.component
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,9 +18,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,15 +35,16 @@ import com.example.skeleton.ui.theme.customizedTextStyle
 /**
  * The small "now playing" bar above the bottom bar: song title and artist on the left,
  * previous / play-pause / next buttons on the right. Every button is at least 48dp so it is
- * easy to hit.
+ * easy to hit. Tapping anywhere else on the bar opens the Now Playing screen.
  *
  * Example:
  * ```kotlin
- * NowPlayingBar(song = song, isPlaying = true, onPlayPauseClick = { viewModel.onPlayPauseClick() })
+ * NowPlayingBar(song = song, isPlaying = true, onClick = { openNowPlaying() }, onPlayPauseClick = { viewModel.onPlayPauseClick() })
  * ```
  *
  * @param song The song loaded in the player.
  * @param isPlaying True shows the Pause button, false shows the Play button.
+ * @param onClick Called when the user taps the bar itself (not one of its buttons).
  * @param onPreviousClick Called when the user taps previous.
  * @param onPlayPauseClick Called when the user taps play / pause.
  * @param onNextClick Called when the user taps next.
@@ -50,6 +56,7 @@ fun NowPlayingBar(
     song: Song,
     isPlaying: Boolean,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
     onPreviousClick: () -> Unit = {},
     onPlayPauseClick: () -> Unit = {},
     onNextClick: () -> Unit = {},
@@ -61,9 +68,16 @@ fun NowPlayingBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp)
+            .clip(shape = RoundedCornerShape(16.dp))
             .background(
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shape = RoundedCornerShape(16.dp),
+            )
+            .clickable(
+                onClickLabel = stringResource(R.string.open_now_playing),
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(bounded = true),
+                onClick = onClick,
             )
             .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

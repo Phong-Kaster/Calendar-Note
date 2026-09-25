@@ -7,4 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Media notification accent: the same blue as the theme's primary (DarkPrimary in ui/theme/Color.kt). -->
+    <color name="notification_accent">#FF9ECAFF</color>
 </resources>

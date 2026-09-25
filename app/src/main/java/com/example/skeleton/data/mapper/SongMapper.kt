@@ -14,6 +14,7 @@ private const val MEDIA_STORE_UNKNOWN = "<unknown>"
  * - No title? We use the file name without its extension ("my_song.mp3" -> "my_song").
  * - Still no name (both blank, or the file is just ".mp3")? We return null and skip it.
  * - Artist blank or "<unknown>"? We say null, so the screen can show "Unknown artist".
+ * - A valid album id becomes the album cover address; no album id means no cover (null).
  *
  * Example:
  * ```kotlin
@@ -37,6 +38,7 @@ fun SongRow.toDomain(): Song? {
         album = cleanTag(value = album),
         durationMs = durationMs,
         contentUri = contentUri,
+        albumArtUri = albumArtUriFor(albumId = albumId),
     )
 }
 

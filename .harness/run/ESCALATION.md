@@ -11,7 +11,7 @@
 
 ## D-001 - Approve the Definition of Done for the Material 3 player (13 criteria) and one goal capability
 
-- **Status:** pending
+- **Status:** answered (iteration 2 — option 1; archived in HISTORY.md)
 - **Type:** DoD approval + Capability grant
 - **Iteration:** 1 (run 2 bootstrap)
 - **Timestamp:** 2026-09-25

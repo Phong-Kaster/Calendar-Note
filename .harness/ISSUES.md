@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 1 (bootstrap)_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 2 (Phase 1)_
 
 ## Abandoned tasks
 
@@ -14,9 +14,7 @@ none
 
 ## Decisions awaiting an answer
 
-| # | Question | Blocks |
-|---|---|---|
-| D-001 | Approve the DoD for the Material 3 player (13 criteria) + optional goal install/start capability | T-001, T-002, T-003, T-004 |
+none
 
 ## Human criteria unsigned
 
@@ -24,6 +22,12 @@ DoD #7–#13 (Now Playing screen, seeking, controls/back, long names, notificati
 opening from the notification) — asked at the end of the run.
 
 ## Review findings not fixed
+
+Phase 1 (queued as T-005, Phase 2):
+- A seek from outside the app while paused is not reflected on Now Playing until play resumes.
+- After process death with Now Playing restored (or a failed controller connect), the screen shows empty instead of closing.
+- The 500 ms position poll keeps running while Now Playing is in the background.
+- `NowPlayingViewModel` has an unused `TAG`.
 
 Carried from run 1 (non-blocking):
 - `res/values/themes.xml` window background is `@android:color/black` while the theme background is `#0B0D10`.
@@ -37,8 +41,11 @@ Carried from run 1 (non-blocking):
 - Tapping the notification keeps opening the Music tab.
 - Album art from MediaStore's album-art address; no new image library; placeholder when missing.
 - The mini bar gets no thumbnail.
+- Now Playing uses its own top bar (not `CoreTopBar`, which hard-codes colours).
 
 ## Environment
 
-- `build-top.txt` (a `dumpsys activity top` capture) is left untracked at the repo root: `rm` is not an allowed
-  command. Safe to delete.
+- Untracked captures at the repo root — `build-top.txt`, `dumpsys-top.txt`, `crash-log.txt`, `review-diff.txt` — are
+  engine scratch files left because `rm` is not an allowed command. Safe to delete.
+- Untracked tooling not created by the engine (`.agents/`, `.claude/agents/`, `.claude/skills/`, `.harness/loop/`,
+  `.harness/knowledge/capabilities.json`) and the modified `skills-lock.json` are left for you to commit.

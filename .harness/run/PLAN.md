@@ -55,6 +55,10 @@ attached device if granted (#6); everything visual is `human` (#7–#13).
   with a placeholder body, which T-004 later fills); [I] `test/.../ui/fragment/nowplaying/model/PlaybackTimeTest.kt` - tier: Capable
 - T-004 - Now Playing shows the real album art (depends on: T-001, T-003) - scope:
   `ui/fragment/nowplaying/component/NowPlayingArtwork.kt` - tier: Capable
+- T-005 - Now Playing stays in step while paused, off-screen, or restored empty (depends on: T-003; A-002) - scope:
+  `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`,
+  `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/nowplaying/{NowPlayingViewModel,NowPlayingFragment,
+  NowPlayingUiState}.kt` - tier: Capable
 
 `[I]` = written by the Iteration from the Worker's report (C-11). Paths are under `app/src/main/java/com/example/skeleton/`
 unless they start with `test/` (`app/src/test/java/com/example/skeleton/`) or `res/` (`app/src/main/res/`).
@@ -64,7 +68,7 @@ unless they start with `test/` (`app/src/test/java/com/example/skeleton/`) or `r
 | Phase | Tasks | Shared files the Iteration wires itself |
 |---|---|---|
 | 1 | T-001, T-002, T-003 | `res/navigation/navigation_graph.xml` (`nowPlayingFragment`, `toNowPlaying`), `injection/ViewModelModule.kt`, both `strings.xml`, `README.md`, every `[I]` res/test file |
-| 2 | T-004 | both `strings.xml` (if new keys), `README.md` if the tree changed |
+| 2 | T-004, T-005 | both `strings.xml` (if new keys), `README.md` if the tree changed |
 
 ## Known Risks
 

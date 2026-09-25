@@ -35,6 +35,7 @@ import com.example.skeleton.ui.fragment.music.component.NowPlayingBar
 import com.example.skeleton.ui.fragment.music.component.SongItem
 import com.example.skeleton.ui.fragment.music.model.MusicScreenContent
 import com.example.skeleton.ui.fragment.music.model.audioPermissionFor
+import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
@@ -94,6 +95,9 @@ class MusicFragment : CoreFragment() {
             onNextClick = {
                 viewModel.onNextClick()
             },
+            onNowPlayingClick = {
+                safeNavigate(R.id.toNowPlaying)
+            },
         )
 
         // Invisible helper: asks for the audio permission and reports the answer.
@@ -120,6 +124,7 @@ class MusicFragment : CoreFragment() {
  * @param onPreviousClick Called when the user taps previous in the now-playing bar.
  * @param onPlayPauseClick Called when the user taps play / pause in the now-playing bar.
  * @param onNextClick Called when the user taps next in the now-playing bar.
+ * @param onNowPlayingClick Called when the user taps the now-playing bar itself.
  * @author Phong-Kaster
  */
 @Composable
@@ -130,6 +135,7 @@ private fun MusicLayout(
     onPreviousClick: () -> Unit = {},
     onPlayPauseClick: () -> Unit = {},
     onNextClick: () -> Unit = {},
+    onNowPlayingClick: () -> Unit = {},
 ) {
     val screenContent = uiState.screenContent
     val currentSong = uiState.nowPlaying.currentSong
@@ -147,6 +153,7 @@ private fun MusicLayout(
                         NowPlayingBar(
                             song = currentSong,
                             isPlaying = uiState.nowPlaying.isPlaying,
+                            onClick = onNowPlayingClick,
                             onPreviousClick = onPreviousClick,
                             onPlayPauseClick = onPlayPauseClick,
                             onNextClick = onNextClick,

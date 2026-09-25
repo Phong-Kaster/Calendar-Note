@@ -25,6 +25,8 @@ package com.example.skeleton.domain.model
  * @param album Album name; null when the phone does not know it.
  * @param durationMs Length of the song in milliseconds; always greater than zero.
  * @param contentUri The `content://` address of the audio file, stored as a String.
+ * @param albumArtUri The `content://` address of the album's cover picture, stored as a String;
+ * null when the song has no known album.
  * @author Phong-Kaster
  */
 data class Song(
@@ -34,4 +36,5 @@ data class Song(
     val album: String?,
     val durationMs: Long,
     val contentUri: String,
+    val albumArtUri: String? = null,
 )

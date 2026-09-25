@@ -4,6 +4,7 @@ package com.example.skeleton.injection
 
 import com.example.skeleton.ui.fragment.home.HomeViewModel
 import com.example.skeleton.ui.fragment.music.MusicViewModel
+import com.example.skeleton.ui.fragment.nowplaying.NowPlayingViewModel
 import com.example.skeleton.ui.fragment.setting.SettingViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -18,4 +19,7 @@ val viewModelModule = module {
 
     // Music View Model
     viewModel { MusicViewModel(songRepository = get(), musicPlayerRepository = get()) }
+
+    // Now Playing View Model
+    viewModel { NowPlayingViewModel(musicPlayerRepository = get()) }
 }
