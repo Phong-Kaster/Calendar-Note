@@ -115,8 +115,8 @@
   <p class="eyebrow" data-lang="en">Updated 2026-09-25 · branch loop/music-player-v2</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
-  <p class="standfirst" data-lang="vi">Không có câu hỏi nào đang chặn tiến độ, và hai bài học có thể không thuộc về riêng repo này. Tất cả chỉ là đề nghị để đọc — không có gì tự áp dụng.</p>
-  <p class="standfirst" data-lang="en">No question is blocking progress, and two lessons may not belong to this repository alone. All read-only proposals — nothing here applies itself.</p>
+  <p class="standfirst" data-lang="vi">Một câu hỏi đang chặn tiến độ (duyệt DoD của lần chạy 2), và hai bài học có thể không thuộc về riêng repo này. Tất cả chỉ là đề nghị để đọc — không có gì tự áp dụng.</p>
+  <p class="standfirst" data-lang="en">One question is blocking progress (run 2's DoD approval), and two lessons may not belong to this repository alone. All read-only proposals — nothing here applies itself.</p>
 
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-btn-escalate" aria-controls="panel-escalate" data-tab="escalate">
@@ -138,85 +138,21 @@
 <details class="card esc">
   <summary>
     <div class="tagrow">
-      <span class="id">D-004</span>
-      <span class="tag" data-lang="vi">Đã trả lời · vòng 7 · dùng quyền sẵn có</span>
-      <span class="tag" data-lang="en">Answered · iteration 7 · existing grant used</span>
-    </div>
-    <h3 data-lang="vi">Cho phép <span class="mono">git rm</span> để tạo Cleanup Commit và kết thúc</h3>
-    <h3 data-lang="en">Allow <span class="mono">git rm</span> so the run can make its Cleanup Commit and finish</h3>
-  </summary>
-  <div class="card-body">
-    <p data-lang="vi">Loại: cấp quyền. Mọi tiêu chí DoD đã đạt (#1–#7 kiểm lại, #8–#16 qua D-003). Lệnh <span class="mono">git rm -r -q .harness/run</span> bị từ chối.</p>
-    <p data-lang="en">Type: capability grant. Every DoD criterion holds (#1–#7 re-proved, #8–#16 via D-003). <span class="mono">git rm -r -q .harness/run</span> was refused.</p>
-    <div class="ask esc"><span class="lbl" data-lang="vi">Cần bạn làm</span><span class="lbl" data-lang="en">What you do</span>
-      <p data-lang="vi">Đề xuất: thêm quyền vĩnh viễn <span class="mono">Bash(git rm -r -q .harness/run)</span> vào <span class="mono">.harness/knowledge/capabilities.json</span>, ghi <span class="mono">## D-004</span> trong <span class="mono">DECISIONS.md</span>, rồi chạy lại.</p>
-      <p data-lang="en">Recommended: add the permanent rule <span class="mono">Bash(git rm -r -q .harness/run)</span> to <span class="mono">.harness/knowledge/capabilities.json</span>, write <span class="mono">## D-004</span> in <span class="mono">DECISIONS.md</span>, then re-run.</p></div>
-    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">DONE only</span></div>
-  </div>
-</details>
-
-<details class="card esc">
-  <summary>
-    <div class="tagrow">
-      <span class="id">D-003</span>
-      <span class="tag" data-lang="vi">Đã trả lời · vòng 6 · 14/14 PASS</span>
-      <span class="tag" data-lang="en">Answered · iteration 6 · 14/14 PASS</span>
-    </div>
-    <h3 data-lang="vi">Yêu cầu kiểm tra bằng tay: thử trình phát nhạc trên điện thoại (DoD #8–#16)</h3>
-    <h3 data-lang="en">Human Verification Request: try the music player on a phone (DoD #8–#16)</h3>
-  </summary>
-  <div class="card-body">
-    <p data-lang="vi">Loại: kiểm tra bằng tay. Mọi task đã xong; mọi tiêu chí <span class="mono">machine</span> (#1–#7) đã được chứng minh lại ở vòng này.</p>
-    <p data-lang="en">Type: human verification. Every task is complete; every <span class="mono">machine</span> criterion (#1–#7) was re-proved this iteration.</p>
-    <p data-lang="vi"><strong>Bối cảnh:</strong> build, 47 unit test, lint (0 lỗi), manifest, call site của policy, chạy trên máy <span class="mono">b56e2819</span> (MusicFragment resumed, không crash) và README đều đạt. Danh sách 14 bước (mở gì, làm gì, mong đợi gì) nằm trong <span class="mono">ESCALATION.md</span> § D-003.</p>
-    <p data-lang="en"><strong>Context:</strong> build, 47 unit tests, lint (0 errors), manifest, policy call sites, device run on <span class="mono">b56e2819</span> (MusicFragment resumed, no crash) and README all hold. The 14-row checklist (what to open, what to do, what to expect) is in <span class="mono">ESCALATION.md</span> § D-003.</p>
-    <div class="ask esc"><span class="lbl" data-lang="vi">Cần bạn làm</span><span class="lbl" data-lang="en">What you do</span>
-      <p data-lang="vi">Chạy qua 14 dòng, ghi PASS / FAIL cho từng dòng dưới <span class="mono">## D-003</span> trong <span class="mono">DECISIONS.md</span>, rồi chạy lại.</p>
-      <p data-lang="en">Work through the 14 rows, write PASS / FAIL per row under <span class="mono">## D-003</span> in <span class="mono">DECISIONS.md</span>, then re-run.</p></div>
-    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">DONE only</span></div>
-  </div>
-</details>
-
-<details class="card esc">
-  <summary>
-    <div class="tagrow">
-      <span class="id">D-002</span>
-      <span class="tag" data-lang="vi">Đã trả lời · vòng 2</span>
-      <span class="tag" data-lang="en">Answered · iteration 2</span>
-    </div>
-    <h3 data-lang="vi">Quyền đã duyệt ở D-001 chưa có hiệu lực: hãy tạo hai file ledger</h3>
-    <h3 data-lang="en">The capabilities approved in D-001 are not in effect: write the two ledger files</h3>
-  </summary>
-  <div class="card-body">
-    <p data-lang="vi">Loại: cấp quyền. Chặn: T-001, T-002, T-003, T-004.</p>
-    <p data-lang="en">Type: capability grant. Blocks: T-001, T-002, T-003, T-004.</p>
-    <p data-lang="vi"><strong>Bối cảnh:</strong> Runtime chỉ biên dịch <span class="mono">.harness/knowledge/capabilities.json</span> và <span class="mono">.harness/run/capabilities.json</span>; cả hai chưa tồn tại nên <span class="mono">./gradlew</span> vẫn bị từ chối. Engine bị cấm ghi hai file này. Nội dung chính xác nằm trong <span class="mono">ESCALATION.md</span> § D-002.</p>
-    <p data-lang="en"><strong>Context:</strong> the Runtime compiles only <span class="mono">.harness/knowledge/capabilities.json</span> and <span class="mono">.harness/run/capabilities.json</span>; neither exists, so <span class="mono">./gradlew</span> is still refused. The engine is denied writing them. Exact content is in <span class="mono">ESCALATION.md</span> § D-002.</p>
-    <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
-      <p data-lang="vi">Tạo cả hai file như đã ghi, rồi chạy lại.</p>
-      <p data-lang="en">Create both files as written, then re-run.</p></div>
-    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">T-001, T-002, T-003, T-004</span></div>
-  </div>
-</details>
-
-<details class="card esc">
-  <summary>
-    <div class="tagrow">
       <span class="id">D-001</span>
-      <span class="tag" data-lang="vi">Đã trả lời · vòng 1</span>
-      <span class="tag" data-lang="en">Answered · iteration 1</span>
+      <span class="tag pending" data-lang="vi">Đang chờ · lần chạy 2, vòng 1</span>
+      <span class="tag pending" data-lang="en">Pending · run 2, iteration 1</span>
     </div>
-    <h3 data-lang="vi">Duyệt Definition of Done (16 tiêu chí) và quyền build/test/lint thường trực</h3>
-    <h3 data-lang="en">Approve the Definition of Done (16 criteria) and the standing build/test/lint capabilities</h3>
+    <h3 data-lang="vi">Duyệt Definition of Done cho trình phát Material 3 (13 tiêu chí) và một quyền theo mục tiêu</h3>
+    <h3 data-lang="en">Approve the Definition of Done for the Material 3 player (13 criteria) and one goal capability</h3>
   </summary>
   <div class="card-body">
     <p data-lang="vi">Loại: duyệt DoD + cấp quyền. Chặn: T-001, T-002, T-003, T-004.</p>
     <p data-lang="en">Type: DoD approval + capability grant. Blocks: T-001, T-002, T-003, T-004.</p>
-    <p data-lang="vi"><strong>Bối cảnh:</strong> PRD để ngỏ vài lựa chọn sản phẩm; chúng được ghi trong mục Constraints của <span class="mono">DoD.md</span>: Media3 1.8.0, tab Music bên trái Home làm màn hình đầu, next/previous quay vòng, previous luôn về bài trước, vuốt bỏ app khi đang phát thì vẫn phát / khi tạm dừng thì dừng hẳn, xin quyền thông báo ở lần chạm bài đầu tiên, giao diện luôn tối. <span class="mono">./gradlew</span> bị từ chối nên toolchain chưa được kiểm chứng trên nhánh này.</p>
-    <p data-lang="en"><strong>Context:</strong> the PRD left several product choices open; they are written in <span class="mono">DoD.md</span> § Constraints: Media3 1.8.0, a Music tab left of Home as the start screen, next/previous wrap, previous always goes to the previous song, swipe-away keeps playing if playing / stops if paused, notification permission asked on the first song tap, an always-dark theme. <span class="mono">./gradlew</span> was refused, so the toolchain is unverified on this branch.</p>
+    <p data-lang="vi"><strong>Bối cảnh:</strong> PRD mới: màn Now Playing riêng (ảnh bìa, tên bài, Slider tua, nút M3 lớn) mở từ thanh đang phát, và notification MediaStyle chuẩn có ảnh bìa, small icon của app, màu nhấn theo theme, icon Material Symbols. Lựa chọn engine đã ghi: Android 12+ tự tô màu theo ảnh bìa và Android 13+ tự vẽ nút, nên màu nhấn + icon Material Symbols chỉ bắt buộc trên Android 12 trở xuống; chạm notification vẫn mở tab Music; không thêm thư viện ảnh; chữ giữ <span class="mono">customizedTextStyle</span>; mini bar không có ảnh nhỏ.</p>
+    <p data-lang="en"><strong>Context:</strong> the new PRD: a separate Now Playing screen (art, title, seek Slider, big M3 buttons) opened from the mini bar, and a standard MediaStyle notification with album art, the app's own small icon, theme accent and Material Symbols icons. Choices recorded by the engine: Android 12+ colours the card from the art and Android 13+ draws its own buttons, so accent + Material Symbols icons are required on Android 12 and older only; tapping the notification still opens the Music tab; no new image library; text keeps <span class="mono">customizedTextStyle</span>; the mini bar gets no thumbnail.</p>
     <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
-      <p data-lang="vi">Duyệt như đã viết (sửa DoD trước nếu muốn). Lệnh cài/mở app trên máy và push nhánh chỉ đề xuất ở mức theo mục tiêu (goal), không thường trực.</p>
-      <p data-lang="en">Approve as written (edit the DoD first if you like). Device install/launch and branch push are proposed goal-scoped only, not standing.</p></div>
+      <p data-lang="vi">Duyệt như đã viết (sửa <span class="mono">DoD.md</span> trước nếu muốn), và thêm quyền theo mục tiêu cài + mở app (<span class="mono">./gradlew :app:installDebug*</span>, <span class="mono">adb shell am start -n …MainActivity*</span>) vào <span class="mono">.harness/run/capabilities.json</span> để engine tự chứng minh DoD #6. Ghi <span class="mono">## D-001</span> trong <span class="mono">DECISIONS.md</span>, rồi chạy lại.</p>
+      <p data-lang="en">Approve as written (edit <span class="mono">DoD.md</span> first if you like), and add the goal-scoped install + start capability (<span class="mono">./gradlew :app:installDebug*</span>, <span class="mono">adb shell am start -n …MainActivity*</span>) to <span class="mono">.harness/run/capabilities.json</span> so the engine can prove DoD #6 itself. Write <span class="mono">## D-001</span> in <span class="mono">DECISIONS.md</span>, then re-run.</p></div>
     <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">T-001, T-002, T-003, T-004</span></div>
   </div>
 </details>

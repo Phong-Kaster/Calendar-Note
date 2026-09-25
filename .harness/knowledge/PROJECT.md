@@ -94,7 +94,7 @@
 - Single module `:app`, source package `com.example.skeleton` (`namespace`), installed as
   `applicationId com.example.myapplication` (`app/build.gradle.kts:16`) — adb commands use the latter.
 - Single Activity + Fragments + Compose: `MainActivity` hosts a `NavHostFragment` for
-  `res/navigation/navigation_graph.xml` (start destination `homeFragment`; global actions `toHome`
+  `res/navigation/navigation_graph.xml` (start destination `musicFragment` since run 1, `navigation_graph.xml:6`; global actions `toHome`
   (pops to graph), `toSetting` (pops to `homeFragment`), `toSettingLanguage`). Each screen
   `XxxFragment : CoreFragment()` overrides `@Composable ComposeView()`, which `CoreFragment` wraps in
   `MyApplicationTheme`. Screen files in `ui/fragment/<screen>/` (`XxxFragment`, `XxxUiState`, `XxxViewModel`,
@@ -144,9 +144,12 @@
   `com.example.myapplication` count against DoD #6.
 - Bash permission matcher: a `cd … && <command>` line counts as multiple operations and is refused; run `cd`
   in its own call (the working directory persists). `git ls-files` / `git ls-tree` are not in the baseline.
-- `git rm` (any form) needs approval and is not in either ledger, so the §11 Cleanup Commit (removing
-  `.harness/run/`) cannot be made without a grant — refused iteration 6. Queue it with the human-verification
-  request next time so completion does not cost an extra round trip.
+- The §11 Cleanup Commit is covered by the baseline: `Bash(git rm -r .harness/run*)` (checked run 2 bootstrap;
+  in run 1 iteration 6 a different form was refused).
+- `git -C <path> …` and `cd <path>; git …` lines are refused by the matcher; run git from the default working
+  directory with plain `git …` (run 2 bootstrap).
+- Android 12+ colours a MediaStyle notification from its artwork and Android 13+ draws its own media-control icons,
+  so an app's accent colour / action icons show only on older Androids (run 2 bootstrap analysis; DoD #11).
 - `.kotlin/` appears untracked after a build (Kotlin daemon data) and is not in `.gitignore`; do not commit it.
 - `git show <ref>:.harness/...` needs `MSYS_NO_PATHCONV=1` under Git Bash, which the matcher refuses; a
   commit SHA as the ref (`git show 4c88c2d:.harness/...`) works.
