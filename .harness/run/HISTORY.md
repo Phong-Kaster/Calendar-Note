@@ -5,6 +5,19 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 5 - 2026-09-25 (Verifier)
+- **Phase:** none — Verifier (§11); wrote no implementation.
+- Recover: tree clean apart from the same untracked non-loop files as iteration 4 and `skills-lock.json`;
+  no debris. Decisions: nothing new in `DECISIONS.md` (D-001/D-002 already consumed).
+- Re-proved `machine` criteria with fresh evidence: #1 `assembleDebug` BUILD SUCCESSFUL; #2
+  `testDebugUnitTest --rerun` BUILD SUCCESSFUL, the five named classes present with 0 failures (10/12/6/10/4);
+  #3 `lintDebug --rerun` 0 errors, 63 warnings; #4 merged manifest has all 5 permissions + the
+  `mediaPlayback` `MediaSessionService`; #5 `QueuePolicyPlayer` (the session's player) calls
+  `PlaybackQueuePolicy` in all four seek overrides, `onTaskRemoved` calls `PlaybackStopPolicy`; #6 device
+  `b56e2819`: installed, launched, `MusicFragment` resumed (mState=7), no crash entry for the app (the
+  first launch's task was removed from Recents by someone using the phone at 15:30:15; relaunched); #7 README.
+- Reconciled: no gaps. 9 `human` criteria unsigned → queued D-003 (Human Verification Request, 14 rows).
+
 ### Iteration 4 - 2026-09-25
 - **Phase:** 3 — T-004 (attempt 1, Capable)
 - Recover: tree clean apart from untracked non-loop files (`.agents/`, `.claude/`, `.harness/loop/`, ledgers,

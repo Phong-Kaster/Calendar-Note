@@ -5,11 +5,11 @@
 
 ## Current
 
-- **Stage:** verifying (Phases 1–3 complete)
+- **Stage:** awaiting human verification (Phases 1–3 complete; Verifier ran iteration 5)
 - **Loop Branch:** loop/music-player-v2 (from `main` @ `027d3ea`)
-- **Next Phase:** none — next invocation is the Verifier (§11)
-- **DONE-candidate:** yes (recorded iteration 4; all tasks complete, every `machine` criterion appears met,
-  all 9 `human` criteria unsigned)
+- **Next Phase:** none — waiting for D-003 (Human Verification Request, DoD #8–#16)
+- **DONE-candidate:** yes (recorded iteration 4; iteration 5 Verifier re-proved every `machine` criterion
+  #1–#7 with fresh evidence; all 9 `human` criteria unsigned → D-003 queued)
 
 ## Progress
 

@@ -183,3 +183,63 @@ After creating the files, add `## D-002` with "done" (or the option chosen) to `
 ### Decision
 
 <!-- Answered in `.harness/run/DECISIONS.md`, under a heading `## D-002` - never here. -->
+
+---
+
+## D-003 - Human Verification Request: try the music player on a phone (DoD #8–#16)
+
+- **Status:** pending
+- **Type:** Human verification (ADR-015)
+- **Iteration:** 5 (Verifier)
+- **Timestamp:** 2026-09-25
+- **Blocks tasks:** none — every task (T-001..T-004) is complete. This entry blocks **`DONE`** (and the
+  Cleanup Commit) only.
+
+### Question
+
+Every `machine` criterion (#1–#7) was re-proved from scratch this iteration. The 9 `human` criteria need a
+person looking at the running app. Please work through the checklist below and mark each row
+`PASS` or `FAIL: <what you saw>`.
+
+### Context
+
+Fresh evidence (iteration 5, Verifier): `./gradlew :app:assembleDebug` BUILD SUCCESSFUL;
+`./gradlew :app:testDebugUnitTest --rerun` BUILD SUCCESSFUL — AudioPermissionTest 10, SongMapperTest 12,
+MusicUiStateTest 6, PlaybackQueuePolicyTest 10, PlaybackStopPolicyTest 4 (plus
+NotificationPermissionDecisionTest 4), 0 failures; `./gradlew :app:lintDebug --rerun` 0 errors / 63 warnings;
+merged manifest holds all 5 permissions and the `mediaPlayback` `MediaSessionService`; `MusicPlaybackService`
+routes next/previous through `PlaybackQueuePolicy` (`QueuePolicyPlayer`, the player handed to the
+`MediaSession`) and `onTaskRemoved` through `PlaybackStopPolicy`; on device `b56e2819` the app installed,
+`MusicFragment` resumed, no crash entry; README covers the player and every new package.
+
+Known quirk (review note from T-004): on Android 13+, if you allow notifications *after* the song already
+started, the notification may only appear at the next player event (e.g. your first Pause). Note it in row 14
+if it bothers you.
+
+### How to run this check
+
+Install: `./gradlew :app:installDebug` (or it is already installed on `b56e2819`). Rows 8 and 13 need a
+fresh start: Settings → Apps → *Android Compose Skeleton* → Storage → Clear data (and on Android 13+
+also reset its notification permission). Put at least 15 songs on the phone for rows 9–12.
+
+| # | DoD | Open | Do | Expect | Result |
+|---|---|---|---|---|---|
+| 1 | 8 | the app, after Clear data | open it; when asked for "Music and audio" (13+) / "Files and media" (≤12) tap **Don't allow** | app is on the **Music** tab; a readable message says the permission is needed, with a button; no blank screen, no crash | |
+| 2 | 8 | same screen | tap the button (tap again after a second refusal → it opens Settings); allow | the song list appears without restarting the app | |
+| 3 | 9 | Music tab, ≥15 songs | read the rows; scroll to the last song; repeat with the phone in light mode and in dark mode | every row's title and artist is easy to read against the background in both modes; scrolling is smooth to the end | |
+| 4 | 9 | Music tab, 0 songs on the phone (optional if hard to set up) | open the tab | a readable "no songs" message, not an empty area | |
+| 5 | 9 | bottom bar | tap Home, then Setting, then Music | each tab opens; Music looks selected while on it | |
+| 6 | 10 | Music tab | tap any song | sound within ~1 s; a now-playing bar shows that song's title, artist and a **Pause** button; the tapped row is marked as playing | |
+| 7 | 11 | now-playing bar | tap **Pause**, wait, tap **Play** | silence and the button becomes **Play**; Play resumes from the same spot, not the start | |
+| 8 | 12 | now-playing bar | tap **Next**; tap **Previous** (also mid-song); play the last song and tap Next; play the first and tap Previous | Next → song below; Previous → song above (always); last → first; first → last; bar title follows; the 3 buttons are clearly visible and easy to hit with a thumb | |
+| 9 | 13 | Android 13+, after Clear data | tap a song for the first time; tap **Don't allow** on the notification prompt | the prompt appears; after refusing, the song still plays, no crash | |
+| 10 | 14 | allow notifications, play a song, press Home | pull down the shade; tap Pause, Play, Next, Previous | the notification shows title, artist, Previous / Play-Pause / Next; each works, icon flips, title updates; reopen the app → bar shows the same song and state | |
+| 11 | 14 | lock screen while playing | use the same controls | they work the same | |
+| 12 | 15 | another app (or Setting tab) while playing | tap the music notification | the app opens on the **Music** tab showing the playing song | |
+| 13 | 16 | while playing | swipe the app away from Recents | music keeps playing; the notification stays | |
+| 14 | 16 | notification | tap Pause, then swipe the app away (or clear the notification) | the notification disappears and nothing keeps running | |
+
+### Decision
+
+<!-- Answer in `.harness/run/DECISIONS.md` under `## D-003`: PASS / FAIL per row, plus anything noticed
+     that no row asked about. -->

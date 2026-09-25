@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - iteration 4_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - iteration 5 (Verifier)_
 
 ## Abandoned tasks
 
@@ -14,12 +14,12 @@ none
 
 ## Decisions awaiting an answer
 
-none
+- **D-003** — Human Verification Request for DoD #8–#16: a 14-row checklist in `.harness/run/ESCALATION.md`.
+  Answer PASS / FAIL per row under `## D-003` in `.harness/run/DECISIONS.md`. Blocks `DONE` only.
 
 ## Human criteria unsigned
 
-DoD #8–#16 (all 9 `human` criteria). Every task is built; the next iteration (the Verifier) re-proves the
-`machine` criteria and then asks for these as one numbered checklist.
+DoD #8–#16 (all 9 `human` criteria). Every `machine` criterion (#1–#7) was re-proved in iteration 5.
 
 ## Review findings not fixed
 
