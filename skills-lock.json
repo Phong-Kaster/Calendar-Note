@@ -35,7 +35,7 @@
       "source": "Phong-Kaster/Foreman",
       "sourceType": "github",
       "skillPath": "skills/engineering/foreman/SKILL.md",
-      "computedHash": "7bad5ad5b7fc4ae4009ca4f06fe540a0b1145c19b84b3f39cc0d0313e8db0581"
+      "computedHash": "b83b7f4e3d301c66003782324458c6dd7571e171ebd0f457dea779b0457ac20a"
     },
     "git-guardrails-claude-code": {
       "source": "mattpocock/skills",
