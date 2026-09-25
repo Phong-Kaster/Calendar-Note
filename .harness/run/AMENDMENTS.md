@@ -4,6 +4,15 @@
 
 <!-- Newest first. -->
 
+### A-004 (decision) - iteration 6 - D-002 applied: two failed on-phone checks become T-006
+- **Decision:** #8, #9, #10, #12, #13 pass; #7 FAIL and #11 FAIL — "all behaviours work well but I don't see the
+  songs' album art" (notification treated as affected too). Hint: legacy `albumart/<id>` is often empty on Android
+  10+; use `ContentResolver.loadThumbnail` or `MediaMetadataRetriever.embeddedPicture`; no new image library.
+- **Human rationale:** "Human verification on the phone; everything else signed off."
+- **Effect:** new task T-006 (Capable, Phase 3, scope in its task file) depends on T-001/T-002/T-004; DONE-candidate
+  cleared. Signed off: #8, #10, #12, #13. #9 passed but T-006 changes the picture it checked, so it is re-asked with
+  #7 and #11. PRD, DoD and architecture unchanged (the fix stays inside "album art via `ContentResolver`").
+
 ### A-003 (Tier 1) - iteration 3 - widen T-005's scope by one new file
 - **Change:** T-005's Declared File Scope gains the new file `ui/fragment/nowplaying/model/NowPlayingCloseRule.kt`
   (plain-Kotlin close decision, per C-04). Disjoint from T-004.

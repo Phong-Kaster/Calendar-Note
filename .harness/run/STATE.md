@@ -5,11 +5,11 @@
 
 ## Current
 
-- **Stage:** awaiting human verification (iteration 5 Verifier re-proved every machine criterion #1–#6, #6 on the phone)
+- **Stage:** executing — Phase 3 (fix from human verification D-002: album art missing on Android 10+)
 - **Loop Branch:** loop/music-player-v2 (run 2; PRD says continue on this branch, no new branch)
-- **Next Phase:** none — next Iteration is the Verifier again (§11): consume D-002
-- **DONE-candidate:** yes (recorded iteration 3; kept — no code gap found by the iteration-4 and iteration-5 Verifiers)
-- **Queued:** D-002 (Human Verification Request for DoD #7–#13)
+- **Next Phase:** 3 — T-006 (Capable)
+- **DONE-candidate:** no (cleared iteration 6: human DoD #7 and #11 failed)
+- **Queued:** none
 
 ## Progress
 
@@ -20,10 +20,13 @@
 | T-003 | complete | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/music/{MusicFragment,component/NowPlayingBar}.kt`, `ui/fragment/nowplaying/**` | Phase 1 commit; PlaybackTimeTest 16 |
 | T-004 | complete | `ui/fragment/nowplaying/component/NowPlayingArtwork.kt` | Phase 2 commit; build/lint green |
 | T-005 | complete | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/nowplaying/{NowPlayingViewModel,NowPlayingFragment,NowPlayingUiState}.kt`, `ui/fragment/nowplaying/model/NowPlayingCloseRule.kt` | Phase 2 commit; NowPlayingCloseRuleTest 7, PlaybackTimeTest 16 |
+| T-006 | pending | `data/albumart/AlbumArtLoader.kt`, `data/mapper/AlbumArtUri.kt`, `service/{AlbumArtBitmapLoader,MusicPlaybackService}.kt`, `ui/fragment/nowplaying/component/NowPlayingArtwork.kt`, `ui/fragment/nowplaying/NowPlayingFragment.kt`, [I] `test/data/mapper/AlbumArtUriTest.kt` | — |
 
 ## Human sign-offs
 
-none yet (DoD #7–#13 unsigned; asked in D-002, iteration 4)
+- 2026-09-25 (D-002, phone CPH2895 Android 16): **#8, #10, #12, #13 pass — signed.**
+- #9 passed, but T-006 changes the art it checked → unsigned again, re-ask with #7.
+- #7 FAIL, #11 FAIL — no album art → T-006; re-ask after it lands.
 
 ## Assumptions
 
@@ -33,5 +36,6 @@ none yet (DoD #7–#13 unsigned; asked in D-002, iteration 4)
 - Notification accent colour and Material Symbols action icons are required only where Android honours them
   (≤ API 32 / Media3-drawn controls); on API 33+ the system's own controls are accepted (DoD #11).
 - Tapping the notification keeps opening the Music tab (unchanged); it does not open Now Playing.
-- Album art comes from MediaStore's album-art endpoint by `ALBUM_ID`; no new image-loading dependency.
+- Album art address stays MediaStore's album-art endpoint by `ALBUM_ID` (DoD #3); since D-002 the picture itself is
+  read via `loadThumbnail` / `MediaMetadataRetriever` on API 29+ (T-006); no new image-loading dependency.
 - The mini bar gets no thumbnail (PRD: keep list + mini bar as they are).

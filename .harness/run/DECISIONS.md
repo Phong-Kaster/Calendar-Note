@@ -25,3 +25,26 @@ and the Constraints unchanged) and grant the proposed goal capability. The ledge
 
 **Rationale:** The DoD matches the PRD and the choices already fixed there (full Now Playing screen; standard
 MediaStyle notification with art, small icon, M3 accent/icons). Letting the engine prove #6 saves a manual step.
+
+## D-002
+
+**Decision:** Phone attached (CPH2895, Android 16). Results: 1 FAIL, 2 pass, 3 pass, 4 pass, 5 FAIL, 6 pass, 7 pass.
+
+- **1 FAIL (#7) — no album art.** Every behaviour works, but the human sees no album cover for the songs on Now Playing.
+- **5 FAIL (#11) — no album art.** Same report: the album cover does not show (treat the notification card as affected
+  too unless the engine can prove otherwise on the device).
+
+The human said "all behaviours work well but I don't see the songs' album art". Not yet confirmed whether the
+placeholder shows or whether the songs on the phone carry embedded art — the fix task should check that on the
+device first. Hint for the fix: on Android 10+ the legacy `content://media/external/audio/albumart/<id>` address is
+often empty; `ContentResolver.loadThumbnail(<audio content uri>, Size, null)` (API 29+) or
+`MediaMetadataRetriever.embeddedPicture` usually returns the embedded cover. No new image library (DoD constraint).
+
+**Rationale:** Human verification on the phone; everything else signed off.
+
+**Addendum (evidence gathered after the answer above):** the phone holds only 2 songs, both in `Download/`:
+`Ahrix - Nova.mp3` (no ID3v2 tag at all) and `Alan_Walker_-_Faded_..._(mp3.pm).mp3` (ID3v2, but no `APIC` frame).
+Neither file carries embedded cover art, and the default music app shows no cover either. So "no art" on this phone
+is expected; the missing-art placeholder is the correct result for these songs. Keep the fix task (so songs that DO
+have art show it on Android 10+), but prove it with a unit test / code evidence, and do not treat these two songs as
+a failing device case. The human will re-check #7/#11 with a song that has a cover, or accept the placeholder.

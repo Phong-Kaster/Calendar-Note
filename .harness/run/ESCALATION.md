@@ -81,7 +81,7 @@ Add this entry to `.harness/run/capabilities.json` → `"entries": [ ... ]`:
 
 ## D-002 - Human Verification Request: try 7 things on the phone (DoD #7–#13), and plug the phone back in
 
-- **Status:** queued (re-asked iteration 5: phone now attached and #6 re-proved — only the 7 checks remain)
+- **Status:** answered (consumed iteration 6: #7 and #11 fail — no album art → T-006; the rest pass; see A-004)
 - **Type:** Human Verification Request
 - **Iteration:** 4 (run 2, Verifier)
 - **Timestamp:** 2026-09-25

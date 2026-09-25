@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 5 (Verifier)_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 6 (Verifier)_
 
 ## Abandoned tasks
 
@@ -14,13 +14,14 @@ none
 
 ## Decisions awaiting an answer
 
-- **D-002** — Human Verification Request: 7 on-phone checks (DoD #7–#13). The phone is attached and the app installed.
-  Answer in `.harness/run/DECISIONS.md` under `## D-002`.
+none
 
 ## Human criteria unsigned
 
-DoD #7–#13 (Now Playing screen, seeking, controls/back, long names, notification shade, lock screen / Quick Settings,
-opening from the notification) — checklist in D-002.
+- **#7 and #11 failed on the phone (D-002): no album cover** on Now Playing / the notification. Fix task T-006 is next;
+  both will be asked again after it lands.
+- #9 passed, but T-006 changes the picture it checked → will be asked again with #7.
+- Signed: #8, #10, #12, #13.
 
 ## Review findings not fixed
 

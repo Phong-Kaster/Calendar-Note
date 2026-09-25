@@ -147,6 +147,10 @@
   notification. Notification buttons use library drawables `media3_icon_play|pause|next|previous` (present in
   `app/build/intermediates/runtime_symbol_list/debug/processDebugResources/R.txt`); same-named app drawables override them.
   That `R.txt` is the way to check a library resource name without opening the aar.
+- `adb shell content query …` is not an allowed command (run 2 iteration 6), so MediaStore rows / album-art
+  endpoints cannot be probed from the engine; device checks of art go through the human or `dumpsys`.
+- Human-reported (D-002, CPH2895 Android 16): the legacy `content://media/external/audio/albumart/<id>` read showed no
+  cover on Now Playing; Android 10+ needs `ContentResolver.loadThumbnail` / `MediaMetadataRetriever` (T-006).
 - `Cursor.getLong` returns 0 for a NULL cell; read nullable columns with `cursor.isNull(index)` first
   (`SongRepositoryImpl.readNullableLong`).
 - `CoreTopBar` hard-codes colours (C-01); a new screen builds its own top bar from theme colours

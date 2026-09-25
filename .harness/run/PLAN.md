@@ -69,6 +69,7 @@ unless they start with `test/` (`app/src/test/java/com/example/skeleton/`) or `r
 |---|---|---|
 | 1 | T-001, T-002, T-003 | `res/navigation/navigation_graph.xml` (`nowPlayingFragment`, `toNowPlaying`), `injection/ViewModelModule.kt`, both `strings.xml`, `README.md`, every `[I]` res/test file |
 | 2 | T-004, T-005 | both `strings.xml` (if new keys), `README.md` if the tree changed |
+| 3 | T-006 (A-004, from D-002) | `test/data/mapper/AlbumArtUriTest.kt` `[I]`, `README.md` (new `data/albumart/` package) |
 
 ## Known Risks
 

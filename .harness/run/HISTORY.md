@@ -4,6 +4,17 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 6 (run 2, Verifier) - 2026-09-25
+- **Phase:** none — Final Verification (§11) consumed D-002; no code written
+- Recover: tracked tree clean except the human's `DECISIONS.md` answer and `skills-lock.json`; untracked tooling and
+  old captures left alone.
+- D-002 answered: #8, #9, #10, #12, #13 pass; **#7 and #11 fail — no album cover** on Now Playing or (assumed) the
+  notification. Reconciled into task **T-006** (A-004): load the cover with `loadThumbnail` / `MediaMetadataRetriever`
+  (API 29+) and give the session a matching `BitmapLoader`. DONE-candidate cleared.
+- Tried to confirm on the device first (`adb shell content query …` for album ids): not an allowed command, so the
+  diagnosis in T-006 is from the platform docs + the human's hint, not device-proved.
+- Learned: `adb shell content …` is refused; a human pass on an art-related item (#9) is void once T-006 changes the art path.
+
 ### Iteration 5 (run 2, Verifier) - 2026-09-25
 - **Phase:** none — Final Verification (§11), no code written; HEAD unchanged since iteration 4 (`a5dcb20`)
 - Recover: tracked tree clean except the human's `skills-lock.json`; untracked tooling and old captures left alone.
@@ -80,3 +91,12 @@
   `.harness/run/capabilities.json`. **Rationale:** "The DoD matches the PRD and the choices already fixed there (full
   Now Playing screen; standard MediaStyle notification with art, small icon, M3 accent/icons). Letting the engine
   prove #6 saves a manual step."
+
+### D-002 - Human Verification Request: 7 on-phone checks (DoD #7–#13)
+- **Asked:** iteration 4 (Verifier), re-asked iteration 5 with the phone attached and #6 re-proved. Checklist of 7
+  items (Now Playing screen, seeking, controls/back, long names, notification shade, lock screen / Quick Settings,
+  opening from the notification). Blocked completion only.
+- **Answered:** iteration 6 consumed. **Decision:** "1 FAIL, 2 pass, 3 pass, 4 pass, 5 FAIL, 6 pass, 7 pass" — #7 and
+  #11 fail: no album cover shown (notification treated as affected). Hint: `loadThumbnail` (API 29+) or
+  `MediaMetadataRetriever.embeddedPicture`; no new image library. **Rationale:** "Human verification on the phone;
+  everything else signed off."
