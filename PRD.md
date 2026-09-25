@@ -1,0 +1,1 @@
+tạo nhánh loop/ music-player-v2`n`nxây dựng một ứng dụng nghe nhạc đơn giản, có play/pause , next , previous song và có foreground server để bật tắt music player từ notification`n`nNguồn nhạc: nhạc có sẵn trên máy.

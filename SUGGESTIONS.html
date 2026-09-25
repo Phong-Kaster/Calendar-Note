@@ -1,0 +1,266 @@
+<title>Hòm thư góp ý</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root{
+    --paper:#E7E8E4; --surface:#F4F5F2; --surface-2:#DDDFDA;
+    --ink:#191D1E; --ink-2:#3D4547; --muted:#667072;
+    --rule:#C6CAC4; --rule-soft:#D6D9D3;
+    --accent:#0F5C63; --accent-ink:#0B4750;
+    --core:#35618E; --pack:#6B4E9C; --local:#667072; --new:#9C6206; --pending:#9A2B22;
+    --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --paper:#14181A; --surface:#1B2023; --surface-2:#232A2D;
+    --ink:#E8EBE9; --ink-2:#BAC3C2; --muted:#8A9694;
+    --rule:#2E373A; --rule-soft:#262E31;
+    --accent:#4FBDC7; --accent-ink:#7FD5DC;
+    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --pending:#E0736A;
+  }}
+  :root[data-theme="dark"]{
+    --paper:#14181A; --surface:#1B2023; --surface-2:#232A2D;
+    --ink:#E8EBE9; --ink-2:#BAC3C2; --muted:#8A9694;
+    --rule:#2E373A; --rule-soft:#262E31;
+    --accent:#4FBDC7; --accent-ink:#7FD5DC;
+    --core:#74A8DB; --pack:#B394E0; --local:#8A9694; --new:#DFA53F; --pending:#E0736A;
+  }
+  [data-lang="en"]{display:none}
+  :root[data-ui-lang="en"] [data-lang="en"]{display:revert}
+  :root[data-ui-lang="en"] [data-lang="vi"]{display:none}
+
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.72;-webkit-font-smoothing:antialiased}
+  .topbar{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--rule)}
+  .topbar-inner{max-width:900px;margin:0 auto;padding:9px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .topbar .who{font-family:var(--f-mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+  select{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 26px 4px 9px;color:var(--ink);background-color:var(--surface);border:1px solid var(--rule);border-radius:2px;-webkit-appearance:none;appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+    background-position:calc(100% - 14px) 52%,calc(100% - 9px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer}
+  select option{background:var(--surface);color:var(--ink)}
+  .wrap{max-width:900px;margin:0 auto;padding:0 28px 90px}
+  header.mast{border-bottom:2px solid var(--ink);padding:34px 0 18px;margin-bottom:0}
+  .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 12px}
+  h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2rem,5vw,2.9rem);line-height:1.12;letter-spacing:-.02em;margin:0 0 13px;text-wrap:balance}
+  .standfirst{font-size:1.1rem;color:var(--ink-2);margin:0;max-width:60ch}
+  .tabs{display:flex;gap:0;margin:22px 0 0;border-bottom:1px solid var(--rule)}
+  .tabs button{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 4px;margin-right:28px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .tabs button .n{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:8px;background:var(--surface-2);color:var(--ink-2);font-size:10.5px}
+  .panel{padding-top:6px}
+  .panel[hidden]{display:none}
+  .banner{border:1px solid var(--new);border-left:3px solid var(--new);background:var(--surface);padding:14px 18px;margin:26px 0 34px;font-size:.98rem}
+  .banner strong{color:var(--new)}
+  .banner p{margin:0 0 8px} .banner p:last-child{margin:0}
+  .banner.esc{border-color:var(--pending)}
+  .banner.esc strong{color:var(--pending)}
+  h2{font-family:var(--f-display);font-weight:700;font-size:1.55rem;line-height:1.3;letter-spacing:-.012em;margin:52px 0 6px;text-wrap:balance}
+  h2+.note{margin:0 0 24px;color:var(--muted);font-size:.95rem;max-width:62ch}
+  h3{font-family:var(--f-display);font-weight:600;font-size:1.08rem;line-height:1.42;margin:0 0 8px}
+  p{margin:0 0 14px}
+  code,.mono{font-family:var(--f-mono);font-size:.85em;background:var(--surface-2);padding:.08em .34em;border-radius:2px}
+  .kid{border-left:3px solid var(--accent);background:var(--surface);padding:13px 18px;margin:14px 0 0;font-size:.97rem}
+  .kid .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent-ink);display:block;margin-bottom:5px}
+  .kid p{margin:0 0 9px} .kid p:last-child{margin:0}
+  .card{border-top:1px solid var(--rule-soft);padding:22px 0 24px}
+  .card:first-of-type{border-top:1px solid var(--rule)}
+  .card.esc{border-top-color:var(--rule-soft)}
+  .card>summary{display:block;cursor:pointer;list-style:none;position:relative;padding-right:26px}
+  .card>summary::-webkit-details-marker{display:none}
+  .card>summary::marker{display:none;content:""}
+  .card>summary::after{content:"";position:absolute;right:2px;top:9px;width:7px;height:7px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+  .card[open]>summary::after{transform:rotate(-135deg);top:13px}
+  .card>summary:hover::after{border-color:var(--ink)}
+  .card>summary h3{margin:0}
+  .card-body{padding-top:14px}
+  .tagrow{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 10px;align-items:center}
+  .tag{font-family:var(--f-mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--rule);color:var(--muted);border-radius:2px}
+  .tag.core{color:var(--core);border-color:var(--core)}
+  .tag.pack{color:var(--pack);border-color:var(--pack)}
+  .tag.local{color:var(--local);border-color:var(--local)}
+  .tag.pending{color:var(--pending);border-color:var(--pending)}
+  .tag.answered{color:var(--local);border-color:var(--local)}
+  .id{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ev{font-family:var(--f-mono);font-size:12.2px;line-height:1.6;background:var(--surface);border:1px solid var(--rule-soft);border-left:2px solid var(--rule);padding:10px 14px;margin:12px 0;overflow-x:auto;white-space:pre;color:var(--ink-2)}
+  .ask{margin:13px 0 0;padding-left:15px;border-left:2px solid var(--accent)}
+  .ask .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent-ink);display:block;margin-bottom:3px}
+  .ask.esc{border-left-color:var(--pending)}
+  .ask.esc .lbl{color:var(--pending)}
+  .ask p{margin:0;font-size:.95rem}
+  .blocks{margin:13px 0 0;font-size:.92rem;color:var(--muted)}
+  .blocks .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-right:8px}
+  table{width:100%;border-collapse:collapse;font-size:.94rem}
+  th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+  th{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);font-weight:400}
+  .scroll{overflow-x:auto}
+  .empty{font-size:.95rem;color:var(--muted);padding:28px 0;border-top:1px solid var(--rule)}
+  footer{margin-top:56px;padding-top:17px;border-top:2px solid var(--ink);font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.8}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="topbar"><div class="topbar-inner">
+  <span class="who" data-lang="vi">Calendar-Note · hòm thư góp ý</span>
+  <span class="who" data-lang="en">Calendar-Note · suggestion box</span>
+  <select id="lang" aria-label="Ngôn ngữ / Language">
+    <option value="vi">Tiếng Việt</option>
+    <option value="en">English</option>
+  </select>
+</div></div>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow" data-lang="vi">Cập nhật 25-09-2026 · nhánh loop/music-player-v2</p>
+  <p class="eyebrow" data-lang="en">Updated 2026-09-25 · branch loop/music-player-v2</p>
+  <h1 data-lang="vi">Hòm thư góp ý</h1>
+  <h1 data-lang="en">Suggestion Box</h1>
+  <p class="standfirst" data-lang="vi">Một câu hỏi đang chặn tiến độ, và hai bài học có thể không thuộc về riêng repo này. Tất cả chỉ là đề nghị để đọc — không có gì tự áp dụng.</p>
+  <p class="standfirst" data-lang="en">One question blocking progress, and two lessons that may not belong to this repository alone. All read-only proposals — nothing here applies itself.</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-btn-escalate" aria-controls="panel-escalate" data-tab="escalate">
+      <span data-lang="vi">Cần quyết</span><span data-lang="en">Escalate</span><span class="n" id="n-escalate">0</span>
+    </button>
+    <button role="tab" id="tab-btn-suggest" aria-controls="panel-suggest" data-tab="suggest">
+      <span data-lang="vi">Góp ý</span><span data-lang="en">Suggestions</span><span class="n" id="n-suggest">0</span>
+    </button>
+  </div>
+</header>
+
+<section id="panel-escalate" class="panel" role="tabpanel" aria-labelledby="tab-btn-escalate">
+
+<div class="banner esc">
+  <p data-lang="vi"><strong>Đây là bản sao chỉ đọc của <span class="mono">ESCALATION.md</span>.</strong> Trả lời tại <span class="mono">.harness/run/DECISIONS.md</span>, không phải ở đây.</p>
+  <p data-lang="en"><strong>This is a read-only mirror of <span class="mono">ESCALATION.md</span>.</strong> Answer in <span class="mono">.harness/run/DECISIONS.md</span>, never here.</p>
+</div>
+
+<details class="card esc">
+  <summary>
+    <div class="tagrow">
+      <span class="id">D-001</span>
+      <span class="tag pending" data-lang="vi">Đang chờ · bootstrap</span>
+      <span class="tag pending" data-lang="en">Pending · bootstrap</span>
+    </div>
+    <h3 data-lang="vi">Duyệt Definition of Done (16 tiêu chí) và quyền build/test/lint thường trực</h3>
+    <h3 data-lang="en">Approve the Definition of Done (16 criteria) and the standing build/test/lint capabilities</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Loại: duyệt DoD + cấp quyền. Chặn: T-001, T-002, T-003, T-004.</p>
+    <p data-lang="en">Type: DoD approval + capability grant. Blocks: T-001, T-002, T-003, T-004.</p>
+    <p data-lang="vi"><strong>Bối cảnh:</strong> PRD để ngỏ vài lựa chọn sản phẩm; chúng được ghi trong mục Constraints của <span class="mono">DoD.md</span>: Media3 1.8.0, tab Music bên trái Home làm màn hình đầu, next/previous quay vòng, previous luôn về bài trước, vuốt bỏ app khi đang phát thì vẫn phát / khi tạm dừng thì dừng hẳn, xin quyền thông báo ở lần chạm bài đầu tiên, giao diện luôn tối. <span class="mono">./gradlew</span> bị từ chối nên toolchain chưa được kiểm chứng trên nhánh này.</p>
+    <p data-lang="en"><strong>Context:</strong> the PRD left several product choices open; they are written in <span class="mono">DoD.md</span> § Constraints: Media3 1.8.0, a Music tab left of Home as the start screen, next/previous wrap, previous always goes to the previous song, swipe-away keeps playing if playing / stops if paused, notification permission asked on the first song tap, an always-dark theme. <span class="mono">./gradlew</span> was refused, so the toolchain is unverified on this branch.</p>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
+      <p data-lang="vi">Duyệt như đã viết (sửa DoD trước nếu muốn). Lệnh cài/mở app trên máy và push nhánh chỉ đề xuất ở mức theo mục tiêu (goal), không thường trực.</p>
+      <p data-lang="en">Approve as written (edit the DoD first if you like). Device install/launch and branch push are proposed goal-scoped only, not standing.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">T-001, T-002, T-003, T-004</span></div>
+  </div>
+</details>
+
+</section>
+
+<section id="panel-suggest" class="panel" role="tabpanel" aria-labelledby="tab-btn-suggest" hidden>
+
+<div class="banner">
+  <p data-lang="vi"><strong>Chưa có gì được sửa.</strong> Đây là đề nghị để bạn đọc. Không một dòng doctrine nào thay đổi cho tới khi bạn đồng ý từng mục.</p>
+  <p data-lang="en"><strong>Nothing has been changed.</strong> This is a proposal for you to read. No line of doctrine moves until you approve each item.</p>
+</div>
+
+<h2 data-lang="vi">Đề nghị</h2>
+<h2 data-lang="en">The suggestions</h2>
+<p class="note" data-lang="vi">Hai mục, mỗi mục đã trả giá bằng một lệnh bị từ chối thật trong lần bootstrap này.</p>
+<p class="note" data-lang="en">Two items, each paid for by a real refused command during this bootstrap.</p>
+
+<details class="card">
+  <summary>
+    <div class="tagrow"><span class="id">S-01</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+    <h3 data-lang="vi">POLICIES khuyên tiền tố <code>MSYS_NO_PATHCONV=1</code>, nhưng bộ lọc quyền lại chặn nó</h3>
+    <h3 data-lang="en">POLICIES recommends a <code>MSYS_NO_PATHCONV=1</code> prefix that the permission matcher refuses</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">POLICIES § Git Conduct khuyên đọc <code>.harness/**</code> từ nhánh khác bằng <code>MSYS_NO_PATHCONV=1 git show ref:path</code>. Lệnh đó bị hỏi quyền (không khớp <code>Bash(git show*)</code> vì bắt đầu bằng biến môi trường). Cách thứ hai trong cùng đoạn — dùng SHA làm ref — chạy được ngay: <code>git show 4c88c2d:.harness/knowledge/PROJECT.md</code>.</p>
+    <p data-lang="en">POLICIES § Git Conduct recommends reading <code>.harness/**</code> from another ref with <code>MSYS_NO_PATHCONV=1 git show ref:path</code>. That line needed approval (an env-var prefix does not match <code>Bash(git show*)</code>). The paragraph's second option — a SHA as the ref — worked at once: <code>git show 4c88c2d:.harness/knowledge/PROJECT.md</code>.</p>
+    <div class="kid"><span class="lbl" data-lang="vi">Nói đơn giản</span><span class="lbl" data-lang="en">In plain words</span>
+      <p data-lang="vi">Sách hướng dẫn chỉ một cánh cửa mà ổ khoá không mở được. Cửa bên cạnh thì mở. Nên ghi cửa bên cạnh lên trước.</p>
+      <p data-lang="en">The manual points at a door the lock won't open. The door next to it opens. List that door first.</p></div>
+    <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
+      <p data-lang="vi">Mâu thuẫn nằm giữa POLICIES và baseline ledger — cả hai đều ở <code>.harness/loop/</code>, giống nhau ở mọi repo.</p>
+      <p data-lang="en">The conflict is between POLICIES and the baseline ledger — both in <code>.harness/loop/</code>, identical in every repository.</p></div>
+  </div>
+</details>
+
+<details class="card">
+  <summary>
+    <div class="tagrow"><span class="id">S-02</span><span class="tag core" data-lang="vi">Đề nghị: tầng loop</span><span class="tag core" data-lang="en">Proposed: loop tier</span></div>
+    <h3 data-lang="vi"><code>cd &lt;repo&gt; &amp;&amp; &lt;lệnh&gt;</code> bị tính là nhiều thao tác và bị chặn</h3>
+    <h3 data-lang="en"><code>cd &lt;repo&gt; &amp;&amp; &lt;command&gt;</code> counts as multiple operations and is refused</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Một dòng <code>cd … &amp;&amp; ./gradlew …</code> hay <code>cd … &amp;&amp; git …</code> bị từ chối dù phần lệnh chính có thể được phép; <code>git -C &lt;path&gt;</code> cũng không khớp mẫu <code>Bash(git status*)</code>. Chạy <code>cd</code> ở một lời gọi riêng (thư mục làm việc được giữ) thì các lệnh sau khớp mẫu bình thường.</p>
+    <p data-lang="en">A <code>cd … &amp;&amp; ./gradlew …</code> or <code>cd … &amp;&amp; git …</code> line is refused even when the main command would be allowed; <code>git -C &lt;path&gt;</code> does not match <code>Bash(git status*)</code> either. Running <code>cd</code> in its own call (the working directory persists) lets later commands match normally.</p>
+    <div class="ask"><span class="lbl" data-lang="vi">Vì sao thuộc tầng loop</span><span class="lbl" data-lang="en">Why the loop tier</span>
+      <p data-lang="vi">Không liên quan tới Android hay repo này: đó là cách bộ lọc quyền của runtime đọc mọi dòng lệnh. Một câu trong ENGINE/POLICIES sẽ tránh được lần hỏi quyền ở mọi repo.</p>
+      <p data-lang="en">Nothing to do with Android or this repository: it is how the runtime's matcher reads every command line. One sentence in ENGINE/POLICIES saves the refusal in every repository.</p></div>
+  </div>
+</details>
+
+<h2 data-lang="vi">Bạn cần làm gì</h2>
+<h2 data-lang="en">What you do</h2>
+<div class="scroll"><table>
+  <thead>
+    <tr data-lang="vi"><th>Quyết định</th><th>Nghĩa là</th></tr>
+    <tr data-lang="en"><th>Decision</th><th>Means</th></tr>
+  </thead>
+  <tbody>
+    <tr data-lang="vi"><td><strong>Đồng ý</strong> một mục</td><td>Bạn (hoặc tôi, khi được yêu cầu ngoài vòng lặp) chép nội dung sang tầng đã chọn, có trích dẫn lần hỏng đã sinh ra nó.</td></tr>
+    <tr data-lang="en"><td><strong>Accept</strong> an item</td><td>You (or I, when asked outside the loop) copy it into the named tier, citing the failure that earned it.</td></tr>
+    <tr data-lang="vi"><td><strong>Từ chối</strong></td><td>Mục bị xoá khỏi hộp. Không cần giải thích.</td></tr>
+    <tr data-lang="en"><td><strong>Reject</strong> it</td><td>The item leaves the box. No justification needed.</td></tr>
+    <tr data-lang="vi"><td><strong>Không làm gì</strong></td><td>Cũng được. Không có gì tự động xảy ra.</td></tr>
+    <tr data-lang="en"><td><strong>Do nothing</strong></td><td>Also fine. Nothing happens on its own.</td></tr>
+  </tbody>
+</table></div>
+
+</section>
+
+<footer>
+  <span data-lang="vi">Tạo bởi engine trong lần chạy <span class="mono">loop/music-player-v2</span>, 25-09-2026.<br>
+  Tab <strong>Cần quyết</strong> là bản sao chỉ đọc của <span class="mono">.harness/run/ESCALATION.md</span> — trả lời tại <span class="mono">DECISIONS.md</span>.<br>
+  Không có gì ở đây đã được áp dụng.</span>
+  <span data-lang="en">Written by the engine during the <span class="mono">loop/music-player-v2</span> run, 2026-09-25.<br>
+  The <strong>Escalate</strong> tab is a read-only mirror of <span class="mono">.harness/run/ESCALATION.md</span> — answer in <span class="mono">DECISIONS.md</span>.<br>
+  Nothing here has been applied.</span>
+</footer>
+
+</div>
+
+<script>
+  (function(){
+    var root=document.documentElement, sel=document.getElementById('lang'), KEY='cn-suggestions-lang';
+    function apply(l){root.setAttribute('data-ui-lang',l);root.setAttribute('lang',l);sel.value=l;try{localStorage.setItem(KEY,l)}catch(e){}}
+    var init='vi';
+    try{var s=localStorage.getItem(KEY); if(s==='vi'||s==='en') init=s;
+        else if((navigator.language||'').toLowerCase().indexOf('vi')!==0) init='en';}catch(e){}
+    apply(init);
+    sel.addEventListener('change',function(){apply(sel.value)});
+  })();
+
+  (function(){
+    var buttons=document.querySelectorAll('.tabs button'), TKEY='cn-suggestions-tab';
+    var panels={escalate:document.getElementById('panel-escalate'), suggest:document.getElementById('panel-suggest')};
+    var escalateCount=panels.escalate.querySelectorAll(':scope > details.card').length;
+    var suggestCount=panels.suggest.querySelectorAll(':scope > details.card').length;
+    document.getElementById('n-escalate').textContent=escalateCount;
+    document.getElementById('n-suggest').textContent=suggestCount;
+    function select(name){
+      buttons.forEach(function(b){b.setAttribute('aria-selected', String(b.dataset.tab===name))});
+      Object.keys(panels).forEach(function(k){panels[k].hidden = (k!==name)});
+      try{localStorage.setItem(TKEY,name)}catch(e){}
+    }
+    buttons.forEach(function(b){b.addEventListener('click',function(){select(b.dataset.tab)})});
+    var start='suggest';
+    try{var stored=localStorage.getItem(TKEY); if(stored==='escalate'||stored==='suggest') start=stored; else if(escalateCount>0) start='escalate';}
+    catch(e){ if(escalateCount>0) start='escalate'; }
+    select(start);
+  })();
+</script>
