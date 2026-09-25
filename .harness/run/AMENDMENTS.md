@@ -29,3 +29,9 @@
   capability added."
 - **Effect:** `./gradlew :app:assembleDebug` verified on the unchanged tree (`BUILD SUCCESSFUL`). T-001..T-004
   released; Phase 1 (T-001, T-002) executed this iteration.
+
+### Iteration 7 - applied D-004 (2026-09-25)
+- **Decision:** No new capability. Run the Cleanup removal as `git rm -r .harness/run` (without `-q`), which the
+  baseline ledger already grants (`Bash(git rm -r .harness/run*)`); `git clean -f .harness/run` also granted.
+- **Human rationale:** "Same effect as the proposed grant with zero added permissions."
+- **Effect:** Cleanup Commit made this iteration with `git rm -r .harness/run`.

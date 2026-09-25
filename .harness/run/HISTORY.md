@@ -5,6 +5,22 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 7 - 2026-09-25 (Verifier)
+- **Phase:** none — Verifier (§11); wrote no implementation.
+- Recover: only `skills-lock.json` (not the engine's) and the same untracked non-loop files. No debris.
+- Consumed D-004: no new grant; use `git rm -r .harness/run` (without `-q`), already baseline-granted.
+- Re-proved `machine` criteria: #1 `assembleDebug` OK; #2 `testDebugUnitTest --rerun` OK, 47 tests, 0 failures;
+  #3 `lintDebug --rerun` 0 errors, 63 warnings; #4 merged manifest: `READ_MEDIA_AUDIO`, `READ_EXTERNAL_STORAGE`,
+  `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`, `mediaPlayback`
+  `MediaSessionService`; #5 `PlaybackQueuePolicy` in the four seek overrides, `PlaybackStopPolicy` in
+  `onTaskRemoved`; #6 device `b56e2819`: installed, launched, `MainActivity` resumed with `MusicFragment`, no
+  crash entry for `com.example.myapplication`; #7 README covers the music player. No app code changed since `6b8c80e`.
+- #8–#16 remain signed off (D-003); their implementation unchanged. Next: Cleanup Commit → `DONE`.
+
+### Archived D-004 (answered, iteration 7)
+- **Q:** Allow `git rm` so the run can make its Cleanup Commit.
+- **A:** Use the already-granted `git rm -r .harness/run` form (no `-q`). Rationale in `AMENDMENTS.md`.
+
 ### Iteration 6 - 2026-09-25 (Verifier)
 - **Phase:** none — Verifier (§11); wrote no implementation.
 - Recover: no tracked changes except `skills-lock.json` (not the engine's); same untracked non-loop files. No debris.

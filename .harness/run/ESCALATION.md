@@ -248,7 +248,7 @@ also reset its notification permission). Put at least 15 songs on the phone for 
 
 ## D-004 - Allow `git rm` so the run can make its Cleanup Commit and finish
 
-- **Status:** pending
+- **Status:** answered (iteration 7) — no new capability; `git rm -r .harness/run` (no `-q`) is already granted
 - **Type:** Capability grant (Tier 2)
 - **Iteration:** 6 (Verifier)
 - **Timestamp:** 2026-09-25
