@@ -76,3 +76,72 @@ Add this entry to `.harness/run/capabilities.json` → `"entries": [ ... ]`:
 ### Decision
 
 <!-- Answer in `.harness/run/DECISIONS.md` under `## D-001` - never here. -->
+
+---
+
+## D-002 - Human Verification Request: try 7 things on the phone (DoD #7–#13), and plug the phone back in
+
+- **Status:** queued
+- **Type:** Human Verification Request
+- **Iteration:** 4 (run 2, Verifier)
+- **Timestamp:** 2026-09-25
+- **Blocks tasks:** none remain — this blocks **completion** (the Cleanup Commit and `DONE`)
+
+### Question
+
+Every automatic check passed again with fresh evidence, except DoD #6: **no phone is attached** (`adb devices` lists
+nothing), so the engine could not install and start the app. Please plug the phone in (USB debugging on), then try
+the 7 checks below and mark each **pass** or **fail**.
+
+### Context
+
+Re-proved this iteration by the Verifier (who wrote none of the code):
+
+- #1 `assembleDebug`, `testDebugUnitTest` (re-run), `lintDebug` (`--rerun-tasks`) → `BUILD SUCCESSFUL`; lint **0 errors**.
+- #2 `PlaybackTimeTest` 16/16; #3 `AlbumArtUriTest` 4/4, `SongMapperTest` 14/14 (76 tests total, 0 failures).
+- #4 0 hits for `RemoteViews` / custom-view names; `MediaSessionService()`, `setMediaNotificationProvider`,
+  `ic_notification_music`, `setArtworkUri` all present.
+- #5 `nowPlayingFragment` + `toNowPlaying` in the nav graph, `NowPlayingViewModel` in Koin, `seekTo(positionMs)`,
+  README tree lists `nowplaying/`; both-locale strings covered by lint's `MissingTranslation` (an error) = 0.
+- #6 **not re-proved** — no device. The next run re-proves it once the phone is attached.
+
+Checklist (install first: `./gradlew :app:installDebug`, then open the app):
+
+1. **Now Playing opens (#7).** Music tab → tap any song → tap the mini "now playing" bar (not its buttons). Expect a
+   separate full screen: a big square album picture (a song without one shows a clearly visible music note on a
+   lighter panel), title and artist, a slider with elapsed time left and total time right, and big buttons previous /
+   filled play-pause / next. Everything legible on the dark background; the play/pause icon stands out from its button.
+2. **Seeking and the clock (#8).** Drag the slider to the middle and let go → the music jumps there and the time
+   matches. While playing the time goes up once a second; pause → it stops; play → it continues.
+3. **Controls and back (#9).** Tap next, previous, play/pause → the song changes / pauses / resumes; title, artist,
+   picture, total time and slider (back to 0:00) update — also when a song ends by itself. Press system back (and the
+   top-left arrow) → the song list, with the mini bar still showing the song and reacting to play/pause.
+4. **Long names (#10).** Play a song with a very long title or artist, open Now Playing → the text scrolls sideways on
+   one line; the buttons stay on screen.
+5. **Notification shade (#11).** Play a song that has album art, pull down the shade → the standard media card with
+   the art, title, artist and working previous / play-pause / next; the status bar shows the app's own music-note
+   icon. (Android 13+ draws its own buttons and colours from the art — accepted.)
+6. **Lock screen and Quick Settings (#12).** Lock the phone while playing → the lock-screen player shows the song and
+   its buttons work. Unlock, open Quick Settings → the media player is there and works.
+7. **Open from the notification (#13).** With Now Playing open, press Home, tap the notification → the app opens on
+   the Music tab (list + mini bar), no crash; tapping the mini bar opens Now Playing again.
+
+### Options Considered
+
+1. All 7 pass, phone attached - consequences: the next run re-proves #6 on the phone, makes the Cleanup Commit, reports `DONE`.
+2. Some fail - consequences: each failed item (with what you saw) becomes a fix task; the loop keeps working.
+3. You cannot attach a phone - consequences: say so and confirm yourself that the app installs and opens without a
+   crash; the engine cannot change #6's class on its own (the DoD is yours).
+
+### Engine Recommendation
+
+Attach the phone, run the checklist, and answer under `## D-002` in `DECISIONS.md` like: `1 pass, 2 pass, 3 fail —
+<what you saw>, …`.
+
+### Proposed Capabilities (if any)
+
+none (the D-001 install/start capability is still granted)
+
+### Decision
+
+<!-- Answer in `.harness/run/DECISIONS.md` under `## D-002` - never here. -->

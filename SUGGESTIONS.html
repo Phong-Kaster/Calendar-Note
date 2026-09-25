@@ -115,8 +115,8 @@
   <p class="eyebrow" data-lang="en">Updated 2026-09-25 · branch loop/music-player-v2</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
-  <p class="standfirst" data-lang="vi">Một câu hỏi đang chặn tiến độ (duyệt DoD của lần chạy 2), và hai bài học có thể không thuộc về riêng repo này. Tất cả chỉ là đề nghị để đọc — không có gì tự áp dụng.</p>
-  <p class="standfirst" data-lang="en">One question is blocking progress (run 2's DoD approval), and two lessons may not belong to this repository alone. All read-only proposals — nothing here applies itself.</p>
+  <p class="standfirst" data-lang="vi">Một yêu cầu đang chặn hoàn tất (kiểm tra thủ công 7 mục trên điện thoại), và hai bài học có thể không thuộc về riêng repo này. Tất cả chỉ là đề nghị để đọc — không có gì tự áp dụng.</p>
+  <p class="standfirst" data-lang="en">One request is blocking completion (7 on-phone human checks), and two lessons may not belong to this repository alone. All read-only proposals — nothing here applies itself.</p>
 
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-btn-escalate" aria-controls="panel-escalate" data-tab="escalate">
@@ -154,6 +154,28 @@
       <p data-lang="vi">Duyệt như đã viết (sửa <span class="mono">DoD.md</span> trước nếu muốn), và thêm quyền theo mục tiêu cài + mở app (<span class="mono">./gradlew :app:installDebug*</span>, <span class="mono">adb shell am start -n …MainActivity*</span>) vào <span class="mono">.harness/run/capabilities.json</span> để engine tự chứng minh DoD #6. Ghi <span class="mono">## D-001</span> trong <span class="mono">DECISIONS.md</span>, rồi chạy lại.</p>
       <p data-lang="en">Approve as written (edit <span class="mono">DoD.md</span> first if you like), and add the goal-scoped install + start capability (<span class="mono">./gradlew :app:installDebug*</span>, <span class="mono">adb shell am start -n …MainActivity*</span>) to <span class="mono">.harness/run/capabilities.json</span> so the engine can prove DoD #6 itself. Write <span class="mono">## D-001</span> in <span class="mono">DECISIONS.md</span>, then re-run.</p></div>
     <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">T-001, T-002, T-003, T-004</span></div>
+  </div>
+</details>
+
+<details class="card esc" open>
+  <summary>
+    <div class="tagrow">
+      <span class="id">D-002</span>
+      <span class="tag" data-lang="vi">Đang chờ · lần chạy 2, vòng 4 (kiểm tra cuối)</span>
+      <span class="tag" data-lang="en">Queued · run 2, iteration 4 (Verifier)</span>
+    </div>
+    <h3 data-lang="vi">Yêu cầu kiểm tra thủ công: thử 7 việc trên điện thoại (DoD #7–#13), và cắm lại điện thoại</h3>
+    <h3 data-lang="en">Human Verification Request: try 7 things on the phone (DoD #7–#13), and plug the phone back in</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Loại: yêu cầu kiểm tra thủ công. Chặn: hoàn tất (Cleanup Commit + DONE) — không còn task nào.</p>
+    <p data-lang="en">Type: Human Verification Request. Blocks: completion (Cleanup Commit + DONE) — no tasks remain.</p>
+    <p data-lang="vi"><strong>Bối cảnh:</strong> #1–#5 đã chứng minh lại (build, 76 test, lint 0 lỗi, grep). #6 chưa chứng minh lại: <span class="mono">adb devices</span> không có máy nào.</p>
+    <p data-lang="en"><strong>Context:</strong> #1–#5 re-proved (build, 76 tests, lint 0 errors, greps). #6 not re-proved: <span class="mono">adb devices</span> listed no phone.</p>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
+      <p data-lang="vi">Cắm điện thoại, làm 7 mục kiểm tra trong <span class="mono">ESCALATION.md</span> § D-002, rồi ghi <span class="mono">## D-002</span> trong <span class="mono">DECISIONS.md</span> kiểu: <span class="mono">1 pass, 2 pass, 3 fail — &lt;bạn thấy gì&gt;</span>.</p>
+      <p data-lang="en">Attach the phone, run the 7 checks in <span class="mono">ESCALATION.md</span> § D-002, then write <span class="mono">## D-002</span> in <span class="mono">DECISIONS.md</span> like: <span class="mono">1 pass, 2 pass, 3 fail — &lt;what you saw&gt;</span>.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">completion</span></div>
   </div>
 </details>
 

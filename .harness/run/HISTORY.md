@@ -4,6 +4,18 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 4 (run 2, Verifier) - 2026-09-25
+- **Phase:** none — Final Verification (§11), no code written
+- Recover: tree dirty only with the human's untracked tooling and old root captures; nothing to salvage. No new
+  decision ids in `DECISIONS.md` (D-001 already consumed).
+- Re-proved: #1 build/test (`--rerun`, 76 tests, 0 failures)/lint (`--rerun-tasks`, 0 errors); #2 `PlaybackTimeTest`
+  16; #3 `AlbumArtUriTest` 4 + `SongMapperTest` 14; #4 greps (0 forbidden names; provider, small icon, artwork
+  present); #5 nav graph, Koin, `seekTo`, README tree, strings (lint `MissingTranslation` = 0).
+- #6 not re-proved: `adb devices` empty (environment, not code) — no task filed.
+- Queued D-002: Human Verification Request for #7–#13 plus "attach the phone" → `ESCALATE`.
+- Learned: `./gradlew :app:lintDebug` after an earlier run is UP-TO-DATE; a Verifier needs `--rerun-tasks` for fresh
+  lint evidence (`--rerun` on several tasks in one line is refused). Scratch logs `.harness/verify-*.txt` left untracked.
+
 ### Iteration 3 (run 2) - 2026-09-25
 - **Phase:** 2 — T-004, T-005 (two Capable Workers in parallel)
 - Recover: no engine debris beyond the untracked root captures (`*.txt`) and the human's tooling; nothing to salvage.

@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 3 (Phase 2)_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 4 (Verifier)_
 
 ## Abandoned tasks
 
@@ -14,12 +14,18 @@ none
 
 ## Decisions awaiting an answer
 
-none
+- **D-002** — Human Verification Request: 7 on-phone checks (DoD #7–#13), and plug the phone back in. Answer in
+  `.harness/run/DECISIONS.md` under `## D-002`.
 
 ## Human criteria unsigned
 
 DoD #7–#13 (Now Playing screen, seeking, controls/back, long names, notification shade, lock screen / Quick Settings,
-opening from the notification) — asked at the end of the run.
+opening from the notification) — checklist in D-002.
+
+## Machine criteria not re-proved
+
+- **DoD #6** (installs and starts without a crash) — `adb devices` listed no phone in iteration 4. Proved in
+  iteration 2; the next Verifier re-proves it once a phone is attached.
 
 ## Review findings not fixed
 
@@ -43,7 +49,8 @@ Carried from run 1 (non-blocking):
 
 ## Environment
 
-- Untracked captures at the repo root — `build-top.txt`, `dumpsys-top.txt`, `crash-log.txt`, `review-diff.txt` — are
+- Untracked captures — `build-top.txt`, `dumpsys-top.txt`, `crash-log.txt`, `review-diff.txt` at the root, and
+  `.harness/verify-build.txt`, `.harness/verify-lint.txt` — are
   engine scratch files left because `rm` is not an allowed command. Safe to delete.
 - Untracked tooling not created by the engine (`.agents/`, `.claude/agents/`, `.claude/skills/`, `.harness/loop/`,
   `.harness/knowledge/capabilities.json`) and the modified `skills-lock.json` are left for you to commit.

@@ -85,6 +85,9 @@
 - Success is the literal `BUILD SUCCESSFUL`. Never trust a piped exit code; run unpiped or with
   `set -o pipefail`, and read the verdict line. One failing task aborts the rest of a multi-task command.
 - Test counts: `app/build/test-results/testDebugUnitTest/TEST-*.xml` (console prints nothing on pass).
+- Fresh evidence (Verifier): a repeat run is UP-TO-DATE. `./gradlew :app:testDebugUnitTest --rerun` re-runs tests;
+  for lint use `./gradlew :app:lintDebug --rerun-tasks` (a line with several `--rerun` tasks is refused). Check the
+  report file's timestamp. Verified run 2 iteration 4.
 - Lint text report: `app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt`.
 - A `FileSystemException … classes.jar … used by another process` is a Windows lock (stale daemon / IDE), not a
   code error: `./gradlew --stop`, then rerun.
