@@ -113,6 +113,9 @@
 - The device used on earlier runs (MIUI) refuses injected input (`adb shell input` → `INJECT_EVENTS`) and
   `pm grant/revoke`; installable and inspectable (`dumpsys`, `logcat -b crash`), not tappable. Serial changed
   between runs; always re-run `adb devices`.
+- A capability approved in `DECISIONS.md` is **not** in effect until the human writes it into
+  `.harness/knowledge/capabilities.json` / `.harness/run/capabilities.json`
+  (`{"entries":[{…,"allow":["<rule>"]}]}`); the Runtime compiles only those files (observed iteration 1, D-002).
 - `adb shell dumpsys activity top | grep MusicFragment` shows which fragment is on screen without input.
 - On `loop/music-player`, the notification player controls did not appear on the device until
   `POST_NOTIFICATIONS` was requested at runtime (commit `4c88c2d`).

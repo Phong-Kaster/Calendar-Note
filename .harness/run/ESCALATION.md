@@ -14,7 +14,7 @@
 
 ## D-001 - Approve the Definition of Done and the standing toolchain capabilities
 
-- **Status:** pending
+- **Status:** answered (iteration 1 — approved as written; see `AMENDMENTS.md`)
 - **Type:** DoD approval + Capability grant
 - **Iteration:** 0 (bootstrap)
 - **Timestamp:** 2026-09-25
@@ -95,3 +95,91 @@ stay a human decision).
 ### Decision
 
 <!-- Answered in `.harness/run/DECISIONS.md`, under a heading `## D-001` - never here. -->
+
+---
+
+## D-002 - The capabilities approved in D-001 are not in effect: write the two ledger files
+
+- **Status:** pending
+- **Type:** Capability grant (materialise an approval already given)
+- **Iteration:** 1
+- **Timestamp:** 2026-09-25
+- **Blocks tasks:** T-001, T-002, T-003, T-004
+
+### Question
+
+D-001 approved the standing and goal-scoped capabilities, but neither ledger file exists, so the Runtime
+compiled only the baseline and `./gradlew :app:assembleDebug` is still refused ("requires approval"). The
+engine is denied Write on both ledgers by design, so only you can create them. Create the two files below
+(content is exactly what D-001 approved), then re-run.
+
+### Context
+
+`run.ps1` `Compile-PermissionSettings` reads only `.harness/loop/capabilities/baseline.json`,
+`.harness/knowledge/capabilities.json` and `.harness/run/capabilities.json`, and only their `allow` arrays.
+An answer in `DECISIONS.md` is not read by the compiler. Without build/test/lint no checkpoint can be
+verified, so Phase 1 was not started (no code written in iteration 1).
+
+### Options Considered
+
+1. Create both ledger files as below - consequences: Phase 1 (dark theme + Music list) starts next run.
+2. Create only the standing ledger - consequences: Phase 1 can run; device install/launch and push stay
+   unavailable, so device checks for the `human` criteria fall entirely to you.
+
+### Engine Recommendation
+
+Option 1.
+
+### Proposed Capabilities (if any)
+
+`.harness/knowledge/capabilities.json`:
+
+```json
+{
+  "entries": [
+    {
+      "intent": "Build, unit-test and lint the app to verify every checkpoint; read device state without changing it",
+      "command": "./gradlew :app:assembleDebug | :app:testDebugUnitTest | :app:lintDebug | :app:processDebugMainManifest | --stop; adb devices / logcat -d / dumpsys",
+      "scope": "this repository's build outputs (app/build); read-only queries of an attached device",
+      "lifetime": "permanent",
+      "allow": [
+        "Bash(./gradlew :app:assembleDebug*)",
+        "Bash(./gradlew :app:testDebugUnitTest*)",
+        "Bash(./gradlew :app:lintDebug*)",
+        "Bash(./gradlew :app:processDebugMainManifest*)",
+        "Bash(./gradlew --stop)",
+        "Bash(set -o pipefail; ./gradlew :app:*)",
+        "Bash(adb devices*)",
+        "Bash(adb logcat -d*)",
+        "Bash(adb shell dumpsys*)"
+      ]
+    }
+  ]
+}
+```
+
+`.harness/run/capabilities.json`:
+
+```json
+{
+  "entries": [
+    {
+      "intent": "Install the debug build on the attached device, launch it, and push the Loop Branch",
+      "command": "./gradlew :app:installDebug; adb shell am start -n com.example.myapplication/...; git push origin loop/music-player-v2",
+      "scope": "the attached test device (app com.example.myapplication only); the loop/music-player-v2 branch on origin, never main",
+      "lifetime": "goal",
+      "allow": [
+        "Bash(./gradlew :app:installDebug*)",
+        "Bash(adb shell am start -n com.example.myapplication/*)",
+        "Bash(git push origin loop/music-player-v2*)"
+      ]
+    }
+  ]
+}
+```
+
+After creating the files, add `## D-002` with "done" (or the option chosen) to `DECISIONS.md`.
+
+### Decision
+
+<!-- Answered in `.harness/run/DECISIONS.md`, under a heading `## D-002` - never here. -->

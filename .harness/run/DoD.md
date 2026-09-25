@@ -5,7 +5,7 @@
 
 ## Status
 
-- [ ] APPROVED — approve via the pending `.harness/run/ESCALATION.md` entry **D-001** (answer in
+- [x] APPROVED — approve via the pending `.harness/run/ESCALATION.md` entry **D-001** (answer in
       `.harness/run/DECISIONS.md`); edit criteria freely before approving.
       Approval covers the Verification Class of each criterion, not only its wording.
 

@@ -5,6 +5,18 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 1 - 2026-09-25
+- **Phase:** none executed
+- Recover: tree dirty with human/tooling changes only (DoD APPROVED tick, `skills-lock.json`, untracked
+  `.agents/`, `.claude/agents|skills`, `.harness/loop/`, runtime-provisioned `DECISIONS.md`). No engine
+  debris. The DoD tick is committed with this checkpoint; the tooling files are left untouched (not the engine's).
+- Consumed D-001 (approved as written).
+- Attempted: `./gradlew :app:assembleDebug` → "This command requires approval". Neither
+  `.harness/knowledge/capabilities.json` nor `.harness/run/capabilities.json` exists; `run.ps1` compiles only
+  those files' `allow` arrays, so the D-001 approval never reached the permission settings.
+- Reconciled: capability needed → queued D-002 (write the two ledgers, exact content given); T-001..T-004
+  deferred on it. No Workers dispatched — nothing could be verified. Knowledge update → PROJECT.md.
+
 ### Iteration 0 (bootstrap) - 2026-09-25
 - **Phase:** none (bootstrap)
 - Attempted: read PRD; surveyed the tree; three Capable analyst passes (conventions + DoD proposal,
@@ -21,3 +33,8 @@
   `data/model` → `data/mediastore`; natural end-of-queue behaviour stated (repeat-all). Knowledge updates → PROJECT.md.
 
 ## Archived Decisions
+
+### D-001 (answered, iteration 1)
+- **Q:** Approve the DoD (16 criteria + Constraints) and the standing / goal-scoped toolchain capabilities.
+- **A:** Option 1, approve as written — DoD, standing and goal-scoped capabilities all approved. Rationale in
+  `AMENDMENTS.md`.

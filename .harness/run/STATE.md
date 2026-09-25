@@ -5,19 +5,19 @@
 
 ## Current
 
-- **Stage:** escalated (awaiting DoD approval, D-001)
+- **Stage:** escalated (DoD approved; awaiting capability ledgers, D-002)
 - **Loop Branch:** loop/music-player-v2 (from `main` @ `027d3ea`)
-- **Next Phase:** Phase 1 — T-001, T-002 (after D-001)
+- **Next Phase:** Phase 1 — T-001, T-002 (after D-002)
 - **DONE-candidate:** no
 
 ## Progress
 
 | Task | Status | Declared File Scope | Evidence |
 |---|---|---|---|
-| T-001 | deferred (D-001) | `ui/theme/Theme.kt`, `ui/theme/Color.kt`, `core/CoreLayout.kt`, `core/CoreActivity.kt`, `res/values/themes.xml` | - |
-| T-002 | deferred (D-001) | new `domain/`, `data/`, `ui/fragment/music/` files + 3 tests (see task file) | - |
-| T-003 | deferred (D-001) | playback files + music screen edits (see task file) | - |
-| T-004 | deferred (D-001) | `service/*`, `MainActivity.kt`, music screen edits (see task file) | - |
+| T-001 | deferred (D-002) | `ui/theme/Theme.kt`, `ui/theme/Color.kt`, `core/CoreLayout.kt`, `core/CoreActivity.kt`, `res/values/themes.xml` | - |
+| T-002 | deferred (D-002) | new `domain/`, `data/`, `ui/fragment/music/` files + 3 tests (see task file) | - |
+| T-003 | deferred (D-002) | playback files + music screen edits (see task file) | - |
+| T-004 | deferred (D-002) | `service/*`, `MainActivity.kt`, music screen edits (see task file) | - |
 
 ## Assumptions
 
