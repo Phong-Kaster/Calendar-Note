@@ -5,9 +5,9 @@
 
 ## Current
 
-- **Stage:** executing (Phase 1 complete; Phase 2 next)
+- **Stage:** executing (Phases 1–2 complete; Phase 3 next)
 - **Loop Branch:** loop/music-player-v2 (from `main` @ `027d3ea`)
-- **Next Phase:** Phase 2 — T-003
+- **Next Phase:** Phase 3 — T-004
 - **DONE-candidate:** no
 
 ## Progress
@@ -16,8 +16,8 @@
 |---|---|---|---|
 | T-001 | complete (2/3 attempts) | `ui/theme/Theme.kt`, `ui/theme/Color.kt`, `core/CoreLayout.kt`, `core/CoreActivity.kt`, `res/values/themes.xml` | iteration 2 build/test/lint green |
 | T-002 | complete (2/3 attempts) | new `domain/`, `data/`, `ui/fragment/music/` files + 3 tests (see task file) | iteration 2 build/test/lint green; 28 new tests; device: MusicFragment resumed, no crash |
-| T-003 | pending | playback files + music screen edits (see task file) | - |
-| T-004 | pending (depends on T-003) | `service/*`, `MainActivity.kt`, music screen edits (see task file) | - |
+| T-003 | complete (1/3 attempts) | playback files + music screen edits (see task file) | iteration 3 build/test/lint green; PlaybackQueuePolicyTest 10; device: MusicFragment resumed, no crash |
+| T-004 | pending (T-003 done — executable) | `service/*`, `MainActivity.kt`, music screen edits (see task file) | - |
 
 ## Assumptions
 

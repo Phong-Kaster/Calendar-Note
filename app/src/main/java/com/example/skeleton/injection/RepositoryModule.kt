@@ -1,9 +1,11 @@
 package com.example.skeleton.injection
 
+import com.example.skeleton.data.repository.impl.MusicPlayerRepositoryImpl
 import com.example.skeleton.data.repository.impl.PostRepositoryImpl
 import com.example.skeleton.data.repository.impl.SettingRepositoryImpl
 import com.example.skeleton.data.repository.impl.SongRepositoryImpl
 import com.example.skeleton.data.repository.impl.UserActionRepositoryImpl
+import com.example.skeleton.domain.repository.MusicPlayerRepository
 import com.example.skeleton.domain.repository.PostRepository
 import com.example.skeleton.domain.repository.SettingRepository
 import com.example.skeleton.domain.repository.SongRepository
@@ -26,4 +28,7 @@ val repositoryModule = module {
             ioDispatcher = Dispatchers.IO,
         )
     }
+
+    // One shared player connection for every screen (reference-counted inside, see C-08).
+    single<MusicPlayerRepository> { MusicPlayerRepositoryImpl(context = androidContext()) }
 }

@@ -42,4 +42,8 @@
     <string name="no_songs_found">No songs found on this phone</string>
     <string name="allow_audio_access_to_list_songs">Allow access to music and audio so we can list the songs on your phone</string>
     <string name="grant_permission">Grant permission</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
 </resources>

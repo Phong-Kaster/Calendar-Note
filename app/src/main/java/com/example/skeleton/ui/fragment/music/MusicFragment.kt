@@ -3,8 +3,10 @@ package com.example.skeleton.ui.fragment.music
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,12 +23,14 @@ import androidx.core.content.ContextCompat
 import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
+import com.example.skeleton.domain.model.NowPlaying
 import com.example.skeleton.domain.model.Song
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.fragment.music.component.MusicEmptyState
 import com.example.skeleton.ui.fragment.music.component.MusicPermissionDenied
 import com.example.skeleton.ui.fragment.music.component.MusicPermissionRequest
+import com.example.skeleton.ui.fragment.music.component.NowPlayingBar
 import com.example.skeleton.ui.fragment.music.component.SongItem
 import com.example.skeleton.ui.fragment.music.model.MusicScreenContent
 import com.example.skeleton.ui.fragment.music.model.audioPermissionFor
@@ -72,6 +76,18 @@ class MusicFragment : CoreFragment() {
             onGrantPermission = {
                 triggerRequestPermission++
             },
+            onSongClick = { song ->
+                viewModel.onSongClick(song = song)
+            },
+            onPreviousClick = {
+                viewModel.onPreviousClick()
+            },
+            onPlayPauseClick = {
+                viewModel.onPlayPauseClick()
+            },
+            onNextClick = {
+                viewModel.onNextClick()
+            },
         )
 
         // Invisible helper: asks for the audio permission and reports the answer.
@@ -87,17 +103,27 @@ class MusicFragment : CoreFragment() {
 /**
  * Pure UI of the Music screen. It shows exactly one body picked by
  * [MusicUiState.screenContent]: spinner, permission message, "no songs" or the list.
+ * While a song is loaded, the now-playing bar sits just above the bottom bar.
  *
  * @param uiState Current screen state.
  * @param onGrantPermission Called when the user taps the grant button.
+ * @param onSongClick Called when the user taps a song row.
+ * @param onPreviousClick Called when the user taps previous in the now-playing bar.
+ * @param onPlayPauseClick Called when the user taps play / pause in the now-playing bar.
+ * @param onNextClick Called when the user taps next in the now-playing bar.
  * @author Phong-Kaster
  */
 @Composable
 private fun MusicLayout(
     uiState: MusicUiState,
     onGrantPermission: () -> Unit = {},
+    onSongClick: (Song) -> Unit = {},
+    onPreviousClick: () -> Unit = {},
+    onPlayPauseClick: () -> Unit = {},
+    onNextClick: () -> Unit = {},
 ) {
     val screenContent = uiState.screenContent
+    val currentSong = uiState.nowPlaying.currentSong
 
     CoreLayout(
         showLoading = screenContent == MusicScreenContent.Loading,
@@ -105,7 +131,21 @@ private fun MusicLayout(
             CoreTopBar(title = stringResource(R.string.music))
         },
         bottomBar = {
-            CoreBottomBar()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                content = {
+                    if (currentSong != null) {
+                        NowPlayingBar(
+                            song = currentSong,
+                            isPlaying = uiState.nowPlaying.isPlaying,
+                            onPreviousClick = onPreviousClick,
+                            onPlayPauseClick = onPlayPauseClick,
+                            onNextClick = onNextClick,
+                        )
+                    }
+                    CoreBottomBar()
+                },
+            )
         },
         content = {
             when (screenContent) {
@@ -113,7 +153,11 @@ private fun MusicLayout(
                 MusicScreenContent.Loading -> Unit
                 MusicScreenContent.PermissionDenied -> MusicPermissionDenied(onGrantPermission = onGrantPermission)
                 MusicScreenContent.Empty -> MusicEmptyState()
-                MusicScreenContent.Songs -> MusicSongList(songs = uiState.songs)
+                MusicScreenContent.Songs -> MusicSongList(
+                    songs = uiState.songs,
+                    currentSongId = uiState.currentSongId,
+                    onSongClick = onSongClick,
+                )
             }
         },
     )
@@ -123,10 +167,16 @@ private fun MusicLayout(
  * Scrollable list of songs, one [SongItem] per song, keyed by song id.
  *
  * @param songs Songs to show, already sorted by title.
+ * @param currentSongId Id of the song loaded in the player; its row is highlighted.
+ * @param onSongClick Called with the tapped song.
  * @author Phong-Kaster
  */
 @Composable
-private fun MusicSongList(songs: List<Song>) {
+private fun MusicSongList(
+    songs: List<Song>,
+    currentSongId: Long?,
+    onSongClick: (Song) -> Unit,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
@@ -139,6 +189,10 @@ private fun MusicSongList(songs: List<Song>) {
                     SongItem(
                         song = song,
                         modifier = Modifier.padding(horizontal = 16.dp),
+                        isPlaying = song.id == currentSongId,
+                        onClick = {
+                            onSongClick(song)
+                        },
                     )
                 },
             )
@@ -167,6 +221,26 @@ private fun MusicLayoutPermissionDeniedPreview() {
 private fun MusicLayoutEmptyPreview() {
     MusicLayout(
         uiState = MusicUiState(isPermissionGranted = true, songs = emptyList()),
+    )
+}
+
+@Preview(name = "Now playing")
+@Composable
+private fun MusicLayoutNowPlayingPreview() {
+    val song = Song(
+        id = 1L,
+        title = "Yesterday",
+        artist = "The Beatles",
+        album = "Help!",
+        durationMs = 125_000L,
+        contentUri = "content://media/external/audio/media/1",
+    )
+    MusicLayout(
+        uiState = MusicUiState(
+            isPermissionGranted = true,
+            songs = listOf(song),
+            nowPlaying = NowPlaying(currentSong = song, isPlaying = true, currentIndex = 0, queueSize = 1),
+        ),
     )
 }
 

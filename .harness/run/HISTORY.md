@@ -5,6 +5,21 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 3 - 2026-09-25
+- **Phase:** 2 — T-003 (Capable Worker, attempt 1)
+- Recover: tree clean apart from tooling files that are not the engine's (`.agents/`, `.claude/agents|skills`,
+  `.harness/loop/`, ledgers, `DECISIONS.md`, `skills-lock.json`); no debris. No new decisions (D-001/D-002
+  already consumed).
+- Attempted: Worker wrote the 7 new Kotlin files + 4 screen edits; its Write was refused for
+  `res/drawable/*.xml` and `app/src/test/...` (in scope) — the Iteration wrote those 5 files from its report.
+  Iteration wiring: Media3 1.8.0, manifest FGS permissions + service, Koin, 4 strings EN + DE, README.
+  Scope check: every changed file inside T-003's scope or the Iteration's wiring list.
+- Evidence: build/test/lint BUILD SUCCESSFUL first try and after review fixes; 39 tests, 0 failures; lint 0
+  errors. Device `10AECY1ZXG003MQ`: installed, MusicFragment resumed, no app crash.
+- Review: 0 blocking; N-1, N-2, N-3 fixed by the Iteration; N-4 kept (convention).
+- Reconciled: Worker write limit → Knowledge update, Constraint C-11. New device serial → PROJECT.md.
+  `rm` refused, so a temporary `build-top.txt` (dumpsys output) is left untracked, not committed.
+
 ### Iteration 2 - 2026-09-25
 - **Phase:** 1 — T-001 (dark theme), T-002 (Music list)
 - Recovered: working tree held only human tooling files (`skills-lock.json`, `.agents/`, `.claude/agents|skills/`,

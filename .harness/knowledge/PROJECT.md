@@ -61,14 +61,19 @@
   `res/values/themes.xml` bare: minSdk is 24 and lint rates `NewApi` an error.** Omit it, or add
   `tools:targetApi="NN"`. Evidence: iteration 2, T-001 attempt 1 failed `lintDebug` on
   `themes.xml:14`.
+- **C-11 — A Worker can write only under `app/src/main/java/`; its Write is refused for `app/src/main/res/**`
+  and `app/src/test/**` even when they are in its Declared File Scope.** For every such file, put its full
+  content (or, for a vector drawable, its path data) in your report; the Iteration writes it. Code that
+  references `R.drawable.x` still compiles once the Iteration adds the file. Evidence: iteration 3, T-003
+  Worker refused on 4 drawables and `PlaybackQueuePolicyTest.kt`.
 
 ## Toolchain (verified commands)
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build | `./gradlew :app:assembleDebug` | 2026-09-25, iteration 2 (`BUILD SUCCESSFUL`); APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, iteration 2 (20 tests, 0 failures) |
-| Lint | `./gradlew :app:lintDebug` | 2026-09-25, iteration 2 (0 errors, 58 warnings; the 4 main-branch `MissingTranslation` errors fixed) |
+| Build | `./gradlew :app:assembleDebug` | 2026-09-25, iteration 3 (`BUILD SUCCESSFUL`); APK at `app/build/outputs/apk/debug/app-debug.apk` |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, iteration 3 (39 tests, 0 failures) |
+| Lint | `./gradlew :app:lintDebug` | 2026-09-25, iteration 3 (0 errors, 63 warnings) |
 | Install / launch | `./gradlew :app:installDebug`; `adb shell am start -n com.example.myapplication/com.example.skeleton.MainActivity` | 2026-09-25, iteration 2 (device `b56e2819`) |
 | Device | `adb devices` | 2026-09-25, iteration 2 |
 
@@ -126,6 +131,10 @@
   `POST_NOTIFICATIONS` was requested at runtime (commit `4c88c2d`).
 - `python` is not an allowed command; make multi-file edits with the Edit tool. `adb shell dumpsys activity top`
   output is ~150 KB — grep the persisted result for `MusicFragment{`.
+- Iteration 3 device: `10AECY1ZXG003MQ` — `installDebug` succeeded without an on-device prompt. `adb shell
+  getprop` and `rm` are not allowed commands; write dumps inside the repo (`> file` outside it is refused).
+- Media3 1.8.0 compiled with `Util.handlePlayPauseButtonAction` / `Util.shouldShowPlayButton` (`@UnstableApi`)
+  and Guava `ListenableFuture`/`Futures` arriving transitively — no extra dependency needed.
 - `adb logcat -d -b crash` on device `b56e2819` always holds `init` SIGABRT lines from boot; only lines naming
   `com.example.myapplication` count against DoD #6.
 - Bash permission matcher: a `cd … && <command>` line counts as multiple operations and is refused; run `cd`
