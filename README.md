@@ -48,6 +48,8 @@ skeleton/
 │   ├── config/                # AppConfig (base URLs, timeouts)
 │   └── extension/             # plain Kotlin extensions (dates, numbers, flows, validation…)
 ├── data/                      # everything that talks to a data source
+│   ├── albumart/              # finds a song's album cover picture on the phone
+│   │   └── AlbumArtLoader.kt  # tries Android 10+ thumbnails, the picture inside the file, then the old address
 │   ├── database/local/        # Room database, DAOs, entities, converters
 │   ├── datastore/             # DataStore preference classes
 │   ├── mapper/                # toDomain()/toEntity() extensions
@@ -71,6 +73,7 @@ skeleton/
 │       └── SongRepository.kt  # "give me the songs on this phone"
 ├── injection/                 # Koin modules (repositories, view models, network, database…)
 ├── service/                   # Android services
+│   ├── AlbumArtBitmapLoader.kt # Media3 BitmapLoader: gives the notification and lock screen the album cover
 │   ├── MusicNotificationProvider.kt # Media3's standard notification with the app's small icon and accent colour
 │   ├── MusicPlaybackService.kt # Media3 MediaSessionService: ExoPlayer + media notification (tap opens Music)
 │   └── PlaybackStopPolicy.kt  # pure rule: stop the service on swipe-away only when paused or empty

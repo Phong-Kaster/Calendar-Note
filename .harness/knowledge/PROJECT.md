@@ -151,6 +151,10 @@
   endpoints cannot be probed from the engine; device checks of art go through the human or `dumpsys`.
 - Human-reported (D-002, CPH2895 Android 16): the legacy `content://media/external/audio/albumart/<id>` read showed no
   cover on Now Playing; Android 10+ needs `ContentResolver.loadThumbnail` / `MediaMetadataRetriever` (T-006).
+- Media3 1.8.0 (verified run 2 iteration 7): `MediaSession.Builder.setBitmapLoader(...)` and
+  `androidx.media3.session.CacheBitmapLoader` compile; Guava `MoreExecutors.listeningDecorator` is on the classpath.
+  A custom `BitmapLoader` is not cached by Media3 — wrap it in `CacheBitmapLoader`, or every notification update
+  re-loads the cover and briefly posts the card without it. `Uri.parse(...)` draws lint `UseKtx`; use `toUri()`.
 - `Cursor.getLong` returns 0 for a NULL cell; read nullable columns with `cursor.isNull(index)` first
   (`SongRepositoryImpl.readNullableLong`).
 - `CoreTopBar` hard-codes colours (C-01); a new screen builds its own top bar from theme colours

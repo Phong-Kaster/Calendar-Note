@@ -162,6 +162,7 @@ private fun NowPlayingContent(
         content = {
             NowPlayingArtwork(
                 albumArtUri = song.albumArtUri,
+                contentUri = song.contentUri,
                 modifier = Modifier.weight(weight = 1f, fill = false),
             )
 

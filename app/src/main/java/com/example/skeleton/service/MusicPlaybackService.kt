@@ -10,6 +10,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.example.skeleton.MainActivity
@@ -22,7 +23,8 @@ import com.google.common.util.concurrent.ListenableFuture
  * The background music service. It owns the real ExoPlayer and a MediaSession, so music keeps
  * playing when the user leaves the screen, and Media3 shows its standard media notification
  * (title, artist, previous / play-pause / next) while music plays. [MusicNotificationProvider]
- * gives that notification the app's music-note icon and accent colour.
+ * gives that notification the app's music-note icon and accent colour, and
+ * [AlbumArtBitmapLoader] finds the album cover it shows (also on Android 10+).
  *
  * The player is set up for music: music audio attributes, it pauses for phone calls and other
  * apps (audio focus), it pauses when headphones are unplugged, and the queue repeats forever.
@@ -40,6 +42,9 @@ import com.google.common.util.concurrent.ListenableFuture
 class MusicPlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
+
+    /** Finds album covers for the notification; its background thread is stopped in [onDestroy]. */
+    private var albumArtBitmapLoader: AlbumArtBitmapLoader? = null
 
     /**
      * Builds the player and the session once, when Android creates the service.
@@ -60,9 +65,16 @@ class MusicPlaybackService : MediaSessionService() {
             .build()
         exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
 
+        // Our own cover loader: the old album-art address is often empty on Android 10+.
+        val bitmapLoader = AlbumArtBitmapLoader(context = this)
+        albumArtBitmapLoader = bitmapLoader
+
         mediaSession = MediaSession.Builder(this, QueuePolicyPlayer(player = exoPlayer))
             .setCallback(PlayableItemsCallback())
             .setSessionActivity(buildOpenMusicPendingIntent())
+            // CacheBitmapLoader hands back the last finished picture at once, so the card never
+            // flashes without its cover when only play/pause changes.
+            .setBitmapLoader(CacheBitmapLoader(bitmapLoader))
             .build()
 
         // Standard Media3 notification, dressed in the app's icon and accent colour.
@@ -138,6 +150,8 @@ class MusicPlaybackService : MediaSessionService() {
             session.release()
         }
         mediaSession = null
+        albumArtBitmapLoader?.release()
+        albumArtBitmapLoader = null
         super.onDestroy()
     }
 

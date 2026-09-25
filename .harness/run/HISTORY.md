@@ -4,6 +4,20 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 7 (run 2) - 2026-09-25
+- **Phase:** 3 — T-006 (Capable Worker, attempt 1 → complete)
+- Recover: tracked tree clean except `skills-lock.json` (human's); untracked tooling and old captures left alone.
+- D-002 now carries a human **addendum** (not seen by iteration 6): the phone's only 2 songs have no embedded cover,
+  so the placeholder there is correct; prove the fix by unit test / code, re-check with a song that has art (A-005).
+- Scope check: Worker's files = its Declared File Scope = `git status` (app side). Iteration wrote `AlbumArtUriTest.kt`
+  (C-11) and the README tree.
+- Evidence: `assembleDebug` + `testDebugUnitTest --rerun` BUILD SUCCESSFUL, 82 tests, 0 failures (AlbumArtUriTest 10);
+  `lintDebug --rerun-tasks` 0 errors, 69 warnings.
+- Review (Capable, fresh context): 0 blocking. Fixed: notification cover flicker / re-lookup of songs without art →
+  wrapped in `CacheBitmapLoader`; 3 `UseKtx` warnings → `toUri()`. Recorded unfixed (ISSUES): single-thread queue on
+  fast skipping, stale decodes on Now Playing, `supportsMimeType` too broad, composable calls data-layer loader.
+- All tasks complete → DONE-candidate. Human #7, #9, #11 unsigned → Verifier will re-ask.
+
 ### Iteration 6 (run 2, Verifier) - 2026-09-25
 - **Phase:** none — Final Verification (§11) consumed D-002; no code written
 - Recover: tracked tree clean except the human's `DECISIONS.md` answer and `skills-lock.json`; untracked tooling and

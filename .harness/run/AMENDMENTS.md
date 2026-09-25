@@ -4,6 +4,14 @@
 
 <!-- Newest first. -->
 
+### A-005 (decision addendum) - iteration 7 - D-002 addendum applied
+- **Addendum:** the phone's only songs (`Ahrix - Nova.mp3`, no ID3v2; `Alan_Walker_-_Faded_…mp3`, ID3v2 without
+  `APIC`) carry no embedded cover, and the stock music app shows none either — the placeholder is correct for them.
+  "Keep the fix task … but prove it with a unit test / code evidence, and do not treat these two songs as a failing
+  device case. The human will re-check #7/#11 with a song that has a cover, or accept the placeholder."
+- **Effect:** T-006 proved by `AlbumArtUriTest` + build/lint/review; no device art check attempted. The next Human
+  Verification Request asks #7/#9/#11 with a song that has a cover, or acceptance of the placeholder.
+
 ### A-004 (decision) - iteration 6 - D-002 applied: two failed on-phone checks become T-006
 - **Decision:** #8, #9, #10, #12, #13 pass; #7 FAIL and #11 FAIL — "all behaviours work well but I don't see the
   songs' album art" (notification treated as affected too). Hint: legacy `albumart/<id>` is often empty on Android
