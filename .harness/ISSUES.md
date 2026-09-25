@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - iteration 6 (Verifier, run complete)_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - iteration 6 (Verifier)_
 
 ## Abandoned tasks
 
@@ -14,7 +14,9 @@ none
 
 ## Decisions awaiting an answer
 
-none
+- **D-004** — allow `git rm -r -q .harness/run` so the engine can make the Cleanup Commit and report `DONE`
+  (it was refused this iteration). Full proposal in `.harness/run/ESCALATION.md`. Answer under `## D-004` in
+  `.harness/run/DECISIONS.md`. Blocks `DONE` only; all work is complete and verified.
 
 ## Human criteria unsigned
 

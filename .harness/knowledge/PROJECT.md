@@ -144,6 +144,9 @@
   `com.example.myapplication` count against DoD #6.
 - Bash permission matcher: a `cd … && <command>` line counts as multiple operations and is refused; run `cd`
   in its own call (the working directory persists). `git ls-files` / `git ls-tree` are not in the baseline.
+- `git rm` (any form) needs approval and is not in either ledger, so the §11 Cleanup Commit (removing
+  `.harness/run/`) cannot be made without a grant — refused iteration 6. Queue it with the human-verification
+  request next time so completion does not cost an extra round trip.
 - `.kotlin/` appears untracked after a build (Kotlin daemon data) and is not in `.gitignore`; do not commit it.
 - `git show <ref>:.harness/...` needs `MSYS_NO_PATHCONV=1` under Git Bash, which the matcher refuses; a
   commit SHA as the ref (`git show 4c88c2d:.harness/...`) works.

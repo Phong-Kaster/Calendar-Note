@@ -243,3 +243,59 @@ also reset its notification permission). Put at least 15 songs on the phone for 
 
 <!-- Answer in `.harness/run/DECISIONS.md` under `## D-003`: PASS / FAIL per row, plus anything noticed
      that no row asked about. -->
+
+---
+
+## D-004 - Allow `git rm` so the run can make its Cleanup Commit and finish
+
+- **Status:** pending
+- **Type:** Capability grant (Tier 2)
+- **Iteration:** 6 (Verifier)
+- **Timestamp:** 2026-09-25
+- **Blocks tasks:** none — every task is complete and every DoD criterion is proved / signed off
+  (#1–#7 re-proved this iteration, #8–#16 via D-003). This entry blocks the **Cleanup Commit** and
+  **`DONE`** only.
+
+### Question
+
+ENGINE §11 step 4 finishes the run by removing `.harness/run/` from the branch tip. `git rm -r -q .harness/run`
+was refused ("This command requires approval"); no ledger grants `git rm`. May the engine run it?
+
+### Context
+
+The whole record (D-003 sign-off, fresh evidence) is already committed at `6b8c80e`, so removing
+`.harness/run/` loses nothing from history. `.harness/ISSUES.md` stays. Every future run ends the same way,
+so this is needed once per run.
+
+### Options considered
+
+1. **Permanent grant (recommended)** — target `.harness/knowledge/capabilities.json` (standing ledger).
+   Justification: every run's completion needs exactly this command, and the rule is limited to the
+   `.harness/run` path.
+2. **Goal grant** — target `.harness/run/capabilities.json`; expires with this run (the next run asks again).
+3. **Do it yourself** — run `git rm -r -q .harness/run` and commit on `loop/music-player-v2`, then add
+   `## D-004` with "done by hand". The next invocation will verify the tip and report `DONE`.
+
+### Capability proposal (option 1)
+
+```json
+{
+  "intent": "Make the ENGINE §11 Cleanup Commit: remove .harness/run/ from the Loop Branch tip once every DoD criterion is proved",
+  "command": "git rm -r -q .harness/run",
+  "scope": "the .harness/run directory on the current loop/* branch only",
+  "lifetime": "permanent",
+  "allow": [
+    "Bash(git rm -r -q .harness/run)"
+  ]
+}
+```
+
+For option 2 use the same entry with `"lifetime": "goal"` in `.harness/run/capabilities.json`.
+
+### Recommendation
+
+Option 1.
+
+### Decision
+
+<!-- Answer in `.harness/run/DECISIONS.md` under `## D-004`. -->

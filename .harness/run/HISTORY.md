@@ -13,7 +13,11 @@
   tests, 0 failures; #3 `lintDebug --rerun` 0 errors, 63 warnings; #4 merged manifest complete; #5
   `PlaybackQueuePolicy` in the four seek overrides, `PlaybackStopPolicy` in `onTaskRemoved`; #6 device
   `b56e2819`: installed, launched, `MusicFragment` present, no crash entry for `com.example.myapplication`; #7 README.
-- Reconciled: no gaps → Cleanup Commit (removes `.harness/run/`), status `DONE`.
+- Reconciled: no gaps. Recorded sign-offs at `6b8c80e`. Attempted Cleanup Commit: `git rm -r -q .harness/run`
+  → "This command requires approval" (no ledger grants `git rm`). Capability needed → queued D-004;
+  knowledge update → PROJECT.md. Pushed the Loop Branch. Status `ESCALATE`.
+- Drafted Cleanup Commit subject: `loop(done): local music player — every Definition of Done criterion proved`;
+  body lists #1–#7 with this iteration's evidence and #8–#16 signed off by the human via D-003.
 
 ### Iteration 5 - 2026-09-25 (Verifier)
 - **Phase:** none — Verifier (§11); wrote no implementation.

@@ -5,9 +5,10 @@
 
 ## Current
 
-- **Stage:** complete (iteration 6 Verifier: all criteria proved / signed off → Cleanup Commit)
+- **Stage:** awaiting Cleanup Commit (iteration 6 Verifier: all criteria proved / signed off; `git rm`
+  refused → D-004)
 - **Loop Branch:** loop/music-player-v2 (from `main` @ `027d3ea`)
-- **Next Phase:** none — run complete
+- **Next Phase:** none — waiting for D-004 (`git rm` capability for the Cleanup Commit)
 - **DONE-candidate:** yes (recorded iteration 4; iteration 5 Verifier re-proved every `machine` criterion
   #1–#7 with fresh evidence; all 9 `human` criteria unsigned → D-003 queued)
 
