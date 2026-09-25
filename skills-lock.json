@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "android-compose-visual-testing": {
+      "source": "Phong-Kaster/Foreman",
+      "sourceType": "github",
+      "skillPath": "skills/knowledge/android/compose-visual-testing/SKILL.md",
+      "computedHash": "8f5508298c83ac24d2b4cc1dd90f319e6dd994529897c4681d240b28d75c4012"
+    },
     "caveman": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -24,6 +30,12 @@
       "sourceType": "github",
       "skillPath": "skills/personal/edit-article/SKILL.md",
       "computedHash": "e0c50de6d64f528cb4ea32b142e2ec499e291efbc6996369ac4a1eea76d4870c"
+    },
+    "foreman": {
+      "source": "Phong-Kaster/Foreman",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/foreman/SKILL.md",
+      "computedHash": "7bad5ad5b7fc4ae4009ca4f06fe540a0b1145c19b84b3f39cc0d0313e8db0581"
     },
     "git-guardrails-claude-code": {
       "source": "mattpocock/skills",
@@ -144,6 +156,12 @@
       "sourceType": "github",
       "skillPath": "skills/deprecated/ubiquitous-language/SKILL.md",
       "computedHash": "4828c4957014e7d9c1fd62d65e92264d6d46808089953e14d1bbba5a92dfff4d"
+    },
+    "verify-distributable": {
+      "source": "Phong-Kaster/Foreman",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/verify-distributable/SKILL.md",
+      "computedHash": "bb9766e89936614298ecdd2295dd2d7414e48a29e6ff85172425c8305facadcf"
     },
     "write-a-skill": {
       "source": "mattpocock/skills",
