@@ -40,3 +40,9 @@ google-services.json
 
 # gradle
 .gradle/
+# Foreman engine scratch captures (build/lint logs, adb dumps, review diffs)
+/build-top.txt
+/dumpsys-top.txt
+/crash-log.txt
+/review-diff.txt
+/.harness/verify-*.txt
