@@ -4,6 +4,17 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 9 (run 2, Verifier) - 2026-09-25
+- **Phase:** none — Final Verification (§11); no code written
+- Recover: only `DECISIONS.md` modified (the human's D-003 answer). Consumed **D-003** → A-006; #7, #9, #11 signed.
+- Machine criteria re-proved with fresh runs: #1 `assembleDebug` / `testDebugUnitTest --rerun` / `lintDebug
+  --rerun-tasks` BUILD SUCCESSFUL, lint 0 errors (69 warnings); #2 PlaybackTimeTest 16/16; #3 AlbumArtUriTest 10/10,
+  SongMapperTest 14/14 (82 tests, 0 failures); #4 0 forbidden-name hits, provider/icon/artwork present; #5 nav graph,
+  Koin binding, `seekTo(positionMs)`, README `nowplaying/`, 45 keys per locale.
+- #6: `adb devices` lists no device this iteration. `git diff 14117ac HEAD -- app README.md` is empty, so the iteration 8
+  on-device proof (`3H164700ALT00000`: install OK, `MusicFragment` on top, 0 crash lines) covers the identical source.
+- All criteria hold → Cleanup Commit next, report DONE.
+
 ### Iteration 8 (run 2, Verifier) - 2026-09-25
 - **Phase:** none — Final Verification (§11); no code written
 - Recover: tracked tree clean except `skills-lock.json` (human's); untracked tooling and old captures left alone.
@@ -126,3 +137,11 @@
   #11 fail: no album cover shown (notification treated as affected). Hint: `loadThumbnail` (API 29+) or
   `MediaMetadataRetriever.embeddedPicture`; no new image library. **Rationale:** "Human verification on the phone;
   everything else signed off."
+
+### D-003 - Human Verification Request: re-check 3 things on the phone after the album-art fix (DoD #7, #9, #11)
+- **Asked:** iteration 8 (Verifier). T-006 changed how covers are read, so #7 (Now Playing), #9 (controls update the
+  picture) and #11 (notification art) were unsigned again; needed a song with an embedded cover, or placeholder
+  acceptance. Blocked completion only.
+- **Answered:** iteration 9 consumed. **Decision:** option 3 — placeholder accepted for #7 and #11; #9 accepted.
+  **Rationale:** "Both songs on the phone carry no embedded art (checked: no `APIC` frame). T-006's cover loading is
+  proven by unit tests (AlbumArtUriTest 10/10) and code evidence; the human accepts the placeholder on device."

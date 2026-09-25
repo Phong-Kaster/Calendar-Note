@@ -48,3 +48,17 @@ Neither file carries embedded cover art, and the default music app shows no cove
 is expected; the missing-art placeholder is the correct result for these songs. Keep the fix task (so songs that DO
 have art show it on Android 10+), but prove it with a unit test / code evidence, and do not treat these two songs as
 a failing device case. The human will re-check #7/#11 with a song that has a cover, or accept the placeholder.
+
+## D-003
+
+**Decision:** Option 3 — no song with an embedded cover is available on the phone; the placeholder is accepted.
+
+- **1 (#7): accepted with placeholder.** Human sign-off: "chấp nhận hình nốt nhạc cho mục 1 và 3" (accept the
+  music-note placeholder for items 1 and 3).
+- **3 (#11): accepted with placeholder.** Same sign-off.
+- **2 (#9): accepted.** Controls, back and mini bar were signed PASS in D-002 row 3; with only cover-less songs the
+  picture stays the placeholder, so there is no cover ↔ placeholder switch to observe. Recorded by the supervisor from
+  the D-002 result plus the human's placeholder acceptance.
+
+**Rationale:** Both songs on the phone carry no embedded art (checked: no `APIC` frame). T-006's cover loading is
+proven by unit tests (AlbumArtUriTest 10/10) and code evidence; the human accepts the placeholder on device.

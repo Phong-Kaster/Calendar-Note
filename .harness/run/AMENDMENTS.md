@@ -4,6 +4,14 @@
 
 <!-- Newest first. -->
 
+### A-006 (decision) - iteration 9 - D-003 applied
+- **Decision:** option 3 — no song with an embedded cover exists on the phone; the music-note placeholder is accepted
+  for #7 and #11 ("chấp nhận hình nốt nhạc cho mục 1 và 3"); #9 accepted from its D-002 PASS plus the placeholder
+  acceptance (recorded by the supervisor in `DECISIONS.md`).
+- **Human rationale:** "Both songs on the phone carry no embedded art (checked: no `APIC` frame). T-006's cover loading
+  is proven by unit tests (AlbumArtUriTest 10/10) and code evidence; the human accepts the placeholder on device."
+- **Effect:** #7, #9, #11 signed; all 13 criteria now signed or machine-proved → completion unblocked.
+
 ### A-005 (decision addendum) - iteration 7 - D-002 addendum applied
 - **Addendum:** the phone's only songs (`Ahrix - Nova.mp3`, no ID3v2; `Alan_Walker_-_Faded_…mp3`, ID3v2 without
   `APIC`) carry no embedded cover, and the stock music app shows none either — the placeholder is correct for them.

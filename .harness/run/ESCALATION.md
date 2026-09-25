@@ -152,7 +152,7 @@ none (the D-001 install/start capability is still granted)
 
 ## D-003 - Human Verification Request: re-check 3 things on the phone after the album-art fix (DoD #7, #9, #11)
 
-- **Status:** queued
+- **Status:** answered (iteration 9 — placeholder accepted for #7, #11; #9 accepted; see `HISTORY.md`)
 - **Type:** Human Verification Request
 - **Iteration:** 8 (run 2, Verifier)
 - **Timestamp:** 2026-09-25

@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 8 (Verifier)_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 9 (Verifier, run complete)_
 
 ## Abandoned tasks
 
@@ -14,14 +14,13 @@ none
 
 ## Decisions awaiting an answer
 
-- **D-003** — Human Verification Request: re-check #7, #9, #11 on the phone with a song that has an embedded cover
-  (or accept the placeholder). Blocks completion only. Machine #1–#6 all re-proved this iteration.
+none
 
 ## Human criteria unsigned
 
-- **#7, #11** — failed in D-002 (no album cover); fix T-006 landed iteration 7, asked again in D-003.
-- **#9** — passed in D-002, but T-006 changed the picture it checked → asked again in D-003.
-- Signed: #8, #10, #12, #13.
+none. Caveat: #7, #9, #11 were signed with the music-note placeholder only (D-003) — no song with an embedded cover
+was available, so a real cover on Now Playing / in the notification has never been seen on a device. T-006's cover
+loading is proven by unit tests and code only. Worth one look when a song with a cover is on the phone.
 
 ## Review findings not fixed
 
@@ -50,6 +49,8 @@ Carried from run 1 (non-blocking):
 - Album art from MediaStore's album-art address; no new image library; placeholder when missing.
 - The mini bar gets no thumbnail.
 - Now Playing uses its own top bar (not `CoreTopBar`, which hard-codes colours).
+- DoD #6 (install + start) was last proved on a device in iteration 8; no device was attached in iteration 9, but the
+  app source is unchanged since (`git diff 14117ac HEAD -- app README.md` empty).
 
 ## Environment
 

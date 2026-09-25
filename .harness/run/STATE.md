@@ -5,11 +5,11 @@
 
 ## Current
 
-- **Stage:** verifying — iteration 8 Verifier re-proved #1–#6; waiting on D-003 (human #7, #9, #11)
+- **Stage:** complete — iteration 9 Verifier re-proved #1–#5 (#6 from iteration 8, source unchanged); D-003 signed #7, #9, #11
 - **Loop Branch:** loop/music-player-v2 (run 2; PRD says continue on this branch, no new branch)
 - **Next Phase:** none — all tasks complete
-- **DONE-candidate:** yes (recorded iteration 7; machine #1–#6 re-proved iteration 8; human #7, #9, #11 asked in D-003)
-- **Queued:** D-003 (Human Verification Request — blocks completion only)
+- **DONE-candidate:** yes → verified iteration 9; Cleanup Commit
+- **Queued:** none
 
 ## Progress
 
@@ -24,6 +24,8 @@
 
 ## Human sign-offs
 
+- 2026-09-25 (D-003): **#7, #11 signed — music-note placeholder accepted** (no song on the phone has an embedded cover);
+  **#9 signed** (D-002 PASS + placeholder acceptance). All 7 human criteria signed.
 - 2026-09-25 (D-002, phone CPH2895 Android 16): **#8, #10, #12, #13 pass — signed.**
 - #9 passed, but T-006 changes the art it checked → unsigned again, re-ask with #7.
 - #7 FAIL, #11 FAIL — no album art → T-006 (landed iteration 7); re-ask. Per the D-002 addendum the phone's two songs
