@@ -5,10 +5,11 @@
 
 ## Current
 
-- **Stage:** executing (Phases 1–2 complete; Phase 3 next)
+- **Stage:** verifying (Phases 1–3 complete)
 - **Loop Branch:** loop/music-player-v2 (from `main` @ `027d3ea`)
-- **Next Phase:** Phase 3 — T-004
-- **DONE-candidate:** no
+- **Next Phase:** none — next invocation is the Verifier (§11)
+- **DONE-candidate:** yes (recorded iteration 4; all tasks complete, every `machine` criterion appears met,
+  all 9 `human` criteria unsigned)
 
 ## Progress
 
@@ -17,7 +18,7 @@
 | T-001 | complete (2/3 attempts) | `ui/theme/Theme.kt`, `ui/theme/Color.kt`, `core/CoreLayout.kt`, `core/CoreActivity.kt`, `res/values/themes.xml` | iteration 2 build/test/lint green |
 | T-002 | complete (2/3 attempts) | new `domain/`, `data/`, `ui/fragment/music/` files + 3 tests (see task file) | iteration 2 build/test/lint green; 28 new tests; device: MusicFragment resumed, no crash |
 | T-003 | complete (1/3 attempts) | playback files + music screen edits (see task file) | iteration 3 build/test/lint green; PlaybackQueuePolicyTest 10; device: MusicFragment resumed, no crash |
-| T-004 | pending (T-003 done — executable) | `service/*`, `MainActivity.kt`, music screen edits (see task file) | - |
+| T-004 | complete (1/3 attempts) | `service/*`, `MainActivity.kt`, music screen edits (see task file) | iteration 4 build/test/lint green; PlaybackStopPolicyTest 4, NotificationPermissionDecisionTest 4; device: MusicFragment resumed, no crash |
 
 ## Assumptions
 

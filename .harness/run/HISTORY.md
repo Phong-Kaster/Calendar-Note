@@ -5,6 +5,22 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 4 - 2026-09-25
+- **Phase:** 3 — T-004 (attempt 1, Capable)
+- Recover: tree clean apart from untracked non-loop files (`.agents/`, `.claude/`, `.harness/loop/`, ledgers,
+  `build-top.txt`) and `skills-lock.json` — none of it this run's debris; left untouched.
+- Decisions: D-001, D-002 already consumed; nothing new.
+- Attempted: Worker wrote `PlaybackStopPolicy`, `onTaskRemoved` → `pauseAllPlayersAndStopSelf()`, session
+  activity PendingIntent → `MainActivity` (`EXTRA_OPEN_MUSIC`, `onCreate` + `onNewIntent` → `toMusic`),
+  `MusicNotificationPermissionRequest` (Android 13+, once per visit, never blocks playback). Iteration wrote
+  `PlaybackStopPolicyTest` (C-11) and added `NotificationPermissionDecisionTest`; README.
+- Scope check: 5 written files, all inside the Declared File Scope. Build/test/lint green (47 tests, lint
+  0 errors / 63 warnings). Device `b56e2819`: installed, `MusicFragment` resumed, no app crash.
+- Review: 0 blocking; N-1 (`playWhenReady` alone counts an errored/ended player as playing), N-2 (guard
+  clause), N-3 (param name `isPlaying` invites the wrong caller) — all fixed, re-verified green.
+- Reconciled: N-1 is a trap → Constraint C-12. All tasks complete; every `machine` criterion appears met →
+  DONE-candidate recorded.
+
 ### Iteration 3 - 2026-09-25
 - **Phase:** 2 — T-003 (Capable Worker, attempt 1)
 - Recover: tree clean apart from tooling files that are not the engine's (`.agents/`, `.claude/agents|skills`,

@@ -28,6 +28,7 @@ import com.example.skeleton.domain.model.Song
 import com.example.skeleton.ui.component.CoreBottomBar
 import com.example.skeleton.ui.component.CoreTopBar
 import com.example.skeleton.ui.fragment.music.component.MusicEmptyState
+import com.example.skeleton.ui.fragment.music.component.MusicNotificationPermissionRequest
 import com.example.skeleton.ui.fragment.music.component.MusicPermissionDenied
 import com.example.skeleton.ui.fragment.music.component.MusicPermissionRequest
 import com.example.skeleton.ui.fragment.music.component.NowPlayingBar
@@ -50,6 +51,9 @@ class MusicFragment : CoreFragment() {
 
     /** Goes up by one every time the user taps "Grant permission". */
     private var triggerRequestPermission by mutableIntStateOf(0)
+
+    /** Goes up by one on every song tap; the helper decides whether to ask for notifications. */
+    private var triggerNotificationPermission by mutableIntStateOf(0)
 
     override fun onResume() {
         super.onResume()
@@ -77,7 +81,9 @@ class MusicFragment : CoreFragment() {
                 triggerRequestPermission++
             },
             onSongClick = { song ->
+                // Play right away; the notification question never blocks playback.
                 viewModel.onSongClick(song = song)
+                triggerNotificationPermission++
             },
             onPreviousClick = {
                 viewModel.onPreviousClick()
@@ -97,6 +103,9 @@ class MusicFragment : CoreFragment() {
                 viewModel.onPermissionResult(granted = granted)
             },
         )
+
+        // Invisible helper: on Android 13+ asks once per visit to show the music notification.
+        MusicNotificationPermissionRequest(requestTrigger = triggerNotificationPermission)
     }
 }
 

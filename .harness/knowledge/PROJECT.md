@@ -66,15 +66,20 @@
   content (or, for a vector drawable, its path data) in your report; the Iteration writes it. Code that
   references `R.drawable.x` still compiles once the Iteration adds the file. Evidence: iteration 3, T-003
   Worker refused on 4 drawables and `PlaybackQueuePolicyTest.kt`.
+- **C-12 — "Is music still meant to play?" is `playWhenReady && playbackState !in {STATE_IDLE, STATE_ENDED}`,
+  never `Player.isPlaying` and never `playWhenReady` alone.** `isPlaying` is false during a transient
+  audio-focus loss (a phone call), so a swipe-away mid-call would stop the music; `playWhenReady` alone stays
+  true after a playback error, keeping a dead service and a stale notification alive. Evidence: iteration 4
+  review N-1 on `MusicPlaybackService.onTaskRemoved`.
 
 ## Toolchain (verified commands)
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build | `./gradlew :app:assembleDebug` | 2026-09-25, iteration 3 (`BUILD SUCCESSFUL`); APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, iteration 3 (39 tests, 0 failures) |
-| Lint | `./gradlew :app:lintDebug` | 2026-09-25, iteration 3 (0 errors, 63 warnings) |
-| Install / launch | `./gradlew :app:installDebug`; `adb shell am start -n com.example.myapplication/com.example.skeleton.MainActivity` | 2026-09-25, iteration 2 (device `b56e2819`) |
+| Build | `./gradlew :app:assembleDebug` | 2026-09-25, iteration 4 (exit 0); APK at `app/build/outputs/apk/debug/app-debug.apk` |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, iteration 4 (47 tests, 0 failures) |
+| Lint | `./gradlew :app:lintDebug` | 2026-09-25, iteration 4 (0 errors, 63 warnings) |
+| Install / launch | `./gradlew :app:installDebug`; `adb shell am start -n com.example.myapplication/com.example.skeleton.MainActivity` | 2026-09-25, iteration 4 (device `b56e2819`, no on-device prompt) |
 | Device | `adb devices` | 2026-09-25, iteration 2 |
 
 - Success is the literal `BUILD SUCCESSFUL`. Never trust a piped exit code; run unpiped or with

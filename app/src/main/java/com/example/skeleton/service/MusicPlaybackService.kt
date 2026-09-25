@@ -1,5 +1,7 @@
 package com.example.skeleton.service
 
+import android.app.PendingIntent
+import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -10,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import com.example.skeleton.MainActivity
 import com.example.skeleton.data.mapper.withPlayableUri
 import com.example.skeleton.domain.model.PlaybackQueuePolicy
 import com.google.common.util.concurrent.Futures
@@ -25,6 +28,10 @@ import com.google.common.util.concurrent.ListenableFuture
  *
  * Both the in-app bar and the notification talk to [QueuePolicyPlayer], which uses
  * [PlaybackQueuePolicy] for next / previous.
+ *
+ * Tapping the notification opens the app on the Music tab. Swiping the app away from Recents
+ * keeps music going while it plays, but stops the service when it is paused
+ * (see [PlaybackStopPolicy]).
  *
  * @author Phong-Kaster
  */
@@ -54,7 +61,59 @@ class MusicPlaybackService : MediaSessionService() {
 
         mediaSession = MediaSession.Builder(this, QueuePolicyPlayer(player = exoPlayer))
             .setCallback(PlayableItemsCallback())
+            .setSessionActivity(buildOpenMusicPendingIntent())
             .build()
+    }
+
+    /**
+     * Builds the "ticket" Android uses when the user taps the media notification: it opens
+     * [MainActivity] (reusing the running one when possible) and asks it to show the Music tab.
+     *
+     * @author Phong-Kaster
+     */
+    private fun buildOpenMusicPendingIntent(): PendingIntent {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra(MainActivity.EXTRA_OPEN_MUSIC, true)
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        return PendingIntent.getActivity(
+            this,
+            OPEN_MUSIC_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+    }
+
+    /**
+     * Called when the user swipes the app away from Recents. If music is paused (or there is
+     * nothing to play) we stop the service so the notification disappears; if music is playing
+     * we keep it going. [PlaybackStopPolicy] makes the decision.
+     *
+     * @author Phong-Kaster
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val player = mediaSession?.player
+        val shouldStop = PlaybackStopPolicy.shouldStopOnTaskRemoved(
+            isPlaybackOngoing = isPlaybackOngoing(player = player),
+            mediaItemCount = player?.mediaItemCount ?: 0,
+        )
+        if (!shouldStop) return
+        // Never bare stopSelf(): the app's own MediaController may still be bound (C-09).
+        pauseAllPlayersAndStopSelf()
+    }
+
+    /**
+     * Answers: does the player still mean to play? True while playing or buffering, and also
+     * during a phone call (audio focus lost for a moment). False when paused, after an error
+     * (idle) or at the end of the queue.
+     *
+     * @author Phong-Kaster
+     */
+    private fun isPlaybackOngoing(player: Player?): Boolean {
+        if (player == null) return false
+        if (player.playbackState == Player.STATE_IDLE) return false
+        if (player.playbackState == Player.STATE_ENDED) return false
+        return player.playWhenReady
     }
 
     /**
@@ -76,6 +135,11 @@ class MusicPlaybackService : MediaSessionService() {
         }
         mediaSession = null
         super.onDestroy()
+    }
+
+    companion object {
+        /** Request code of the notification's "open the app" ticket. */
+        private const val OPEN_MUSIC_REQUEST_CODE = 1001
     }
 }
 

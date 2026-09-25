@@ -15,6 +15,10 @@ already stored on the phone and plays them with a foreground media service.
   Next on the last song wraps to the first; Previous always goes to the previous song (wraps to the last).
 - **Media notification** — while playing, the Media3 notification shows the song with the same
   Previous / Play-Pause / Next controls, and music keeps playing in the background.
+  - On Android 13+, the first song tap of a visit asks to allow notifications; music plays either way.
+  - Tapping the notification opens the app on the Music tab.
+  - Swiping the app away from Recents keeps music playing; if it was paused, the service stops and the
+    notification disappears.
 - **Always-dark theme** — one fixed dark colour scheme, whatever the phone's light/dark setting.
 - **Home** and **Setting** tabs from the skeleton (posts feed, language picker, notification settings).
 - English and German translations.
@@ -61,13 +65,14 @@ skeleton/
 │       └── SongRepository.kt  # "give me the songs on this phone"
 ├── injection/                 # Koin modules (repositories, view models, network, database…)
 ├── service/                   # Android services
-│   └── MusicPlaybackService.kt # Media3 MediaSessionService: ExoPlayer + media notification
+│   ├── MusicPlaybackService.kt # Media3 MediaSessionService: ExoPlayer + media notification (tap opens Music)
+│   └── PlaybackStopPolicy.kt  # pure rule: stop the service on swipe-away only when paused or empty
 ├── ui/                        # screens, shared components, theme
 │   ├── component/             # shared widgets (CoreTopBar, CoreBottomBar, rate sheet)
 │   ├── fragment/              # one folder per screen
 │   │   ├── home/              # Home tab
 │   │   ├── music/             # Music tab: permission flow, song list, now-playing bar
-│   │   │   ├── component/     # SongItem, NowPlayingBar, MusicPermissionRequest, MusicEmptyState
+│   │   │   ├── component/     # SongItem, NowPlayingBar, MusicPermissionRequest, MusicNotificationPermissionRequest, MusicEmptyState
 │   │   │   ├── model/         # AudioPermission (which permission per API level), MusicScreenContent
 │   │   │   ├── MusicFragment.kt
 │   │   │   ├── MusicUiState.kt
@@ -76,7 +81,7 @@ skeleton/
 │   ├── modifier/              # custom Compose modifiers
 │   ├── theme/                 # the fixed dark colour scheme, typography (customizedTextStyle)
 │   └── util/                  # UI helpers (NavigationUtil, error mapping, system bars)
-├── MainActivity.kt
+├── MainActivity.kt            # single activity; opens the Music tab when started from the notification
 └── MainApplication.kt
 ```
 
