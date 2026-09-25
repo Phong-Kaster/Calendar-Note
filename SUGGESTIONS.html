@@ -170,8 +170,8 @@
   <div class="card-body">
     <p data-lang="vi">Loại: yêu cầu kiểm tra thủ công. Chặn: hoàn tất (Cleanup Commit + DONE) — không còn task nào.</p>
     <p data-lang="en">Type: Human Verification Request. Blocks: completion (Cleanup Commit + DONE) — no tasks remain.</p>
-    <p data-lang="vi"><strong>Bối cảnh:</strong> #1–#5 đã chứng minh lại (build, 76 test, lint 0 lỗi, grep). #6 chưa chứng minh lại: <span class="mono">adb devices</span> không có máy nào.</p>
-    <p data-lang="en"><strong>Context:</strong> #1–#5 re-proved (build, 76 tests, lint 0 errors, greps). #6 not re-proved: <span class="mono">adb devices</span> listed no phone.</p>
+    <p data-lang="vi"><strong>Bối cảnh:</strong> #1–#5 đã chứng minh lại (build, 76 test, lint 0 lỗi, grep). Vòng 5: #6 đã chứng minh trên điện thoại (cài OK, <span class="mono">MusicFragment</span> ở trên cùng, 0 dòng crash). App đã được cài sẵn — chỉ còn 7 mục kiểm tra.</p>
+    <p data-lang="en"><strong>Context:</strong> #1–#5 re-proved (build, 76 tests, lint 0 errors, greps). Iteration 5: #6 re-proved on the phone (install OK, <span class="mono">MusicFragment</span> on top, 0 crash lines). The app is already installed — only the 7 checks remain.</p>
     <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
       <p data-lang="vi">Cắm điện thoại, làm 7 mục kiểm tra trong <span class="mono">ESCALATION.md</span> § D-002, rồi ghi <span class="mono">## D-002</span> trong <span class="mono">DECISIONS.md</span> kiểu: <span class="mono">1 pass, 2 pass, 3 fail — &lt;bạn thấy gì&gt;</span>.</p>
       <p data-lang="en">Attach the phone, run the 7 checks in <span class="mono">ESCALATION.md</span> § D-002, then write <span class="mono">## D-002</span> in <span class="mono">DECISIONS.md</span> like: <span class="mono">1 pass, 2 pass, 3 fail — &lt;what you saw&gt;</span>.</p></div>

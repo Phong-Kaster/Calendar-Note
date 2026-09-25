@@ -5,11 +5,11 @@
 
 ## Current
 
-- **Stage:** awaiting human verification (iteration 4 Verifier re-proved machine #1–#5; #6 not re-proved: no device attached)
+- **Stage:** awaiting human verification (iteration 5 Verifier re-proved every machine criterion #1–#6, #6 on the phone)
 - **Loop Branch:** loop/music-player-v2 (run 2; PRD says continue on this branch, no new branch)
-- **Next Phase:** none — next Iteration is the Verifier again (§11): consume D-002, re-prove #6 on the phone
-- **DONE-candidate:** yes (recorded iteration 3; kept — no code gap found by the iteration-4 Verifier)
-- **Queued:** D-002 (Human Verification Request for DoD #7–#13; attach the phone for #6)
+- **Next Phase:** none — next Iteration is the Verifier again (§11): consume D-002
+- **DONE-candidate:** yes (recorded iteration 3; kept — no code gap found by the iteration-4 and iteration-5 Verifiers)
+- **Queued:** D-002 (Human Verification Request for DoD #7–#13)
 
 ## Progress
 

@@ -4,6 +4,17 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 5 (run 2, Verifier) - 2026-09-25
+- **Phase:** none — Final Verification (§11), no code written; HEAD unchanged since iteration 4 (`a5dcb20`)
+- Recover: tracked tree clean except the human's `skills-lock.json`; untracked tooling and old captures left alone.
+  `DECISIONS.md` has no `## D-002` yet → D-002 stays queued.
+- Re-proved: #1 build + test (`--rerun`, 76 tests, 0 failures) + lint (`--rerun-tasks`, 0 Error/Fatal); #2–#3 same
+  suites green; #4 greps; #5 nav graph, Koin, `seekTo`, README tree.
+- **#6 re-proved** on the attached phone (CPH2895, Android 16): `installDebug` → "Installed on 1 device", `am start`
+  OK, `dumpsys activity top` shows `MusicFragment`, `logcat -d -b crash` has 0 lines naming the app.
+- D-002 narrowed to the 7 human checks (#7–#13) → `ESCALATE`.
+- Learned: `adb logcat -c` is not granted (only `-d` reads); the crash buffer check reads the whole buffer, still 0.
+
 ### Iteration 4 (run 2, Verifier) - 2026-09-25
 - **Phase:** none — Final Verification (§11), no code written
 - Recover: tree dirty only with the human's untracked tooling and old root captures; nothing to salvage. No new
