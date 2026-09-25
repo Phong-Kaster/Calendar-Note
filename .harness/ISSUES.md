@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 7 (Phase 3)_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 8 (Verifier)_
 
 ## Abandoned tasks
 
@@ -14,13 +14,13 @@ none
 
 ## Decisions awaiting an answer
 
-none
+- **D-003** — Human Verification Request: re-check #7, #9, #11 on the phone with a song that has an embedded cover
+  (or accept the placeholder). Blocks completion only. Machine #1–#6 all re-proved this iteration.
 
 ## Human criteria unsigned
 
-- **#7 and #11 failed on the phone (D-002): no album cover.** Fix T-006 landed (iteration 7) but is not device-proved:
-  the phone's two songs have no embedded cover (D-002 addendum). Will be re-asked with a song that has a cover.
-- #9 passed, but T-006 changes the picture it checked → re-asked with #7.
+- **#7, #11** — failed in D-002 (no album cover); fix T-006 landed iteration 7, asked again in D-003.
+- **#9** — passed in D-002, but T-006 changed the picture it checked → asked again in D-003.
 - Signed: #8, #10, #12, #13.
 
 ## Review findings not fixed

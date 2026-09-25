@@ -115,8 +115,8 @@
   <p class="eyebrow" data-lang="en">Updated 2026-09-25 · branch loop/music-player-v2</p>
   <h1 data-lang="vi">Hòm thư góp ý</h1>
   <h1 data-lang="en">Suggestion Box</h1>
-  <p class="standfirst" data-lang="vi">Không có câu hỏi nào đang chờ (D-002 đã trả lời: thiếu ảnh bìa → đang sửa ở T-006), và hai bài học có thể không thuộc về riêng repo này. Tất cả chỉ là đề nghị để đọc — không có gì tự áp dụng.</p>
-  <p class="standfirst" data-lang="en">No question is waiting (D-002 answered: album art missing → being fixed in T-006), and two lessons may not belong to this repository alone. All read-only proposals — nothing here applies itself.</p>
+  <p class="standfirst" data-lang="vi">Một câu hỏi đang chờ: D-003 — kiểm lại 3 việc trên điện thoại (#7, #9, #11) sau bản sửa ảnh bìa T-006. Hai bài học có thể không thuộc về riêng repo này. Tất cả chỉ là đề nghị để đọc — không có gì tự áp dụng.</p>
+  <p class="standfirst" data-lang="en">One question is waiting: D-003 — re-check 3 things on the phone (#7, #9, #11) after the T-006 album-art fix. Two lessons may not belong to this repository alone. All read-only proposals — nothing here applies itself.</p>
 
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-btn-escalate" aria-controls="panel-escalate" data-tab="escalate">
@@ -175,6 +175,28 @@
     <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
       <p data-lang="vi">Cắm điện thoại, làm 7 mục kiểm tra trong <span class="mono">ESCALATION.md</span> § D-002, rồi ghi <span class="mono">## D-002</span> trong <span class="mono">DECISIONS.md</span> kiểu: <span class="mono">1 pass, 2 pass, 3 fail — &lt;bạn thấy gì&gt;</span>.</p>
       <p data-lang="en">Attach the phone, run the 7 checks in <span class="mono">ESCALATION.md</span> § D-002, then write <span class="mono">## D-002</span> in <span class="mono">DECISIONS.md</span> like: <span class="mono">1 pass, 2 pass, 3 fail — &lt;what you saw&gt;</span>.</p></div>
+    <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">completion</span></div>
+  </div>
+</details>
+
+<details class="card esc" open>
+  <summary>
+    <div class="tagrow">
+      <span class="id">D-003</span>
+      <span class="tag" data-lang="vi">Đang chờ · vòng 8 (Verifier)</span>
+      <span class="tag" data-lang="en">Waiting · iteration 8 (Verifier)</span>
+    </div>
+    <h3 data-lang="vi">Yêu cầu kiểm tra thủ công: kiểm lại 3 việc trên điện thoại sau bản sửa ảnh bìa (DoD #7, #9, #11)</h3>
+    <h3 data-lang="en">Human Verification Request: re-check 3 things on the phone after the album-art fix (DoD #7, #9, #11)</h3>
+  </summary>
+  <div class="card-body">
+    <p data-lang="vi">Loại: yêu cầu kiểm tra thủ công. Chặn: hoàn tất (Cleanup Commit + DONE) — không còn task nào.</p>
+    <p data-lang="en">Type: Human Verification Request. Blocks: completion (Cleanup Commit + DONE) — no tasks remain.</p>
+    <p data-lang="vi"><strong>Bối cảnh:</strong> #1–#6 đã chứng minh lại (build, 82 test, lint 0 lỗi, grep; cài + mở app trên điện thoại, <span class="mono">MusicFragment</span> ở trên cùng, 0 dòng crash). Bản mới đã được cài. Cần một bài MP3 <strong>có ảnh bìa nhúng trong file</strong> — hai bài cũ không có, nên hiện nốt nhạc là đúng. #8, #10, #12, #13 vẫn giữ chữ ký từ D-002.</p>
+    <p data-lang="en"><strong>Context:</strong> #1–#6 re-proved (build, 82 tests, lint 0 errors, greps; install + start on the phone, <span class="mono">MusicFragment</span> on top, 0 crash lines). The new build is installed. You need one MP3 <strong>with a cover embedded in the file</strong> — the two old songs have none, so the music-note placeholder is correct for them. #8, #10, #12, #13 stay signed from D-002.</p>
+    <div class="ask esc"><span class="lbl" data-lang="vi">Đề xuất của engine</span><span class="lbl" data-lang="en">Engine's recommendation</span>
+      <p data-lang="vi">Chép một MP3 có ảnh bìa vào điện thoại, làm 3 mục trong <span class="mono">ESCALATION.md</span> § D-003 (Now Playing có ảnh bìa; next/previous đổi cả ảnh; notification có ảnh bìa), rồi ghi <span class="mono">## D-003</span> trong <span class="mono">DECISIONS.md</span> kiểu: <span class="mono">1 pass, 2 pass, 3 fail — &lt;bạn thấy gì&gt;</span>. Không có bài có ảnh bìa? Ghi "chấp nhận placeholder cho 1 và 3".</p>
+      <p data-lang="en">Copy one MP3 with a cover to the phone, run the 3 checks in <span class="mono">ESCALATION.md</span> § D-003 (Now Playing shows the cover; next/previous change the picture too; the notification shows the cover), then write <span class="mono">## D-003</span> in <span class="mono">DECISIONS.md</span> like: <span class="mono">1 pass, 2 pass, 3 fail — &lt;what you saw&gt;</span>. No song with a cover? Write "accept placeholder for 1 and 3".</p></div>
     <div class="blocks"><span class="lbl" data-lang="vi">Chặn</span><span class="lbl" data-lang="en">Blocks</span><span class="mono">completion</span></div>
   </div>
 </details>

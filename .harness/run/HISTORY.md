@@ -4,6 +4,18 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 8 (run 2, Verifier) - 2026-09-25
+- **Phase:** none — Final Verification (§11); no code written
+- Recover: tracked tree clean except `skills-lock.json` (human's); untracked tooling and old captures left alone.
+  No new decision in `DECISIONS.md` (D-001, D-002 already consumed).
+- Machine criteria re-proved with fresh runs: #1 `assembleDebug` / `testDebugUnitTest --rerun` / `lintDebug
+  --rerun-tasks` BUILD SUCCESSFUL, lint 0 errors; #2 PlaybackTimeTest 16/16; #3 AlbumArtUriTest 10/10, SongMapperTest
+  14/14 (82 tests, 0 failures); #4 greps OK; #5 greps OK, 45 keys per locale; #6 installDebug on `3H164700ALT00000`,
+  `am start` OK, `MusicFragment` on top, 0 crash lines.
+- Human #7, #9, #11 unsigned (T-006 changed the art path) → queued **D-003** (Human Verification Request, 3 items,
+  needs a song with an embedded cover). Report ESCALATE.
+- Learned: `adb logcat -b crash -c` needs approval; `;`/`&&`-chained shell pipelines to `sort`/`comm` are refused.
+
 ### Iteration 7 (run 2) - 2026-09-25
 - **Phase:** 3 — T-006 (Capable Worker, attempt 1 → complete)
 - Recover: tracked tree clean except `skills-lock.json` (human's); untracked tooling and old captures left alone.

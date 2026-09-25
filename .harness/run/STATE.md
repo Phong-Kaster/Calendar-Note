@@ -5,11 +5,11 @@
 
 ## Current
 
-- **Stage:** verifying — Phase 3 (T-006) complete iteration 7; next invocation is the Verifier (§11)
+- **Stage:** verifying — iteration 8 Verifier re-proved #1–#6; waiting on D-003 (human #7, #9, #11)
 - **Loop Branch:** loop/music-player-v2 (run 2; PRD says continue on this branch, no new branch)
 - **Next Phase:** none — all tasks complete
-- **DONE-candidate:** yes (recorded iteration 7; human #7, #9, #11 still unsigned → Verifier re-asks)
-- **Queued:** none
+- **DONE-candidate:** yes (recorded iteration 7; machine #1–#6 re-proved iteration 8; human #7, #9, #11 asked in D-003)
+- **Queued:** D-003 (Human Verification Request — blocks completion only)
 
 ## Progress
 
@@ -20,7 +20,7 @@
 | T-003 | complete | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/music/{MusicFragment,component/NowPlayingBar}.kt`, `ui/fragment/nowplaying/**` | Phase 1 commit; PlaybackTimeTest 16 |
 | T-004 | complete | `ui/fragment/nowplaying/component/NowPlayingArtwork.kt` | Phase 2 commit; build/lint green |
 | T-005 | complete | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/nowplaying/{NowPlayingViewModel,NowPlayingFragment,NowPlayingUiState}.kt`, `ui/fragment/nowplaying/model/NowPlayingCloseRule.kt` | Phase 2 commit; NowPlayingCloseRuleTest 7, PlaybackTimeTest 16 |
-| T-006 | pending | `data/albumart/AlbumArtLoader.kt`, `data/mapper/AlbumArtUri.kt`, `service/{AlbumArtBitmapLoader,MusicPlaybackService}.kt`, `ui/fragment/nowplaying/component/NowPlayingArtwork.kt`, `ui/fragment/nowplaying/NowPlayingFragment.kt`, [I] `test/data/mapper/AlbumArtUriTest.kt` | complete | Phase 3 commit; AlbumArtUriTest 10, 82 tests, lint 0 errors |
+| T-006 | complete | `data/albumart/AlbumArtLoader.kt`, `data/mapper/AlbumArtUri.kt`, `service/{AlbumArtBitmapLoader,MusicPlaybackService}.kt`, `ui/fragment/nowplaying/component/NowPlayingArtwork.kt`, `ui/fragment/nowplaying/NowPlayingFragment.kt`, [I] `test/data/mapper/AlbumArtUriTest.kt` | Phase 3 commit; AlbumArtUriTest 10, 82 tests, lint 0 errors |
 
 ## Human sign-offs
 
