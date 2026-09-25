@@ -33,4 +33,15 @@
     <string name="the_server_is_busy">Der Server ist derzeit ausgelastet. Bitte versuche es später erneut</string>
     <string name="we_are_sorry">Es tut uns leid, etwas ist schiefgelaufen. Bitte versuche es erneut.</string>
     <string name="request_timed_out">Zeitüberschreitung der Anfrage</string>
+
+    <string name="home_refresh">Aktualisieren</string>
+    <string name="home_no_posts">Noch keine Beiträge. Zum Aktualisieren nach unten ziehen oder auf Aktualisieren tippen.</string>
+    <string name="exact_alarm">Wecker &amp; Erinnerungen</string>
+    <string name="allow_exact_alarm_for_prayer_time">Erlaube exakte Wecker, damit Benachrichtigungen pünktlich ausgelöst werden</string>
+
+    <string name="music">Musik</string>
+    <string name="unknown_artist">Unbekannter Künstler</string>
+    <string name="no_songs_found">Keine Songs auf diesem Telefon gefunden</string>
+    <string name="allow_audio_access_to_list_songs">Erlaube den Zugriff auf Musik und Audio, damit wir die Songs auf deinem Telefon anzeigen können</string>
+    <string name="grant_permission">Berechtigung erteilen</string>
 </resources>

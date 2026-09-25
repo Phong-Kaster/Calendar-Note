@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -18,7 +19,19 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
 
-
+/**
+ * The shared screen shell (a Scaffold) used by every screen. It paints the theme's dark
+ * background, clears keyboard focus when the empty area is tapped, and shows a spinner instead
+ * of [content] while [showLoading] is true.
+ *
+ * Example:
+ * ```kotlin
+ * CoreLayout(topBar = { CoreTopBar(...) }, content = { MyScreenBody() })
+ * ```
+ * @param showLoading true shows a centered progress indicator instead of the content
+ * @param content the scrollable body of the screen
+ * @author Phong-Kaster
+ */
 @Composable
 fun CoreLayout(
     modifier: Modifier = Modifier,
@@ -35,7 +48,7 @@ fun CoreLayout(
     Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .background(color = Color.Black)
+            .background(color = MaterialTheme.colorScheme.background)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

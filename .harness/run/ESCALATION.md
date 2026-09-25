@@ -100,7 +100,7 @@ stay a human decision).
 
 ## D-002 - The capabilities approved in D-001 are not in effect: write the two ledger files
 
-- **Status:** pending
+- **Status:** answered (iteration 2 — both ledgers written; `./gradlew :app:assembleDebug` verified; see `AMENDMENTS.md`)
 - **Type:** Capability grant (materialise an approval already given)
 - **Iteration:** 1
 - **Timestamp:** 2026-09-25

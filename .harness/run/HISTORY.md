@@ -5,6 +5,27 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 2 - 2026-09-25
+- **Phase:** 1 — T-001 (dark theme), T-002 (Music list)
+- Recovered: working tree held only human tooling files (`skills-lock.json`, `.agents/`, `.claude/agents|skills/`,
+  runtime-provisioned ledgers + `DECISIONS.md`) — not engine debris; left untouched and uncommitted.
+- Consumed D-002 (ledgers written). Verified `assembleDebug` on the unchanged tree before dispatching.
+- Workers: T-001 at Fast (haiku), T-002 at Capable (opus). Scope check: file sets disjoint and inside scope.
+  Iteration wired manifest, nav graph (Music start, `toMusic`, toHome/toSetting popUpTo musicFragment),
+  BottomBarDestination.Music + CoreBottomBar, Koin, both strings.xml (+4 missing German keys), README.
+- Attempt failures: T-001 attempt 1 failed lint (`windowLightNavigationBar` NewApi) → scope reverted,
+  re-dispatched at Capable (mechanical escalation), passed. Review (Capable, fresh context): B-1 blocking
+  (Fragment-level request trigger replays on back-stack return → Settings/dialog opens without a tap);
+  N-1..N-4 non-blocking. T-002 attempt 2 fixed B-1, N-2, N-3; Iteration fixed N-1 (`toMusic` popUpTo
+  musicFragment). N-4 recorded unfixed.
+- Device: first build installed, launched, `MusicFragment` resumed, no crash. Final build install refused on
+  device (MIUI prompt).
+- Reconciled: knowledge update → C-10 (API-gated theme attrs) + toolchain verified + env facts in PROJECT.md.
+
+### Archived D-002 (answered, iteration 2)
+- **Q:** Write the two capability ledger files so the D-001 grants take effect.
+- **A:** Option 1, done — both files written with the D-001 content. Rationale in `AMENDMENTS.md`.
+
 ### Iteration 1 - 2026-09-25
 - **Phase:** none executed
 - Recover: tree dirty with human/tooling changes only (DoD APPROVED tick, `skills-lock.json`, untracked

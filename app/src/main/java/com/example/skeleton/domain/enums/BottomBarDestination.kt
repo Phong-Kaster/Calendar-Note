@@ -12,6 +12,13 @@ enum class BottomBarDestination (
     val directions: Int,
     @IdRes val homeDestinationId: Int,
 ) {
+    Music(
+        nameId = R.string.music,
+        drawableId = R.drawable.ic_bottom_music,
+        destinationId = R.id.musicFragment,
+        directions = R.id.toMusic,
+        homeDestinationId = R.id.musicFragment,
+    ),
     Home(
         nameId = R.string.home,
         drawableId = R.drawable.ic_bottom_home,

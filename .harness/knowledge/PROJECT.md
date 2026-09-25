@@ -57,15 +57,20 @@
 - **C-09 — Stopping a `MediaSessionService` uses `pauseAllPlayersAndStopSelf()`, never bare `stopSelf()`**,
   which cannot end a service the app's own `MediaController` still binds. Evidence: `loop/music-player`
   iteration 3.
+- **C-10 — An API-gated theme attribute (`android:windowLightNavigationBar` = API 27, etc.) never goes in
+  `res/values/themes.xml` bare: minSdk is 24 and lint rates `NewApi` an error.** Omit it, or add
+  `tools:targetApi="NN"`. Evidence: iteration 2, T-001 attempt 1 failed `lintDebug` on
+  `themes.xml:14`.
 
 ## Toolchain (verified commands)
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build | `./gradlew :app:assembleDebug` | **not yet on this branch** — denied at bootstrap (no standing capability). Verified on `loop/music-player` 2026-09-24 from the same base; APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | not yet on this branch (main: 1 test, `ExampleUnitTest`) |
-| Lint | `./gradlew :app:lintDebug` | not yet on this branch (main: **BUILD FAILED**, 4 `MissingTranslation` errors) |
-| Device | `adb devices` | not yet on this branch |
+| Build | `./gradlew :app:assembleDebug` | 2026-09-25, iteration 2 (`BUILD SUCCESSFUL`); APK at `app/build/outputs/apk/debug/app-debug.apk` |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, iteration 2 (20 tests, 0 failures) |
+| Lint | `./gradlew :app:lintDebug` | 2026-09-25, iteration 2 (0 errors, 58 warnings; the 4 main-branch `MissingTranslation` errors fixed) |
+| Install / launch | `./gradlew :app:installDebug`; `adb shell am start -n com.example.myapplication/com.example.skeleton.MainActivity` | 2026-09-25, iteration 2 (device `b56e2819`) |
+| Device | `adb devices` | 2026-09-25, iteration 2 |
 
 - Success is the literal `BUILD SUCCESSFUL`. Never trust a piped exit code; run unpiped or with
   `set -o pipefail`, and read the verdict line. One failing task aborts the rest of a multi-task command.
@@ -119,6 +124,10 @@
 - `adb shell dumpsys activity top | grep MusicFragment` shows which fragment is on screen without input.
 - On `loop/music-player`, the notification player controls did not appear on the device until
   `POST_NOTIFICATIONS` was requested at runtime (commit `4c88c2d`).
+- `python` is not an allowed command; make multi-file edits with the Edit tool. `adb shell dumpsys activity top`
+  output is ~150 KB — grep the persisted result for `MusicFragment{`.
+- `adb logcat -d -b crash` on device `b56e2819` always holds `init` SIGABRT lines from boot; only lines naming
+  `com.example.myapplication` count against DoD #6.
 - Bash permission matcher: a `cd … && <command>` line counts as multiple operations and is refused; run `cd`
   in its own call (the working directory persists). `git ls-files` / `git ls-tree` are not in the baseline.
 - `.kotlin/` appears untracked after a build (Kotlin daemon data) and is not in `.gitignore`; do not commit it.

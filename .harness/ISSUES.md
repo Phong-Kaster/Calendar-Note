@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - iteration 1_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - iteration 2_
 
 ## Abandoned tasks
 
@@ -14,20 +14,27 @@ none
 
 ## Decisions awaiting an answer
 
-| # | Question | Blocks |
-|---|---|---|
-| D-002 | The capabilities approved in D-001 are not in effect — create `.harness/knowledge/capabilities.json` and `.harness/run/capabilities.json` (exact content in `ESCALATION.md`) | T-001, T-002, T-003, T-004 |
+none
 
 ## Human criteria unsigned
 
-DoD #8–#16 (all 9 `human` criteria) — none can be checked until the feature is built.
+DoD #8–#16 (all 9 `human` criteria). #8 and #9 (permission flow, song list) are buildable now; the rest need
+Phases 2–3. They will be asked for together once every `machine` criterion holds.
 
 ## Review findings not fixed
 
-none
+- N-4 (non-blocking, T-001): `res/values/themes.xml` window background is `@android:color/black` while the
+  theme background is `#0B0D10` — a slight shade change may show on cold start / fade transitions.
 
 ## Assumptions recorded
 
 - Branch name `loop/ music-player-v2` read as `loop/music-player-v2`.
 - Playback service in a new `service/` package; raw MediaStore row holder in a new `data/mediastore/` package.
-- Toolchain unverified on this branch: `./gradlew` still refused in iteration 1 (pending D-002).
+- Music tab sits with Home in the bottom bar's left group.
+- "Grant permission" opens Settings only after two not-granted answers with no rationale.
+
+## Environment
+
+- The final Phase-1 build could not be installed on device `b56e2819`: `INSTALL_FAILED_ABORTED: User rejected
+  permissions` (MIUI asks for on-device confirmation of each install). The earlier Phase-1 build installed,
+  launched on `MusicFragment`, and did not crash.
