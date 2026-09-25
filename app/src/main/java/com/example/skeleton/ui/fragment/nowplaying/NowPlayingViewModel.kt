@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skeleton.domain.model.NowPlaying
 import com.example.skeleton.domain.repository.MusicPlayerRepository
+import com.example.skeleton.ui.fragment.nowplaying.model.shouldCloseNowPlaying
 import com.example.skeleton.ui.fragment.nowplaying.model.shouldTickPosition
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -37,13 +39,14 @@ class NowPlayingViewModel(
     private val musicPlayerRepository: MusicPlayerRepository,
 ) : ViewModel() {
 
-    private val TAG = "NowPlayingViewModel"
-
     private val _uiState = MutableStateFlow(NowPlayingUiState())
     val uiState: StateFlow<NowPlayingUiState> = _uiState.asStateFlow()
 
-    /** Remembers whether this screen has ever seen a song, so "no song" at start does not close it. */
+    /** Remembers whether this screen has ever seen a song, so a song going away closes it. */
     private var hasSeenSong = false
+
+    /** True while the screen is at least STARTED (visible); the position only ticks then. */
+    private val isScreenStarted = MutableStateFlow(false)
 
     init {
         connectMusicPlayer()
@@ -61,8 +64,10 @@ class NowPlayingViewModel(
     }
 
     /**
-     * Copies every player change into the screen state, reads a fresh position (a skip or a
-     * pause moves it too), and marks the song as gone when the player lost it.
+     * Copies every player change into the screen state, reads a fresh position (a skip, a pause
+     * or a seek from the lock screen moves it too — [NowPlaying.positionChangeCount] makes sure
+     * such a seek arrives here even while paused), and decides whether the screen must close.
+     * Once "close" is decided it stays decided, so the screen goes back exactly once.
      *
      * @author Phong-Kaster
      */
@@ -70,38 +75,68 @@ class NowPlayingViewModel(
         viewModelScope.launch {
             musicPlayerRepository.state.collectLatest { nowPlaying ->
                 val hasSong = nowPlaying.currentSong != null
-                val isSongGone = hasSeenSong && !hasSong
+                val shouldClose = shouldCloseNowPlaying(
+                    hasSeenSong = hasSeenSong,
+                    hasSong = hasSong,
+                    isConnectAttemptFinished = nowPlaying.isConnectAttemptFinished,
+                )
                 if (hasSong) hasSeenSong = true
 
                 _uiState.value = _uiState.value.copy(
                     nowPlaying = nowPlaying,
                     positionMs = musicPlayerRepository.currentPositionMs(),
-                    isSongGone = isSongGone,
+                    isSongGone = _uiState.value.isSongGone || shouldClose,
                 )
             }
         }
     }
 
     /**
-     * While music is playing, asks the player for its position about every half second.
-     * When it pauses (or the song goes away) the loop stops; it starts again on the next play.
+     * While music is playing AND the screen is visible, asks the player for its position about
+     * every half second. When music pauses, the song goes away, or the screen is hidden, the
+     * loop stops; it starts again (reading the position at once) when all are true again.
      *
      * @author Phong-Kaster
      */
     private fun collectPositionTicks() {
         viewModelScope.launch {
-            musicPlayerRepository.state
-                .map { nowPlaying -> isTicking(nowPlaying = nowPlaying) }
+            combine(
+                musicPlayerRepository.state.map { nowPlaying -> isTicking(nowPlaying = nowPlaying) },
+                isScreenStarted,
+            ) { isMusicMoving, isVisible ->
+                isMusicMoving && isVisible
+            }
                 .distinctUntilChanged()
                 .collectLatest { shouldTick ->
                     if (!shouldTick) return@collectLatest
-                    // Runs until collectLatest cancels it (music paused); delay() is where it stops.
+                    // Runs until collectLatest cancels it (paused or hidden); delay() is where it stops.
                     while (true) {
                         refreshPosition()
                         delay(POSITION_TICK_MS)
                     }
                 }
         }
+    }
+
+    /**
+     * The screen became visible (Fragment onStart): read the position right away (it may have
+     * moved while hidden) and let the half-second refresh run again if music is playing.
+     *
+     * @author Phong-Kaster
+     */
+    fun onScreenStarted() {
+        refreshPosition()
+        isScreenStarted.value = true
+    }
+
+    /**
+     * The screen is hidden (Fragment onStop): stop the half-second refresh so nothing ticks
+     * off-screen.
+     *
+     * @author Phong-Kaster
+     */
+    fun onScreenStopped() {
+        isScreenStarted.value = false
     }
 
     /**

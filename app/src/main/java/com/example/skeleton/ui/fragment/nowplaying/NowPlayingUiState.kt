@@ -7,7 +7,8 @@ import com.example.skeleton.domain.model.NowPlaying
  *
  * @param nowPlaying What the player is doing: song, play/pause, song length.
  * @param positionMs Where the player is inside the song, in milliseconds (refreshed about twice a second while playing).
- * @param isSongGone True once a song was shown and then the player has no song anymore; the screen closes itself.
+ * @param isSongGone True when there is nothing to show — a shown song went away, or connecting
+ * finished (or failed) with no song loaded; the screen closes itself. Once true it stays true.
  * @author Phong-Kaster
  */
 data class NowPlayingUiState(

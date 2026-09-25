@@ -2,7 +2,7 @@
 
 > Regenerated every iteration. Problems only. What succeeded is in the commit messages.
 
-_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 2 (Phase 1)_
+_Last updated: 2026-09-25 - branch `loop/music-player-v2` - run 2, iteration 3 (Phase 2)_
 
 ## Abandoned tasks
 
@@ -23,11 +23,9 @@ opening from the notification) — asked at the end of the run.
 
 ## Review findings not fixed
 
-Phase 1 (queued as T-005, Phase 2):
-- A seek from outside the app while paused is not reflected on Now Playing until play resumes.
-- After process death with Now Playing restored (or a failed controller connect), the screen shows empty instead of closing.
-- The 500 ms position poll keeps running while Now Playing is in the background.
-- `NowPlayingViewModel` has an unused `TAG`.
+Phase 2 (NIT, non-blocking):
+- `NowPlayingArtwork.kt` keeps a file-level `private const val TAG` string (jetpack-compose-ui.md allows only numbers there).
+- A failed controller connect while the Music tab still holds the connection also closes Now Playing (no retry).
 
 Carried from run 1 (non-blocking):
 - `res/values/themes.xml` window background is `@android:color/black` while the theme background is `#0B0D10`.

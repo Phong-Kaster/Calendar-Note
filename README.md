@@ -15,6 +15,8 @@ already stored on the phone and plays them with a foreground media service.
   Next on the last song wraps to the first; Previous always goes to the previous song (wraps to the last).
 - **Now Playing screen** — tapping the mini bar opens a full screen with the album picture, title and
   artist, a seek slider with elapsed/total time, and large Material 3 Previous / Play-Pause / Next buttons.
+  The album cover is read from MediaStore (a music-note placeholder when there is none); the time follows
+  seeks made from the lock screen or notification; the screen closes itself when no song is loaded.
 - **Media notification** — while playing, the standard Media3 notification shows the song and its album
   art with the same Previous / Play-Pause / Next controls, the app's own music-note icon and accent
   colour, and music keeps playing in the background.
@@ -84,7 +86,7 @@ skeleton/
 │   │   │   └── MusicViewModel.kt
 │   │   ├── nowplaying/        # full Now Playing screen, opened by tapping the mini bar
 │   │   │   ├── component/     # NowPlayingTopBar, NowPlayingArtwork, NowPlayingSongInfo, NowPlayingSeekBar, NowPlayingControls
-│   │   │   ├── model/         # PlaybackTime (clock text, slider ↔ position maths, when to tick)
+│   │   │   ├── model/         # PlaybackTime (clock text, slider ↔ position maths, when to tick), NowPlayingCloseRule (when the screen closes itself)
 │   │   │   ├── NowPlayingFragment.kt
 │   │   │   ├── NowPlayingUiState.kt
 │   │   │   └── NowPlayingViewModel.kt

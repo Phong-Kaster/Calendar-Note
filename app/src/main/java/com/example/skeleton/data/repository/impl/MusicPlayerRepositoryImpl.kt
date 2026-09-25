@@ -63,9 +63,17 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
     /** The songs of the last [playSongs] call, used to map a MediaItem back to its full Song. */
     private var queuedSongs: List<Song> = emptyList()
 
+    /**
+     * Rings every time the position jumps (seek, skip, restart). A seek while paused changes
+     * nothing else in [NowPlaying], so without this number the StateFlow would see "same as
+     * before" and screens would keep showing the old time.
+     */
+    private var positionChangeCount = 0
+
     /** Copies every player change into [state]. */
     private val playerListener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
+            if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)) positionChangeCount++
             updateState(player = player)
         }
     }
@@ -81,6 +89,7 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
             Log.w(TAG, "Controller disconnected; it will be rebuilt on next use")
             dropController()
             // The old song and queue are no longer true; the next connection publishes fresh ones.
+            // isConnectAttemptFinished goes back to false: nothing is known until the rebuild ends.
             _state.value = NowPlaying()
         }
     }
@@ -99,6 +108,9 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
         if (connectionCount > 0) return
         pendingCommands.clear()
         dropController()
+        // Nobody is connected now, so the snapshot is no longer a finished answer: the next
+        // screen that connects must wait for its own attempt before trusting "no song".
+        _state.value = _state.value.copy(isConnectAttemptFinished = false)
     }
 
     override fun playSongs(songs: List<Song>, startIndex: Int) {
@@ -201,6 +213,7 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
             Log.e(TAG, "buildController failed", e)
             controllerFuture = null
             pendingCommands.clear()
+            publishConnectAttemptFailed()
         }
     }
 
@@ -219,6 +232,7 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
             Log.e(TAG, "Controller connection failed", e)
             controllerFuture = null
             pendingCommands.clear()
+            publishConnectAttemptFailed()
             return
         }
 
@@ -291,7 +305,8 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
     // ---------- State ----------
 
     /**
-     * Reads the player and publishes a fresh [NowPlaying].
+     * Reads the player and publishes a fresh [NowPlaying]. It is only called with a connected
+     * controller, so the connection attempt is finished by now.
      *
      * @author Phong-Kaster
      */
@@ -304,7 +319,19 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
             currentIndex = if (currentItem == null) NO_INDEX else player.currentMediaItemIndex,
             queueSize = player.mediaItemCount,
             durationMs = knownDurationMs(player = player),
+            positionChangeCount = positionChangeCount,
+            isConnectAttemptFinished = true,
         )
+    }
+
+    /**
+     * Tells watchers "we tried to reach the player and it did not work": nothing is loaded, and
+     * no better answer is coming until someone asks again.
+     *
+     * @author Phong-Kaster
+     */
+    private fun publishConnectAttemptFailed() {
+        _state.value = NowPlaying(isConnectAttemptFinished = true)
     }
 
     /**

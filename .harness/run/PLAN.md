@@ -58,7 +58,7 @@ attached device if granted (#6); everything visual is `human` (#7–#13).
 - T-005 - Now Playing stays in step while paused, off-screen, or restored empty (depends on: T-003; A-002) - scope:
   `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`,
   `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/nowplaying/{NowPlayingViewModel,NowPlayingFragment,
-  NowPlayingUiState}.kt` - tier: Capable
+  NowPlayingUiState}.kt`, `ui/fragment/nowplaying/model/NowPlayingCloseRule.kt` (A-003), [I] its test - tier: Capable
 
 `[I]` = written by the Iteration from the Worker's report (C-11). Paths are under `app/src/main/java/com/example/skeleton/`
 unless they start with `test/` (`app/src/test/java/com/example/skeleton/`) or `res/` (`app/src/main/res/`).

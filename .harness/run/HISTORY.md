@@ -4,6 +4,18 @@
 
 <!-- Newest first. One entry per iteration. -->
 
+### Iteration 3 (run 2) - 2026-09-25
+- **Phase:** 2 — T-004, T-005 (two Capable Workers in parallel)
+- Recover: no engine debris beyond the untracked root captures (`*.txt`) and the human's tooling; nothing to salvage.
+  `review-diff.txt` overwritten with this Phase's diff for the reviewer. No new decisions in `DECISIONS.md`.
+- Scope check: files disjoint, inside scopes (T-005 + new `model/NowPlayingCloseRule.kt`, A-003), union = `git status`.
+  Wired: `NowPlayingCloseRuleTest.kt` (C-11), README feature text + tree note.
+- Build, 76 tests, lint (0 errors) green first try.
+- Review: C-01…C-12 clean, no blocking. NIT 1 (decode target used the longer screen side) and NIT 3 (trailing lambda on
+  `produceState`) fixed by the Iteration, re-built green; NIT 2 (file-level string `TAG`) recorded in ISSUES.md.
+- Learned: `produceState` keeps its old value across key changes; `StateFlow` drops no-field-change events → counter.
+- All tasks complete → DONE-candidate recorded; next Iteration verifies.
+
 ### Iteration 2 (run 2) - 2026-09-25
 - **Phase:** 1 — T-001, T-002, T-003 (three Capable Workers in parallel)
 - Recover: tree dirty only with human edits (`DECISIONS.md`, `run/capabilities.json`) and untracked tooling

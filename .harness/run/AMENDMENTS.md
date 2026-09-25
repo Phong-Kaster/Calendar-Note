@@ -4,6 +4,12 @@
 
 <!-- Newest first. -->
 
+### A-003 (Tier 1) - iteration 3 - widen T-005's scope by one new file
+- **Change:** T-005's Declared File Scope gains the new file `ui/fragment/nowplaying/model/NowPlayingCloseRule.kt`
+  (plain-Kotlin close decision, per C-04). Disjoint from T-004.
+- **Why:** the task asks for a unit-tested decision rule; the original scope had no plain-Kotlin home for it.
+  PRD, DoD and architecture unchanged.
+
 ### A-002 (Tier 1) - iteration 2 - add T-005 from the Phase 1 review
 - **Change:** new task T-005 "Now Playing stays in step while paused, off-screen, or restored empty" (review findings
   2, 3, 4, 5 on T-003's code). Scope `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`,

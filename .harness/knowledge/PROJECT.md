@@ -76,9 +76,9 @@
 
 | Purpose | Command | Verified |
 |---|---|---|
-| Build | `./gradlew :app:assembleDebug` | 2026-09-25, run 2 iteration 2 (`BUILD SUCCESSFUL`); APK at `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, run 2 iteration 2 (69 tests, 0 failures) |
-| Lint | `./gradlew :app:lintDebug` | 2026-09-25, run 2 iteration 2 (0 errors, 68 warnings; 4 are `UnusedResources` on the deliberate `media3_icon_*` overrides) |
+| Build | `./gradlew :app:assembleDebug` | 2026-09-25, run 2 iteration 3 (`BUILD SUCCESSFUL`); APK at `app/build/outputs/apk/debug/app-debug.apk` |
+| Unit tests | `./gradlew :app:testDebugUnitTest` | 2026-09-25, run 2 iteration 3 (76 tests, 0 failures) |
+| Lint | `./gradlew :app:lintDebug` | 2026-09-25, run 2 iteration 3 (0 errors, ~70 warnings; 4 are `UnusedResources` on the deliberate `media3_icon_*` overrides) |
 | Install / launch | `./gradlew :app:installDebug`; `adb shell am start -n com.example.myapplication/com.example.skeleton.MainActivity` | 2026-09-25, run 2 iteration 2 (device `3H164700ALT00000`, no on-device prompt) |
 | Device | `adb devices` | 2026-09-25, iteration 2 |
 
@@ -165,6 +165,12 @@
 - Android 12+ colours a MediaStyle notification from its artwork and Android 13+ draws its own media-control icons,
   so an app's accent colour / action icons show only on older Androids (run 2 bootstrap analysis; DoD #11).
 - `.kotlin/` appears untracked after a build (Kotlin daemon data) and is not in `.gitignore`; do not commit it.
+- `produceState(key1 = x)` keeps its previous value when the key changes (the holder is not keyed); a loader keyed
+  on a song must set `value = null` first or the old song's picture lingers (run 2 iteration 3, T-004).
+- A `StateFlow<NowPlaying>` drops an event that changes no field (e.g. a seek while paused); publish such events as a
+  changing field — `NowPlaying.positionChangeCount` (run 2 iteration 3, T-005).
+- `CoreFragment` is a plain `Fragment`; screens may override `onStart` / `onStop` (NowPlayingFragment gates its
+  position poll that way).
 - `git show <ref>:.harness/...` needs `MSYS_NO_PATHCONV=1` under Git Bash, which the matcher refuses; a
   commit SHA as the ref (`git show 4c88c2d:.harness/...`) works.
 

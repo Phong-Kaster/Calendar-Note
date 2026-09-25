@@ -30,12 +30,33 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  *
  * The Fragment owns the ViewModel and the navigation; [NowPlayingLayout] does the drawing.
  * When the player has no song anymore (for example the music was stopped from the
- * notification), the screen closes itself and goes back.
+ * notification, or the app came back from the background with nothing loaded), the screen
+ * closes itself and goes back. The time line only refreshes while the screen is visible.
  *
  * @author Phong-Kaster
  */
 class NowPlayingFragment : CoreFragment() {
     private val viewModel: NowPlayingViewModel by viewModel()
+
+    /**
+     * The screen is visible again: re-read the position and resume the time line refresh.
+     *
+     * @author Phong-Kaster
+     */
+    override fun onStart() {
+        super.onStart()
+        viewModel.onScreenStarted()
+    }
+
+    /**
+     * The screen is hidden: stop refreshing the time line so nothing ticks off-screen.
+     *
+     * @author Phong-Kaster
+     */
+    override fun onStop() {
+        viewModel.onScreenStopped()
+        super.onStop()
+    }
 
     @Composable
     override fun ComposeView() {

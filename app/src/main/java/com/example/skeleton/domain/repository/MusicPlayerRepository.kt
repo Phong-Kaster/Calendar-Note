@@ -27,7 +27,11 @@ import kotlinx.coroutines.flow.StateFlow
  */
 interface MusicPlayerRepository {
 
-    /** What is playing right now. Starts as an empty [NowPlaying]. */
+    /**
+     * What is playing right now. Starts as an empty [NowPlaying] with
+     * [NowPlaying.isConnectAttemptFinished] false; it turns true once a connection attempt ends
+     * (worked or failed). [NowPlaying.positionChangeCount] changes on every position jump.
+     */
     val state: StateFlow<NowPlaying>
 
     /** Opens (or shares) the connection to the player. Pair with [release]. */

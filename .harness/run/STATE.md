@@ -5,10 +5,10 @@
 
 ## Current
 
-- **Stage:** executing (Phase 1 done; DoD approved via D-001)
+- **Stage:** verifying (Phases 1–2 done; every task complete)
 - **Loop Branch:** loop/music-player-v2 (run 2; PRD says continue on this branch, no new branch)
-- **Next Phase:** Phase 2 — T-004, T-005
-- **DONE-candidate:** no
+- **Next Phase:** none — next Iteration is the Verifier (§11)
+- **DONE-candidate:** yes (recorded iteration 3; all machine criteria appear satisfied, human #7–#13 unsigned)
 
 ## Progress
 
@@ -17,8 +17,8 @@
 | T-001 | complete | `data/mediastore/SongRow.kt`, `data/repository/impl/SongRepositoryImpl.kt`, `domain/model/Song.kt`, `data/mapper/{SongMapper,MediaItemMapper,AlbumArtUri}.kt` | Phase 1 commit; AlbumArtUriTest 4, SongMapperTest 14 |
 | T-002 | complete | `service/MusicPlaybackService.kt`, `service/MusicNotificationProvider.kt` | Phase 1 commit; grep DoD #4 |
 | T-003 | complete | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/music/{MusicFragment,component/NowPlayingBar}.kt`, `ui/fragment/nowplaying/**` | Phase 1 commit; PlaybackTimeTest 16 |
-| T-004 | ready | `ui/fragment/nowplaying/component/NowPlayingArtwork.kt` | - |
-| T-005 | ready | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/nowplaying/{NowPlayingViewModel,NowPlayingFragment,NowPlayingUiState}.kt` | - |
+| T-004 | complete | `ui/fragment/nowplaying/component/NowPlayingArtwork.kt` | Phase 2 commit; build/lint green |
+| T-005 | complete | `domain/model/NowPlaying.kt`, `domain/repository/MusicPlayerRepository.kt`, `data/repository/impl/MusicPlayerRepositoryImpl.kt`, `ui/fragment/nowplaying/{NowPlayingViewModel,NowPlayingFragment,NowPlayingUiState}.kt`, `ui/fragment/nowplaying/model/NowPlayingCloseRule.kt` | Phase 2 commit; NowPlayingCloseRuleTest 7, PlaybackTimeTest 16 |
 
 ## Human sign-offs
 
