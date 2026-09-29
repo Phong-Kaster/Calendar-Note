@@ -7,7 +7,6 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
-import com.example.skeleton.ui.util.SystemBarUtil
 
 open class CoreActivity() : AppCompatActivity() {
 
@@ -20,7 +19,9 @@ open class CoreActivity() : AppCompatActivity() {
             statusBarStyle = SystemBarStyle.dark(scrim = Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(scrim = Color.TRANSPARENT),
         )
-        SystemBarUtil.hideNavigationBar(window = this.window)
+        // The navigation bar stays visible (and transparent, edge to edge). Hiding it, as the skeleton
+        // did, made the navigation-bar inset zero, so bottom controls sat in the system gesture zone and
+        // a tap on the mini player pulled the phone's navigation bar up instead.
         setContent { ComposeView() }
     }
 }
