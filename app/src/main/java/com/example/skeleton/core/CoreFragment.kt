@@ -11,22 +11,16 @@ import androidx.compose.runtime.ProvidedValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.Density
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 
-val LocalLocale = staticCompositionLocalOf { Locale.getDefault() }
-val LocalNavController = staticCompositionLocalOf<NavController?> { null }
 //val LocalTheme = compositionLocalOf { DarkCustomizedTheme }
 
 open class CoreFragment : Fragment() {
@@ -48,8 +42,6 @@ open class CoreFragment : Fragment() {
             setViewCompositionStrategy(strategy = ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 CompositionLocalProvider(
-                    LocalNavController provides findNavController(),
-                    LocalLocale provides requireActivity().resources.configuration.locales[0],
                     LocalDensity provides Density(LocalDensity.current.density, 1f),
 //                    LocalTheme provides if (enableDarkMode) DarkCustomizedTheme else LightCustomizedTheme,
                     *compositionLocalProvider().toTypedArray()
@@ -74,8 +66,6 @@ open class CoreFragment : Fragment() {
      fun showToast(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
-
-     fun trackEvent(name: String) {}
 
     private fun setupDarkMode() {
         lifecycleScope.launch {

@@ -1,9 +1,6 @@
 package com.example.skeleton
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.skeleton.core.CoreActivity

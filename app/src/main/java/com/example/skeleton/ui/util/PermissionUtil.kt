@@ -4,40 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 object PermissionUtil {
-    /**
-     * return true if notification has enabled
-     * return false if notification has disabled
-     */
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-    fun isNotificationEnabled(context: Context): Boolean {
-        return ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-    }
-
-    /**
-     * Checks if multiple permissions are granted.
-     *
-     * @param context The application context.
-     * @param permissions A vararg of permissions to check (e.g., Manifest.permission.CAMERA, Manifest.permission.READ_CONTACTS).
-     * @return True if all specified permissions are granted, false otherwise.
-     *
-     * Usage example:
-     * ```kotlin
-     * if (PermissionUtil.hasPermissions(this, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)) {
-     *     // Both Camera and Record Audio permissions are granted
-     * } else {
-     *     // At least one permission is not granted, request them
-     * }
-     * ```
-     */
-    fun hasPermissions(context: Context, vararg permissions: String): Boolean = permissions.all {
-        ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-    }
-
     /**
      * Checks if a specific permission is granted.
      *
@@ -54,31 +24,8 @@ object PermissionUtil {
      * }
      * ```
      */
-    fun isPermissionGranted(context: Context, permission: String): Boolean {
+    private fun isPermissionGranted(context: Context, permission: String): Boolean {
         return ActivityCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-    }
-
-     fun isPermissionStorageGranted(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ (API 33+)
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_MEDIA_IMAGES
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            // Android 12 and below
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    fun isPermissionCameraGranted(context: Context): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
     }
 
     /**
@@ -115,20 +62,5 @@ object PermissionUtil {
      */
     fun isAudioPermissionGranted(context: Context): Boolean {
         return isPermissionGranted(context = context, permission = audioPermission())
-    }
-
-    /**
-     * Returns true if both location permissions (coarse and fine) are granted.
-     * Used for features that need location (e.g. prayer times, nearby places).
-     *
-     * @param context The application context.
-     * @return True if ACCESS_COARSE_LOCATION and ACCESS_FINE_LOCATION are granted.
-     */
-    fun isLocationGranted(context: Context): Boolean {
-        return hasPermissions(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
     }
 }

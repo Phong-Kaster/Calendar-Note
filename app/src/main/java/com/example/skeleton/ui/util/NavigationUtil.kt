@@ -63,21 +63,4 @@ object NavigationUtil {
         }
     }
 
-
-    /**
-     * this function prevent users tap navigation too fast
-     */
-    // last time that user do a navigation
-    private var lastNavTime = 0L
-    // interval between 2 navigation
-    private const val NAV_DEBOUNCE_MS = 800L
-    fun canNavigate(): Boolean {
-        val now = System.currentTimeMillis()
-        return if (now - lastNavTime > NAV_DEBOUNCE_MS) {
-            lastNavTime = now
-            true
-        } else {
-            false
-        }
-    }
 }

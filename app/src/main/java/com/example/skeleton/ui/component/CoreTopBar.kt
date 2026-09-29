@@ -163,7 +163,7 @@ private var maximumStatusBarHeight by mutableStateOf(0.dp)
  * @author Phong-Kaster
  */
 @Composable
-fun Modifier.dynamicStatusBarPadding(): Modifier = this.composed {
+private fun Modifier.dynamicStatusBarPadding(): Modifier = this.composed {
     // Current status bar height
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 

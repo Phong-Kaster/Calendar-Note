@@ -12,7 +12,6 @@ appcompat = "1.7.1"
 navigationRuntimeKtx = "2.9.6"
 navigationFragment = "2.9.6"
 koin-bom = "4.1.1"
-desugar-jdk-libs = "2.1.4"
 accompanist-permissions = "0.36.0"
 material = "1.11.0"
 media3 = "1.11.1"
@@ -41,8 +40,6 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-android = { module = "io.insert-koin:koin-android" }
 
-# Core library desugaring (java.time on minSdk 24)
-android-desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 
 # Accompanist Permissions (Compose permission handling)
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist-permissions" }

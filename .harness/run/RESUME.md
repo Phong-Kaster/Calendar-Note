@@ -2,9 +2,8 @@
 
 > Derived cache; on disagreement with task files or git, this is wrong.
 
-- **Stage:** executing (Phase 4 / T-005 done, committed)
-- **Next Phase:** Phase 5 = T-006 (Iteration: R5 dead-code sweep incl. lint UnusedResources, README rewrite + package tree, R6/R8 check). No Worker.
-- **Later phases:** none. After T-006: DONE-candidate -> Verifier drives AVD `astronex_test`.
+- **Stage:** DONE-candidate (all tasks complete, Phase 5 committed)
+- **Next:** this is the Verifier invocation: re-prove every machine criterion, drive machine-then-human on AVD `astronex_test`, then Cleanup Commit / DONE or DONE_PARTIAL.
 - **Device drive pending** for DoD 3-6,8-11,15,17,19,20,22,23 (phone install blocked by on-device confirm; use AVD `astronex_test` at Verifier).
 - **Queued decisions:** 0
 - **Abandoned:** none

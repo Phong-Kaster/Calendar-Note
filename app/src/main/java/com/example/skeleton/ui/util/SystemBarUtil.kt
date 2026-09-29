@@ -7,30 +7,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 object SystemBarUtil {
     /**
-     * - hide status bar of device
-     * @param window the window where the status bar should be hidden
-     * @author Phong-Kaster
-     */
-    fun hideStatusBar(window: Window){
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            hide(WindowInsetsCompat.Type.statusBars())
-        }
-    }
-
-    /**
-     * - hide both navigation bar & status bar
-     * @param window the window where the status bar should be hidden
-     * @author Phong-Kaster
-     */
-    fun hideSystemBars(window: Window) {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            hide(WindowInsetsCompat.Type.systemBars())
-        }
-    }
-
-    /**
      * - hide navigation bar
      * @param window the window where the status bar should be hidden
      * @author Phong-Kaster
