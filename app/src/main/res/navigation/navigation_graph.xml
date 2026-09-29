@@ -11,6 +11,11 @@
         android:label="Library Fragment" />
 
     <fragment
+        android:id="@+id/nowPlayingFragment"
+        android:name="com.example.skeleton.ui.fragment.nowplaying.NowPlayingFragment"
+        android:label="Now Playing Fragment" />
+
+    <fragment
         android:id="@+id/homeFragment"
         android:name="com.example.skeleton.ui.fragment.home.HomeFragment"
         android:label="Home Fragment" />
@@ -51,5 +56,13 @@
         app:popEnterAnim="@anim/enter_slide_in_left"
         app:popExitAnim="@anim/exit_slide_out_right"
         app:popUpToInclusive="true"/>
+
+    <action
+        android:id="@+id/toNowPlaying"
+        app:destination="@id/nowPlayingFragment"
+        app:enterAnim="@anim/enter_slide_up"
+        app:exitAnim="@anim/exit_none"
+        app:popEnterAnim="@anim/exit_none"
+        app:popExitAnim="@anim/exit_slide_down" />
 
 </navigation>

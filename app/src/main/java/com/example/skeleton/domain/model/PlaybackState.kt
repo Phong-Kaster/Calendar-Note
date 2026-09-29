@@ -14,7 +14,7 @@ package com.example.skeleton.domain.model
  * ```
  *
  * @param currentSong the song loaded in the player, or null when nothing is loaded.
- * @param isPlaying true while sound is actually coming out.
+ * @param isPlaying true while the player is playing or trying to (e.g. buffering), so the play/pause button matches what a tap will do.
  * @param positionMs how far into the song we are, in milliseconds.
  * @param durationMs how long the song is, in milliseconds (0 when unknown).
  * @param currentIndex position of [currentSong] in the queue; -1 when the queue is empty.

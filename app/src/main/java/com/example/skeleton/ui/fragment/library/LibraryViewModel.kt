@@ -8,6 +8,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -33,6 +34,35 @@ class LibraryViewModel(
 
     /** The song-reading job that is running now, so a newer reload can replace it. */
     private var loadSongsJob: Job? = null
+
+    init {
+        collectPlayback()
+    }
+
+    /**
+     * Keeps [LibraryUiState.playback] in sync with the player, so the mini-player and the
+     * highlighted row follow every change, even ones made from the notification.
+     * No `Dispatchers.IO`: the repository's state is already a hot in-memory StateFlow.
+     *
+     * @author Phong-Kaster
+     */
+    private fun collectPlayback() {
+        viewModelScope.launch {
+            playerRepository.state.collectLatest { playback ->
+                _uiState.value = _uiState.value.copy(playback = playback)
+            }
+        }
+    }
+
+    /**
+     * Called when the user taps play/pause on the mini-player.
+     * A plain call on purpose: the repository moves the command to the main thread.
+     *
+     * @author Phong-Kaster
+     */
+    fun onPlayPauseClick() {
+        playerRepository.togglePlayPause()
+    }
 
     /**
      * Called when the screen checks the permission by itself (first open, or coming back

@@ -45,4 +45,14 @@
     <string name="open_settings">Open settings</string>
     <string name="unknown_artist">Unknown artist</string>
     <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="repeat_off">Repeat off</string>
+    <string name="repeat_all">Repeat all</string>
+    <string name="repeat_one">Repeat one</string>
+    <string name="now_playing">Now playing</string>
+    <string name="nothing_playing">Nothing is playing</string>
+    <string name="back">Back</string>
 </resources>

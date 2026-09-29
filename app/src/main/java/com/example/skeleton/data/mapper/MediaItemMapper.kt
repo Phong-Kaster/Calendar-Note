@@ -117,7 +117,7 @@ fun Player.toPlaybackState(): PlaybackState {
     val song = currentMediaItem?.toSong(playerDurationMs = playerDurationMs)
     return PlaybackState(
         currentSong = song,
-        isPlaying = isPlaying,
+        isPlaying = isPlayRequested(),
         positionMs = currentPosition.coerceAtLeast(0L),
         durationMs = song?.durationMs ?: 0L,
         currentIndex = if (itemCount == 0) -1 else currentMediaItemIndex,
@@ -162,4 +162,16 @@ private fun repeatModeFromPlayer(playerRepeatMode: Int): RepeatMode {
         Player.REPEAT_MODE_ONE -> RepeatMode.One
         else -> RepeatMode.Off
     }
+}
+
+/**
+ * True when the player is playing or is about to (for example while buffering or after a short
+ * audio-focus loss). Uses `playWhenReady`, the same rule the play/pause toggle uses, so the icon
+ * never disagrees with what a tap does. An ended or idle player is not "playing".
+ *
+ * @author Phong-Kaster
+ */
+private fun Player.isPlayRequested(): Boolean {
+    val isStopped = playbackState == Player.STATE_ENDED || playbackState == Player.STATE_IDLE
+    return playWhenReady && isStopped.not()
 }

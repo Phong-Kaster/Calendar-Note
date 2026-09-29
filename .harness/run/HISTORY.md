@@ -21,4 +21,10 @@
 - Learned: attached phone has real songs (API 36); serial changes between sessions; Workers cannot delete files, so removals are Iteration-executed.
 - Reconciled: assumptions A-001…A-005 recorded.
 
+### Iteration 4 - 2026-09-29
+- **Phase:** 3 (T-003 mini player, T-004 Now Playing)
+- Wired icons `ic_player_*`, 10 strings, nav destination + `toNowPlaying`, Koin `NowPlayingViewModel`. Two Opus Workers in parallel (disjoint scopes); combined build + 10+ new unit tests green; lint only baseline errors. Reviewer: no Constraint violations; fixed play/pause icon vs toggle mismatch (mapper `isPlaying` now playWhenReady-based).
+- Learned: `safeNavigate` is a `NavigationUtil` extension (import needed); with a `bottomBar` in CoreLayout, do not add nav-bar inset to the list too.
+- Reconciled: unfixed reviewer notes in ISSUES.md; no amendments.
+
 ## Archived Decisions

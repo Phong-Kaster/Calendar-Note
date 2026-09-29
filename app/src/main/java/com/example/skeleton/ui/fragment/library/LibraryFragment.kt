@@ -26,14 +26,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.skeleton.R
 import com.example.skeleton.core.CoreFragment
 import com.example.skeleton.core.CoreLayout
+import com.example.skeleton.domain.model.PlaybackState
 import com.example.skeleton.domain.model.Song
 import com.example.skeleton.ui.fragment.library.component.LibraryEmptyState
 import com.example.skeleton.ui.fragment.library.component.LibraryPermissionRequired
 import com.example.skeleton.ui.fragment.library.component.LibraryTopBar
+import com.example.skeleton.ui.fragment.library.component.MiniPlayerBar
 import com.example.skeleton.ui.fragment.library.component.SongItem
 import com.example.skeleton.ui.theme.MyApplicationTheme
+import com.example.skeleton.ui.util.NavigationUtil.safeNavigate
 import com.example.skeleton.ui.util.PermissionUtil
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -50,6 +54,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  *    permission and reloads songs.
  * 4. Tapping a song plays the whole list from that song. On the first tap (Android 13+) it also
  *    asks once for the notification permission, so the media notification can show.
+ * 5. While a song is loaded, a mini-player sits at the bottom: play/pause toggles the player,
+ *    tapping the rest of the bar opens Now Playing.
  *
  * @author Phong-Kaster
  */
@@ -142,6 +148,12 @@ class LibraryFragment : CoreFragment() {
                 if (notificationPermissionState.status.isGranted) return@LibraryLayout
                 notificationPermissionState.launchPermissionRequest()
             },
+            onPlayPauseClick = {
+                viewModel.onPlayPauseClick()
+            },
+            onOpenNowPlaying = {
+                safeNavigate(R.id.toNowPlaying)
+            },
         )
     }
 }
@@ -154,6 +166,8 @@ class LibraryFragment : CoreFragment() {
  * @param onRequestPermission shows the system permission dialog again.
  * @param onOpenSettings opens app Settings (used after "permanently denied").
  * @param onSongClick called with the tapped song's position in [LibraryUiState.songs].
+ * @param onPlayPauseClick called when play/pause on the mini-player is tapped.
+ * @param onOpenNowPlaying called when the mini-player body is tapped.
  * @author Phong-Kaster
  */
 @Composable
@@ -162,10 +176,20 @@ private fun LibraryLayout(
     onRequestPermission: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onSongClick: (Int) -> Unit = {},
+    onPlayPauseClick: () -> Unit = {},
+    onOpenNowPlaying: () -> Unit = {},
 ) {
     CoreLayout(
         topBar = {
             LibraryTopBar()
+        },
+        bottomBar = {
+            if (uiState.showMiniPlayer.not()) return@CoreLayout
+            MiniPlayerBar(
+                playback = uiState.playback,
+                onPlayPauseClick = onPlayPauseClick,
+                onOpenNowPlaying = onOpenNowPlaying,
+            )
         },
         content = {
             when {
@@ -173,6 +197,8 @@ private fun LibraryLayout(
                 uiState.showEmptyState -> LibraryEmptyState()
                 uiState.hasPermission -> LibrarySongList(
                     songs = uiState.songs,
+                    currentSongId = uiState.currentSongId,
+                    hasMiniPlayer = uiState.showMiniPlayer,
                     onSongClick = onSongClick,
                 )
                 uiState.isPermissionChecked -> LibraryPermissionRequired(
@@ -186,23 +212,30 @@ private fun LibraryLayout(
 }
 
 /**
- * The scrolling list of songs. Bottom padding includes the navigation bar height,
- * so the last song is never hidden behind the system buttons.
+ * The scrolling list of songs. The last song must never hide behind anything at the bottom:
+ * - no mini-player: bottom padding adds the navigation bar height ourselves;
+ * - with mini-player: the Scaffold already shrinks the list by the bar's height (the bar
+ *   pads itself above the navigation bar), so only a small gap is added.
  *
  * @param songs songs to list.
+ * @param currentSongId id of the song loaded in the player; its row is highlighted.
+ * @param hasMiniPlayer true when the mini-player is shown below the list.
  * @param onSongClick called with the tapped song's position.
  * @author Phong-Kaster
  */
 @Composable
 private fun LibrarySongList(
     songs: List<Song>,
+    currentSongId: Long? = null,
+    hasMiniPlayer: Boolean = false,
     onSongClick: (Int) -> Unit = {},
 ) {
     val navigationBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomPadding = if (hasMiniPlayer) 16.dp else 16.dp + navigationBarBottom
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 4.dp, bottom = 16.dp + navigationBarBottom),
+        contentPadding = PaddingValues(top = 4.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         itemsIndexed(
@@ -211,6 +244,7 @@ private fun LibrarySongList(
         ) { index, song ->
             SongItem(
                 song = song,
+                isCurrent = song.id == currentSongId,
                 onClick = {
                     onSongClick(index)
                 },
@@ -251,6 +285,54 @@ private fun LibraryLayoutSongsPreview() {
                     songs = previewSongs,
                     hasPermission = true,
                     isPermissionChecked = true,
+                ),
+            )
+        }
+    )
+}
+
+@Preview(name = "Playing")
+@Composable
+private fun LibraryLayoutPlayingPreview() {
+    MyApplicationTheme(
+        content = {
+            LibraryLayout(
+                uiState = LibraryUiState(
+                    songs = previewSongs,
+                    hasPermission = true,
+                    isPermissionChecked = true,
+                    playback = PlaybackState(
+                        currentSong = previewSongs.first(),
+                        isPlaying = true,
+                        positionMs = 90_000L,
+                        durationMs = 215_000L,
+                        currentIndex = 0,
+                        queueSize = previewSongs.size,
+                    ),
+                ),
+            )
+        }
+    )
+}
+
+@Preview(name = "Paused")
+@Composable
+private fun LibraryLayoutPausedPreview() {
+    MyApplicationTheme(
+        content = {
+            LibraryLayout(
+                uiState = LibraryUiState(
+                    songs = previewSongs,
+                    hasPermission = true,
+                    isPermissionChecked = true,
+                    playback = PlaybackState(
+                        currentSong = previewSongs.last(),
+                        isPlaying = false,
+                        positionMs = 1_200_000L,
+                        durationMs = 3_723_000L,
+                        currentIndex = 1,
+                        queueSize = previewSongs.size,
+                    ),
                 ),
             )
         }

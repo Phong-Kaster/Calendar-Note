@@ -5,3 +5,5 @@
 - Assumptions A-001..A-005 recorded in `run/ASSUMPTIONS.md`.
 - Minor: dismissing the system permission dialog by tapping outside is treated as "permanently denied" (button then opens Settings) - accepted.
 - Review finding not fixed: `PlaybackState.hasNext/hasPrevious` are approximate under shuffle (T-002, minor).
+- Review notes not fixed (T-003/T-004, minor): seek knob may briefly snap back after release; `dragFraction` not reset when the song changes mid-drag; "unknown artist" rule duplicated in `NowPlayingUiState` and `SongItem.kt`; `PlaybackState.hasPrevious` unused by UI (Previous always enabled); Now Playing content not vertically centred on tall screens; CoreTopBar buttons 32dp (<48dp touch target).
+- Device drive pending for T-003/T-004 (DoD 12,13,18).

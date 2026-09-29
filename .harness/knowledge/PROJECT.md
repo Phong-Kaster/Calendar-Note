@@ -20,6 +20,8 @@
 - **Never** add Compose to `MainActivity`; `CoreActivity.onCreate` calls `setContent` then `MainActivity` replaces it with `activity_main.xml` (the UI lives in Fragments).
 - **Never** edit `strings.xml`, `AndroidManifest.xml`, `navigation_graph.xml`, `injection/*.kt`, `MainApplication.kt`, Gradle files or `README.md` from a Worker task — the Iteration wires them. Report needed strings as `name = "English value"` in the manifest.
 
+- **Never** call `safeNavigate` without `import com.example.skeleton.ui.util.NavigationUtil.safeNavigate` (it is an extension in the `NavigationUtil` object, not a `CoreFragment` member). When a screen fills `CoreLayout(bottomBar=...)`, the bar owns the nav-bar inset: do not add nav-bar padding to the list too.
+
 ## Toolchain (verified commands)
 
 Run from repo root in Git Bash; `2>&1 > file` then read the tail. JDK 24 on PATH, AGP 9.0.1, Kotlin 2.2.10, Gradle 9.1.
