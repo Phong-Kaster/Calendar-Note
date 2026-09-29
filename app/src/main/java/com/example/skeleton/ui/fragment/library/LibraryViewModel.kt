@@ -3,6 +3,7 @@ package com.example.skeleton.ui.fragment.library
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skeleton.domain.repository.MusicRepository
+import com.example.skeleton.domain.repository.PlayerRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,10 +20,12 @@ import kotlinx.coroutines.launch
  * ```
  *
  * @param musicRepository where the songs come from.
+ * @param playerRepository the remote control of the music player; tapping a song plays it.
  * @author Phong-Kaster
  */
 class LibraryViewModel(
     private val musicRepository: MusicRepository,
+    private val playerRepository: PlayerRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
@@ -65,6 +68,25 @@ class LibraryViewModel(
             isPermissionPermanentlyDenied = permanentlyDenied,
         )
         if (isGranted) loadSongs()
+    }
+
+    /**
+     * Called when the user taps a song. The whole list becomes the play queue and playback
+     * starts at the tapped song, so Next / Previous (also from the notification) walk the list.
+     * The player command is a plain call on purpose: the repository moves it to the main thread.
+     *
+     * Example:
+     * ```kotlin
+     * viewModel.onSongClick(index = 2) // plays the 3rd song, queue = all songs
+     * ```
+     *
+     * @param index position of the tapped song in [LibraryUiState.songs].
+     * @author Phong-Kaster
+     */
+    fun onSongClick(index: Int) {
+        val songs = _uiState.value.songs
+        if (index !in songs.indices) return
+        playerRepository.playQueue(songs = songs, startIndex = index)
     }
 
     /**

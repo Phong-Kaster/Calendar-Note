@@ -2,10 +2,10 @@
 
 > Derived cache; on disagreement with task files or git, this is wrong.
 
-- **Stage:** executing (D-001 approved; Phase 1 / T-001 done, committed)
-- **Next Phase:** Phase 2 = T-002 (Iteration must first add media3-exoplayer + media3-session to libs.versions.toml/build.gradle.kts, then manifest service/perms/singleTop, DI, strings, before dispatch). T-001 leftovers: on-device drive of DoD 4,5,6,17,20,22,23 not done (phone locked, input injection denied). Old text follows:
-  - T-001 - scope: `domain/model/Song.kt`, `domain/repository/MusicRepository.kt`, `data/repository/impl/MusicRepositoryImpl.kt`, `data/mapper/SongMapper.kt`, `core/extension/date_and_time/DurationExtension.kt`, `ui/fragment/library/**`, `ui/util/PermissionUtil.kt`, `ui/theme/{Theme,Color}.kt`, `core/CoreLayout.kt`, `res/drawable/ic_music_note.xml`, tests `SongMapperTest`, `DurationExtensionTest`, `LibraryUiStateTest`
-- **Later phases:** 2 = T-002; 3 = T-003 + T-004; 4 = T-005 (Iteration); 5 = T-006 (Iteration)
+- **Stage:** executing (Phase 2 / T-002 done, committed)
+- **Next Phase:** Phase 3 = T-003 (scope `ui/fragment/library/**`) + T-004 (scope `ui/fragment/nowplaying/**`, see TASKS/T-004.md). Iteration must first wire: nav graph (`nowPlayingFragment` + action `toNowPlaying`), `NowPlayingViewModel` DI (`playerRepository = get()`), strings (`play`, `pause`, ...), drawables `ic_player_play/pause/...` per the task files. `MediaItemMapper.kt` already has the Player<->domain mappers. `PlaybackState.hasNext/hasPrevious` approximate under shuffle.
+- **Later phases:** 4 = T-005 (Iteration removals); 5 = T-006 (Iteration sweep/README)
+- **Device drive pending** for DoD 3-6,8-11,15,17,19,20,22,23 (phone install blocked by on-device confirm; use AVD `astronex_test` at Verifier).
 - **Queued decisions:** 0
 - **Abandoned:** none
 - **Unreachable:** none

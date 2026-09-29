@@ -114,6 +114,10 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    // Media3 - ExoPlayer + MediaSessionService (background playback, notification, lock screen)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.session)
+
     // Ktor
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)

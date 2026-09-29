@@ -1,7 +1,9 @@
 package com.example.skeleton.ui.fragment.library
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +36,7 @@ import com.example.skeleton.ui.fragment.library.component.SongItem
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.util.PermissionUtil
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -45,6 +48,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  *    "permanently denied" from the real answer (denied + no rationale).
  * 3. Every time the screen comes back (RESUMED, e.g. back from Settings) it re-checks the
  *    permission and reloads songs.
+ * 4. Tapping a song plays the whole list from that song. On the first tap (Android 13+) it also
+ *    asks once for the notification permission, so the media notification can show.
  *
  * @author Phong-Kaster
  */
@@ -100,6 +105,16 @@ class LibraryFragment : CoreFragment() {
             },
         )
 
+        /*
+         * Notification permission (Android 13+): without it the media notification is hidden.
+         * We ask once per screen, on the first song tap. Playback never waits for the answer,
+         * so the answer callback does nothing.
+         */
+        val notificationPermissionState = rememberPermissionState(
+            permission = Manifest.permission.POST_NOTIFICATIONS,
+        )
+        var hasAskedNotificationPermission by rememberSaveable { mutableStateOf(false) }
+
         /** Only prompts automatically once per screen (survives rotation); later prompts come from the button. */
         var hasAutoRequested by rememberSaveable { mutableStateOf(false) }
 
@@ -119,7 +134,13 @@ class LibraryFragment : CoreFragment() {
                 openAppSettings()
             },
             onSongClick = { index ->
-                // T-002 will start playback from this index. No-op for now.
+                viewModel.onSongClick(index = index)
+
+                if (hasAskedNotificationPermission) return@LibraryLayout
+                hasAskedNotificationPermission = true
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return@LibraryLayout
+                if (notificationPermissionState.status.isGranted) return@LibraryLayout
+                notificationPermissionState.launchPermissionRequest()
             },
         )
     }
