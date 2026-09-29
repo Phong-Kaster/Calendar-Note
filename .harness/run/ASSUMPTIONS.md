@@ -99,3 +99,23 @@ UI language (PRD is Vietnamese), rename package/applicationId/label?
 
 ### Taken, and why
 Option 1: the skeleton's default language and convention docs are English; renaming applicationId/namespace touches every file for no PRD benefit; `values-de` is removed as a demo leftover.
+
+---
+
+## A-006 - Device-driven criteria driven on the AVD with generated audio, not the phone
+
+- **Tier:** 2 (execution strategy)
+- **Iteration:** 9 (Verifier)
+- **First dependent checkpoint:** Iteration 9 (next Iteration replaces this with SHA)
+- **Revert:** n/a (evidence only; re-drive on a phone to overturn)
+
+### Question
+The DoD shorthand says `adb` targets "the one attached phone (API 36, has real songs)". The attached phone (CPH2895, `3H164700ALT00000`) was being used by someone else during the drive (another app, `com.luraai.studio`, took the foreground seconds after launch), and it holds only 2 `is_music=1` tracks while criterion 6 needs at least 3. Where should criteria 4-6, 8-13 and 22-24 be driven?
+
+### Options Considered
+1. Drive on the phone anyway. Results are unreliable (someone else's taps land in the middle), it disturbs a person's device, and it has too few songs.
+2. Drive on AVD `astronex_test` (API 34, Google APIs image) after pushing three generated 90 s WAV tones to `/sdcard/Music` and running a media scan. This is a device the build controls, which ENGINE §11 prefers, and the DoD driving notes already name the AVD.
+3. Report everything "not driven".
+
+### Taken, and why
+Option 2. On this image the dialog's package is `com.google.android.permissioncontroller`, while its resource ids stay `com.android.permissioncontroller:id/...`, which is what criteria 4, 5 and 22 check. The second-deny button is `permission_deny_and_dont_ask_again_button`. Criteria 17-19 still say "on the phone", so they stay under **Awaiting a person** for the phone.

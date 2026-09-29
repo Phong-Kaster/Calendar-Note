@@ -47,3 +47,11 @@
 ## Iteration 8 - 2026-09-29 (Phase 6, T-007)
 - Iteration-executed: removed unreferenced NavigationUtil members; gradle assemble/test/androidTest/lint exit 0; R5 sweep clean except allow-listed theme member. DONE-candidate recorded.
 - Reconciled: no amendments.
+
+## Iteration 9 - 2026-09-29 (Verifier)
+- Recover: tree had `.harness/TELEMETRY.tsv` (runtime, committed) and untracked `.claude/agents/`. That is runtime-provisioned agent definitions, not debris, so it was left untouched and not committed.
+- Clean rebuild + unit tests (45/45) + androidTest compile + lint (0 errors, UnusedResources 0) exit 0. The R5 sweep is clean. Criteria 1-3, 14, 16 and R1-R8 were re-proved.
+- The phone CPH2895 was in use by someone else (a foreign app took the foreground mid-drive) and has only 2 songs. Stopped driving it and recorded A-006. Drove on AVD `astronex_test` with 3 generated WAVs. Criteria 4-6, 8-13, 22-24 pass; pre-checks for 7 and 15 did not fail; the notification-shade part of 19 was checked, the lock screen was not driven (no keyguard). Details: `evidence/V2-SUMMARY.md`.
+- Driver fixes along the way (not app defects): MSYS path conversion broke the APK path; the second system dialog uses `permission_deny_and_dont_ask_again_button`; a stale shade dump led to a tap on the media card's pause button.
+- C10 transcript: PAUSED(2) pos 13507 -> PLAYING(3) -> next: Bravo_Tone pos 0 -> previous: Alpha_Tone pos 0.
+- Reconciled: no gaps, so no tasks filed. Seek landing short of the drag target -> no action (already an open review note; C13 threshold met). Criteria awaiting signatures -> §14.2 ISSUES "Awaiting a person". Result: DONE_PARTIAL, no Cleanup Commit.

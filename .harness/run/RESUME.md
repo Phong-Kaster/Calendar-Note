@@ -2,12 +2,12 @@
 
 > Derived cache; on disagreement with task files or git, this is wrong.
 
-- **Stage:** DONE-candidate recorded - next invocation is the Verifier (capable tier)
-- **Next:** Verifier (STATE.md DONE-candidate). Re-prove machine criteria, then drive machine-then-human ones on the AVD.
-- **Device drive still pending** for DoD 4-13,15,17-20,22-24: use AVD `astronex_test` (was shut down externally in Iteration 7; start it first, check `adb devices`). AVD has no media: criterion 7 first, then push ≥3 audio files to `/sdcard/Music` + media scan for 6, 8-13.
+- **Stage:** DONE_PARTIAL reported by the Iteration 9 Verifier. No executable task remains.
+- **Next:** none. If a human signs 7,15,17-21 in `DECISIONS.md` (or answers a failed item), consume it. When all are signed, the next Verifier re-proves and makes the Cleanup Commit (DONE).
+- **Awaiting a person:** DoD 7, 15, 17, 18, 19, 20, 21. The checklist is in `.harness/ISSUES.md`.
 - **Queued decisions:** 0
 - **Abandoned:** none
 - **Unreachable:** none
-- **Verified commands:** build: `./gradlew.bat :app:assembleDebug` | test: `./gradlew.bat :app:testDebugUnitTest` | androidTest compile: `./gradlew.bat :app:assembleDebugAndroidTest` | lint: `./gradlew.bat :app:lintDebug` | R5 sweep: `python .harness/run/evidence/V-sweep.py` | device: `adb -s <serial>`; PKG `com.example.myapplication`, ACT `com.example.skeleton.MainActivity`
+- **Verified commands:** build: `./gradlew.bat :app:assembleDebug` | test: `./gradlew.bat :app:testDebugUnitTest` | androidTest compile: `./gradlew.bat :app:assembleDebugAndroidTest` | lint: `./gradlew.bat :app:lintDebug` | R5 sweep: `python .harness/run/evidence/V-sweep.py` | device: AVD `emulator-5554` + WAVs in `/sdcard/Music` (A-006); PKG `com.example.myapplication`, ACT `com.example.skeleton.MainActivity`
 - **Model tiers (from `.harness/loop/models.json`):** fast: `sonnet` | capable: `opus`
-- **Run Mode:** Autonomous. Wire shared files (manifest, nav, DI, Gradle, strings, themes.xml, README) yourself; Workers cannot delete or build.
+- **Run Mode:** Autonomous.

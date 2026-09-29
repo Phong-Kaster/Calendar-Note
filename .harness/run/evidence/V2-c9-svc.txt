@@ -1,0 +1,36 @@
+ACTIVITY MANAGER SERVICES (dumpsys activity services)
+  User 0 active services:
+  * ServiceRecord{c1a4747 u0 com.example.myapplication/com.example.skeleton.service.PlaybackService}
+    intent={act=androidx.media3.session.MediaSessionService cmp=com.example.myapplication/com.example.skeleton.service.PlaybackService}
+    packageName=com.example.myapplication
+    processName=com.example.myapplication
+    baseDir=/data/app/~~LkKv3Ou8WDdUcF6fdf7wPA==/com.example.myapplication-V6DbtuXmnpUeh5TUdhLR9g==/base.apk
+    dataDir=/data/user/0/com.example.myapplication
+    app=ProcessRecord{f70c065 6292:com.example.myapplication/u0a201}
+    mAllowWhileInUsePermissionInFgsReason=PROC_STATE_TOP
+    allowUiJobScheduling=true
+    recentCallingPackage=com.example.myapplication
+    recentCallingUid=10201
+    allowStartForeground=PROC_STATE_TOP
+    startForegroundCount=1
+    infoAllowStartForeground=[callingPackage: com.example.myapplication; callingUid: 10201; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { act=androidx.media3.session.MediaSessionService cmp=com.example.myapplication/com.example.skeleton.service.PlaybackService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:true]
+    isForeground=true foregroundId=1001 types=00000002 foregroundNoti=Notification(channel=default_channel_id shortcut=null contentView=null vibrate=null sound=null defaults=0x0 flags=0x68 color=0x00000000 category=transport groupKey=media3_group_key actions=3 vis=PUBLIC)
+    createTime=-11s183ms startingBgTimeout=--
+    lastActivity=-3s400ms restartTime=-11s183ms createdFromFg=true
+    startRequested=true delayedStop=false stopIfKilled=false callStart=true lastStartId=4
+ startCommandResult=1
+    Bindings:
+    * IntentBindRecord{44f5b72 CREATE}:
+      intent={act=androidx.media3.session.MediaSessionService cmp=com.example.myapplication/com.example.skeleton.service.PlaybackService}
+      binder=android.os.BinderProxy@fd2dbc3
+      requested=true received=true hasBound=true doRebind=false
+      * Client AppBindRecord{78f2c40 ProcessRecord{f70c065 6292:com.example.myapplication/u0a201}}
+        Per-process Connections:
+          ConnectionRecord{692f286 u0 CR CAPS com.example.myapplication/com.example.skeleton.service.PlaybackService:@fe85761 flags=0x1001}
+    All Connections:
+      ConnectionRecord{692f286 u0 CR CAPS com.example.myapplication/com.example.skeleton.service.PlaybackService:@fe85761 flags=0x1001}
+
+  Connection bindings to services:
+  * ConnectionRecord{692f286 u0 CR CAPS com.example.myapplication/com.example.skeleton.service.PlaybackService:@fe85761 flags=0x1001}
+    binding=AppBindRecord{78f2c40 com.example.myapplication/com.example.skeleton.service.PlaybackService:com.example.myapplication}
+    conn=android.os.BinderProxy@fe85761 flags=0x1001
