@@ -8,8 +8,8 @@
 
 - **Tier:** Missing information
 - **Iteration:** 1
-- **First dependent checkpoint:** Iteration 1 (bootstrap plan); SHA filled by Iteration 2
-- **Revert:** `git revert <sha>`
+- **First dependent checkpoint:** b5f678a
+- **Revert:** `git revert b5f678a`
 
 ### Question
 Should the app declare/request `POST_NOTIFICATIONS` (media notifications may be exempt on API 33+)?
@@ -27,8 +27,8 @@ Option 1: the PRD's core deliverable is a visible notification controller; a per
 
 - **Tier:** Missing information
 - **Iteration:** 1
-- **First dependent checkpoint:** Iteration 1; SHA filled by Iteration 2
-- **Revert:** `git revert <sha>`
+- **First dependent checkpoint:** b5f678a
+- **Revert:** `git revert b5f678a`
 
 ### Question
 What does "real music player" include, and is there a bottom bar / settings tab?
@@ -47,8 +47,8 @@ Option 1: covers the PRD's "real player + notification controller" with minimal 
 
 - **Tier:** 2 (plan/architecture)
 - **Iteration:** 1
-- **First dependent checkpoint:** Iteration 1; SHA filled by Iteration 2
-- **Revert:** `git revert <sha>`
+- **First dependent checkpoint:** b5f678a
+- **Revert:** `git revert b5f678a`
 
 ### Question
 May we add Coil / coroutines-guava for artwork and controller futures?
@@ -66,8 +66,8 @@ Option 1: the PRD asks to remove code, not add dependencies; the notification al
 
 - **Tier:** Missing information
 - **Iteration:** 1
-- **First dependent checkpoint:** Iteration 1; SHA filled by Iteration 2
-- **Revert:** `git revert <sha>`
+- **First dependent checkpoint:** b5f678a
+- **Revert:** `git revert b5f678a`
 
 ### Question
 When the user removes the app from Recents: keep playing or stop?
@@ -86,8 +86,8 @@ Option 1: matches user expectation of a music player with a notification control
 
 - **Tier:** Missing information
 - **Iteration:** 1
-- **First dependent checkpoint:** Iteration 1; SHA filled by Iteration 2
-- **Revert:** `git revert <sha>`
+- **First dependent checkpoint:** b5f678a
+- **Revert:** `git revert b5f678a`
 
 ### Question
 UI language (PRD is Vietnamese), rename package/applicationId/label?

@@ -82,6 +82,42 @@ object PermissionUtil {
     }
 
     /**
+     * Tells which permission we must ask for to read songs on this phone.
+     * Android 13+ (API 33) uses READ_MEDIA_AUDIO; older phones use READ_EXTERNAL_STORAGE.
+     *
+     * Example:
+     * ```kotlin
+     * val permissionState = rememberPermissionState(PermissionUtil.audioPermission())
+     * ```
+     *
+     * @return the Manifest permission name to request for audio files.
+     * @author Phong-Kaster
+     */
+    fun audioPermission(): String {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+    }
+
+    /**
+     * Returns true when the app may read songs on this phone.
+     *
+     * Example:
+     * ```kotlin
+     * if (PermissionUtil.isAudioPermissionGranted(context)) viewModel.loadSongs()
+     * ```
+     *
+     * @param context any context.
+     * @return true if [audioPermission] is granted.
+     * @author Phong-Kaster
+     */
+    fun isAudioPermissionGranted(context: Context): Boolean {
+        return isPermissionGranted(context = context, permission = audioPermission())
+    }
+
+    /**
      * Returns true if both location permissions (coarse and fine) are granted.
      * Used for features that need location (e.g. prayer times, nearby places).
      *

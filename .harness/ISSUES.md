@@ -1,25 +1,6 @@
-# LOOP ISSUES REPORT
+# ISSUES
 
-_Last updated: 2026-09-29 - branch `loop/music-player-v3` - iteration 1_
-
-## Abandoned tasks
-None.
-
-## Unreachable tasks
-None.
-
-## Decisions awaiting an answer
-| # | Question | Blocks |
-|---|---|---|
-| D-001 | Approve the Definition of Done | T-001…T-006 |
-
-## Review findings not fixed
-None.
-
-## Awaiting a person
-Nothing yet (human criteria 7, 15, 17–21 are unsigned; they become checklist items at the Verifier stage).
-
-## Assumptions recorded
-See `.harness/run/ASSUMPTIONS.md` (A-001…A-005).
-
-Note: baseline `lintDebug` fails with 4 pre-existing `MissingTranslation` errors (fixed by removal T-005).
+- Unreachable-by-tooling: on-device drive for T-001 (DoD 4,5,6,17,20,22,23) not yet done; phone was locked and `adb shell input` denied (INJECT_EVENTS). Retry with AVD `astronex_test` / unlocked phone.
+- Awaiting a person (later): human criteria 7,15,17,18,19,20,21 unsigned.
+- Assumptions A-001..A-005 recorded in `run/ASSUMPTIONS.md`.
+- Minor: dismissing the system permission dialog by tapping outside is treated as "permanently denied" (button then opens Settings) - accepted.

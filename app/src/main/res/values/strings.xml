@@ -36,4 +36,13 @@
     <string name="the_server_is_busy">The server is currently busy. Please try again later</string>
     <string name="we_are_sorry">We’re sorry, something went wrong. Please try again.</string>
     <string name="request_timed_out">Request timed out</string>
+
+    <string name="library">Library</string>
+    <string name="no_songs_found">No songs found on this device</string>
+    <string name="allow_access_to_your_music">Allow access to your music so the app can show the songs on this phone.</string>
+    <string name="music_access_turned_off">Music access is turned off. Open Settings and allow it to see your songs.</string>
+    <string name="allow">Allow</string>
+    <string name="open_settings">Open settings</string>
+    <string name="unknown_artist">Unknown artist</string>
+    <string name="play">Play</string>
 </resources>
