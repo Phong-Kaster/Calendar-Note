@@ -2,21 +2,28 @@ package com.example.skeleton.ui.util
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 
+/**
+ * Small helpers that make navigating between fragments safe: if the navigation fails
+ * (for example the user taps twice very fast), we print the error instead of crashing the app.
+ *
+ * Example:
+ * ```
+ * safeNavigate(destination = R.id.nowPlayingFragment)
+ * safeNavigateUp()
+ * ```
+ * @author Phong-Kaster
+ */
 object NavigationUtil {
 
     /**
-     * Pop everything up to the "destination_a" destination off the back stack
-     * before navigating to the "destination_b" destination
-     *   navController.navigate("destination_b") {
-     *        popUpTo("destination_a") {
-     *               inclusive = true
-     *                saveState = true
-     *            }
-     *   }
+     * Go to another screen by its id. Any error is printed, not thrown.
+     * @param destination is the id of the screen that we go to
+     * @param bundle is the optional data we send to that screen
+     * @param navOptions is the optional animation / back stack rules
+     * @author Phong-Kaster
      */
     fun Fragment.safeNavigate(destination: Int, bundle: Bundle? = null, navOptions: NavOptions? = null) {
         try {
@@ -26,14 +33,10 @@ object NavigationUtil {
         }
     }
 
-    fun Fragment.safeNavigate(destination: NavDirections) {
-        try {
-            findNavController().navigate(destination)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
-    }
-
+    /**
+     * Go back to the previous screen. Any error is printed, not thrown.
+     * @author Phong-Kaster
+     */
     fun Fragment.safeNavigateUp() {
         try {
             findNavController().navigateUp()
@@ -41,26 +44,4 @@ object NavigationUtil {
             ex.printStackTrace()
         }
     }
-
-    /**
-     * pop the current destination off the back stack and navigate to the previous destination
-     * @param destination is the screen that we go to
-     * @param inclusive is whether we remove the current destination from backstack before go to the destination
-     */
-    fun Fragment.safePopBackstack(destination: Int, inclusive: Boolean, saveState: Boolean) {
-        try {
-            findNavController().popBackStack(destination, inclusive = inclusive, saveState = saveState)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
-    }
-
-    fun Fragment.safePopBackstack(){
-        try {
-            findNavController().popBackStack()
-        }catch (ex: Exception){
-            ex.printStackTrace()
-        }
-    }
-
 }

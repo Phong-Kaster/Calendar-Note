@@ -43,3 +43,7 @@
 - R5 FAILS: `NavigationUtil.safePopBackstack` (both overloads) and `safeNavigate(NavDirections)` are unreferenced (`evidence/V-sweep.txt`). Filed T-007, cleared DONE-candidate.
 - Device drive not done: AVD `astronex_test` booted, then was shut down externally before boot completed (emulator log: graceful-shutdown request); phone b56e2819 detached and a different phone (CPH2895, 3H164700ALT00000) appeared. Did not drive a personal device mid-swap; next Verifier drives on the AVD.
 - Reconciled: R5 gap -> Tier-1 amendment (new task T-007); environment fact -> PROJECT.md.
+
+## Iteration 8 - 2026-09-29 (Phase 6, T-007)
+- Iteration-executed: removed unreferenced NavigationUtil members; gradle assemble/test/androidTest/lint exit 0; R5 sweep clean except allow-listed theme member. DONE-candidate recorded.
+- Reconciled: no amendments.

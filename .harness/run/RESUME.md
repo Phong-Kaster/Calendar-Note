@@ -2,8 +2,8 @@
 
 > Derived cache; on disagreement with task files or git, this is wrong.
 
-- **Stage:** executing — Phase 6 next (Verifier Iteration 7 cleared DONE-candidate on an R5 gap)
-- **Next Phase 6:** T-007 — scope `app/src/main/java/com/example/skeleton/ui/util/NavigationUtil.kt` (remove `safePopBackstack` x2 and `safeNavigate(NavDirections)`), tier Fast. After it: DONE-candidate again → Verifier.
+- **Stage:** DONE-candidate recorded - next invocation is the Verifier (capable tier)
+- **Next:** Verifier (STATE.md DONE-candidate). Re-prove machine criteria, then drive machine-then-human ones on the AVD.
 - **Device drive still pending** for DoD 4-13,15,17-20,22-24: use AVD `astronex_test` (was shut down externally in Iteration 7; start it first, check `adb devices`). AVD has no media: criterion 7 first, then push ≥3 audio files to `/sdcard/Music` + media scan for 6, 8-13.
 - **Queued decisions:** 0
 - **Abandoned:** none

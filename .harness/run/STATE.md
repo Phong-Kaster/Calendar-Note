@@ -2,10 +2,10 @@
 
 ## Current
 
-- **Stage:** executing (Verifier found R5 gap; Phase 6 next)
+- **Stage:** DONE-candidate recorded (T-007 complete; next invocation is the Verifier)
 - **Loop Branch:** loop/music-player-v3
-- **Next Phase:** 6 (T-007)
-- **DONE-candidate:** no (cleared by Verifier, Iteration 7: R5 gap -> T-007)
+- **Next Phase:** none - Verifier
+- **DONE-candidate:** yes (Iteration 8; R5 gap closed by T-007)
 
 ## Progress
 
@@ -17,7 +17,7 @@
 | T-004 | complete | ui/fragment/nowplaying/** | build+unit tests pass; device drive pending |
 | T-005 | complete | Iteration-executed removals | build+unit+androidTest compile green; R1,R3 rg empty; manifest verified |
 | T-006 | complete | Iteration-executed sweep/README | build+unit+androidTest compile+lint green, UnusedResources 0 |
-| T-007 | pending | `ui/util/NavigationUtil.kt` | - |
+| T-007 | complete | `ui/util/NavigationUtil.kt` | all 4 gradle tasks exit 0; sweep lists only allow-listed InterFontFamily |
 
 ## Assumptions
 

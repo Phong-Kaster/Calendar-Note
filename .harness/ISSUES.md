@@ -1,6 +1,6 @@
 # ISSUES
 
-- Open task T-007: R5 fails — `NavigationUtil.safePopBackstack` (2 overloads) and `safeNavigate(NavDirections)` unreferenced (Verifier, Iteration 7).
+- T-007 (R5 NavigationUtil gap) closed in Iteration 8; DONE-candidate recorded, Verifier next.
 - Device drive not yet done for DoD 4-13,15,17-20,22-24: Iteration 7 AVD `astronex_test` was shut down externally before boot completed; attached phone changed (b56e2819 → CPH2895). Next Verifier drives on the AVD.
 - Awaiting a person (later): criteria 7,15,17,18,19,20,21 unsigned.
 - Assumptions A-001..A-005 recorded in `run/ASSUMPTIONS.md` (none Tier 3).
