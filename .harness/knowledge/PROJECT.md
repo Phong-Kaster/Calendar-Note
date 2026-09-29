@@ -54,6 +54,9 @@ Package under test: `applicationId = com.example.myapplication` (namespace is `c
 - Workers cannot delete files or run anything. Deletions and all builds are done by the Iteration.
 - `local.properties` and `build/` are git-ignored. `.harness/run/` is committed on the Loop Branch until the Cleanup Commit.
 
+- The AVD `astronex_test` can be shut down externally mid-boot (Iteration 7: graceful-shutdown request ~2 min after start) and attached phones change serials/models between runs (b56e2819 Xiaomi 23021RAAEG, 3H164700ALT00000 CPH2895). Start the AVD first thing in the Verifier, check `adb devices` before every drive step, and never assume the phone serial.
+- Verifier R5 check: `python .harness/run/evidence/V-sweep.py` (reference sweep; theme members are allow-listed). It matches by name, so also check overloads by hand.
+
 ## Sources Consulted
 
 - `CLAUDE.md`, `.claude/*.md`, `app/src/main/java/com/example/skeleton/ui/CLAUDE.md`, `PRD.md`, `.harness/loop/POLICIES.md`, manifest, Gradle files, all sources under `app/src/main`.

@@ -1,0 +1,35 @@
+== R1
+exit=1
+6:    app:startDestination="@id/libraryFragment">
+== R3
+exit=1
+2
+== R4
+R4 done
+== R6
+app/src/androidTest/java/com/example/skeleton/ExampleInstrumentedTest.kt
+== R7
+package com.example.skeleton
+
+import android.app.Application
+import com.example.skeleton.injection.appModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+
+class MainApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+
+        startKoin {
+            androidLogger()
+            androidContext(this@MainApplication)
+            modules(appModule)
+        }
+    }
+}
+== R8
+2:    <string name="app_name" translatable="false">Music Player</string>
+exit=1
+== deps

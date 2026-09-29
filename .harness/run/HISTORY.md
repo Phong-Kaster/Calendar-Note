@@ -37,3 +37,9 @@
 ## Iteration: Phase 5 (T-006 sweep/README)
 - Iteration-executed: R5 sweep removed unreferenced helpers/resources, dropped desugaring, wrote README with package tree. All builds + lint green; UnusedResources 0.
 - Reconciled: DONE-candidate recorded; no amendments.
+
+## Iteration 7 - 2026-09-29 (Verifier)
+- Clean rebuild: assembleDebug, testDebugUnitTest (6 classes, 45 tests, 0 fail), assembleDebugAndroidTest, lintDebug exit 0; UnusedResources 0 (`evidence/V-gradle.txt`). Criteria 1, 2, 3, 14, 16, R1-R4, R6-R8 re-proved (`evidence/V-manifest.txt`, `V-badging.txt`, `V-removals.txt`, `V-deps.txt`).
+- R5 FAILS: `NavigationUtil.safePopBackstack` (both overloads) and `safeNavigate(NavDirections)` are unreferenced (`evidence/V-sweep.txt`). Filed T-007, cleared DONE-candidate.
+- Device drive not done: AVD `astronex_test` booted, then was shut down externally before boot completed (emulator log: graceful-shutdown request); phone b56e2819 detached and a different phone (CPH2895, 3H164700ALT00000) appeared. Did not drive a personal device mid-swap; next Verifier drives on the AVD.
+- Reconciled: R5 gap -> Tier-1 amendment (new task T-007); environment fact -> PROJECT.md.

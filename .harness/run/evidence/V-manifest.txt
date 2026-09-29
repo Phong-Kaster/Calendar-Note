@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:versionCode="1"
+    android:versionName="1.0"
+    android:compileSdkVersion="36"
+    android:compileSdkVersionCodename="16"
+    package="com.example.myapplication"
+    platformBuildVersionCode="36"
+    platformBuildVersionName="16">
+
+    <uses-sdk
+        android:minSdkVersion="24"
+        android:targetSdkVersion="36" />
+
+    <uses-permission
+        android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-permission
+        android:name="android.permission.WAKE_LOCK" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <permission
+        android:name="com.example.myapplication.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+        android:protectionLevel="0x2" />
+
+    <uses-permission
+        android:name="com.example.myapplication.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+
+    <application
+        android:theme="@ref/0x7f120231"
+        android:label="@ref/0x7f11001e"
+        android:icon="@ref/0x7f0e0000"
+        android:name="com.example.skeleton.MainApplication"
+        android:debuggable="true"
+        android:allowBackup="false"
+        android:supportsRtl="true"
+        android:extractNativeLibs="false"
+        android:fullBackupContent="@ref/0x7f140000"
+        android:roundIcon="@ref/0x7f0e0001"
+        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+        android:dataExtractionRules="@ref/0x7f140001">
+
+        <activity
+            android:theme="@ref/0x7f120231"
+            android:label="@ref/0x7f11001e"
+            android:name="com.example.skeleton.MainActivity"
+            android:exported="true"
+            android:launchMode="1">
+
+            <intent-filter>
+
+                <action
+                    android:name="android.intent.action.MAIN" />
+
+                <category
+                    android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name="com.example.skeleton.service.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="0x2">
+
+            <intent-filter>
+
+                <action
+                    android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:theme="@ref/0x1030241"
+            android:name="androidx.activity.ComponentActivity"
+            android:exported="true" />
+
+        <activity
+            android:name="androidx.compose.ui.tooling.PreviewActivity"
+            android:exported="true" />
+
+        <activity
+            android:theme="@ref/0x1030055"
+            android:name="androidx.media3.session.BluetoothValidationActivity"
+            android:permission="android.permission.BLUETOOTH_PRIVILEGED"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true">
+
+            <intent-filter>
+
+                <action
+                    android:name="android.intent.action.VIEW" />
+
+                <data
+                    android:scheme="content" />
+
+                <data
+                    android:host="media" />
+
+                <data
+                    android:pathPrefix="/internal/audio/media/" />
+
+                <data
+                    android:mimeType="audio/*" />
+            </intent-filter>
+        </activity>
+
+        <uses-library
+            android:name="androidx.window.extensions"
+            android:required="false" />
+
+        <uses-library
+            android:name="androidx.window.sidecar"
+            android:required="false" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:exported="false"
+            android:authorities="com.example.myapplication.androidx-startup">
+
+            <meta-data
+                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+                android:value="androidx.startup" />
+
+            <meta-data
+                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+                android:value="androidx.startup" />
+
+            <meta-data
+                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+                android:value="androidx.startup" />
+        </provider>
+
+        <receiver
+            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+            android:permission="android.permission.DUMP"
+            android:enabled="true"
+            android:exported="true"
+            android:directBootAware="false">
+
+            <intent-filter>
+
+                <action
+                    android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+            </intent-filter>
+
+            <intent-filter>
+
+                <action
+                    android:name="androidx.profileinstaller.action.SKIP_FILE" />
+            </intent-filter>
+
+            <intent-filter>
+
+                <action
+                    android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+            </intent-filter>
+
+            <intent-filter>
+
+                <action
+                    android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

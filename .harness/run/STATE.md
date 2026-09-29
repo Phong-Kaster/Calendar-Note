@@ -2,10 +2,10 @@
 
 ## Current
 
-- **Stage:** executing (Phase 5 done)
+- **Stage:** executing (Verifier found R5 gap; Phase 6 next)
 - **Loop Branch:** loop/music-player-v3
-- **Next Phase:** Verifier (fresh invocation)
-- **DONE-candidate:** yes
+- **Next Phase:** 6 (T-007)
+- **DONE-candidate:** no (cleared by Verifier, Iteration 7: R5 gap -> T-007)
 
 ## Progress
 
@@ -17,6 +17,7 @@
 | T-004 | complete | ui/fragment/nowplaying/** | build+unit tests pass; device drive pending |
 | T-005 | complete | Iteration-executed removals | build+unit+androidTest compile green; R1,R3 rg empty; manifest verified |
 | T-006 | complete | Iteration-executed sweep/README | build+unit+androidTest compile+lint green, UnusedResources 0 |
+| T-007 | pending | `ui/util/NavigationUtil.kt` | - |
 
 ## Assumptions
 

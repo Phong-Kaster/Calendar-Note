@@ -13,6 +13,8 @@ Behaviour-first checkpoints: (1) app opens to a real library of device songs, (2
 - T-005 - Delete every demo feature, network/DB/DataStore/Lottie/Play/TLS stack, permissions, resources, deps (Iteration-executed; deletions need no Worker) (depends on: T-001..T-004) - scope: DoD R1–R4, R7 - tier: n/a (Iteration)
 - T-006 - Dead-code sweep, lint clean, app label, real tests kept, README + package tree (Iteration-executed) (depends on: T-005) - scope: `README.md`, `res/values/strings.xml`, R5/R6/R8 - tier: n/a (Iteration)
 
+- T-007 - Remove unreferenced NavigationUtil members (R5 gap found by Verifier, Iteration 7) (depends on: T-006) - scope: `ui/util/NavigationUtil.kt` - tier: Fast
+
 ## Phase Grouping
 
 | Phase | Tasks | Shared files the Iteration wires itself |
@@ -22,6 +24,7 @@ Behaviour-first checkpoints: (1) app opens to a real library of device songs, (2
 | 3 | T-003, T-004 | nav graph (`nowPlayingFragment`, action `toNowPlaying`), `ViewModelModule`, `strings.xml`, shared player icons `res/drawable/ic_player_*.xml` (Iteration authors before dispatch) |
 | 4 | T-005 | everything (manifest, Gradle, DI, MainApplication, nav, resources) |
 | 5 | T-006 | README, strings, lint |
+| 6 | T-007 | none (single file) |
 
 ## Known Risks
 
