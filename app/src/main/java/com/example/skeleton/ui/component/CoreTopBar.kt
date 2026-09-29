@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,8 +18,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -25,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.example.skeleton.R
 import com.example.skeleton.ui.theme.MyApplicationTheme
 import com.example.skeleton.ui.theme.customizedTextStyle
+import kotlinx.coroutines.delay
 
 /**
  * A simple top bar: optional round icon button on the left, optional title in the middle,
@@ -135,6 +145,48 @@ fun CoreTopBar(
         }
     }
 
+}
+
+private var maximumStatusBarHeight by mutableStateOf(0.dp)
+
+/**
+ * Pads the top of a view by the tallest status bar height seen so far, so a top bar never jumps
+ * when the status bar is briefly hidden. While the status bar is hidden the padding area is
+ * painted black after one second.
+ *
+ * Example:
+ * ```kotlin
+ * Spacer(modifier = Modifier.fillMaxWidth().dynamicStatusBarPadding())
+ * ```
+ *
+ * @return the modifier with the background and top padding applied.
+ * @author Phong-Kaster
+ */
+@Composable
+fun Modifier.dynamicStatusBarPadding(): Modifier = this.composed {
+    // Current status bar height
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+    var backgroundColor by remember { mutableStateOf(Color.Transparent) }
+
+    // Status bar hidden: wait one second, then paint the area black
+    LaunchedEffect(statusBarHeight) {
+        if (statusBarHeight == 0.dp) {
+            delay(1000)
+            backgroundColor = Color.Black
+        } else {
+            backgroundColor = Color.Transparent
+        }
+    }
+
+    // Remember the tallest status bar height we have seen
+    LaunchedEffect(statusBarHeight) {
+        if (statusBarHeight > maximumStatusBarHeight) maximumStatusBarHeight = statusBarHeight
+    }
+
+    Modifier
+        .background(color = backgroundColor)
+        .padding(top = maximumStatusBarHeight)
 }
 
 @Preview

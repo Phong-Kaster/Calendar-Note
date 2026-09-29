@@ -2,8 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
-    kotlin("plugin.serialization")
 }
 
 android {
@@ -23,21 +21,8 @@ android {
     }
 
     buildTypes {
-        debug {
-            // JSONPlaceholder allows HTTP; avoids TLS trust failures on some emulators / inspected networks during dev.
-            buildConfigField(
-                "String",
-                "API_BASE_URL",
-                "\"http://jsonplaceholder.typicode.com/\"",
-            )
-        }
         release {
             isMinifyEnabled = false
-            buildConfigField(
-                "String",
-                "API_BASE_URL",
-                "\"https://jsonplaceholder.typicode.com/\"",
-            )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -54,7 +39,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 
@@ -71,7 +55,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.fragment)
-    implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -80,48 +63,19 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    // Constraint Layout
-    implementation(libs.androidx.constraint.layout)
-    implementation(libs.androidx.constraint.layout.compose)
-
-    // Preferences DataStore (SharedPreferences like APIs)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.datastore.preferences.core)
-
     // Material (for Fragment/AppCompat compatibility)
     implementation(libs.google.material)
 
-    // Accompanist Permissions (Compose permission handling, e.g. notification/location)
+    // Accompanist Permissions (Compose runtime-permission handling: music, notifications)
     implementation(libs.accompanist.permissions)
 
     // Koin for Dependency Injection
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.android)
-    implementation(libs.koin.compose.viewmodel)
-    implementation(libs.koin.androidx.compose)
-
-    // Lottie
-    implementation(libs.lottie.compose)
-
-    // Google Play in-app review - https://developer.android.com/guide/playcore/in-app-review/kotlin-java
-    implementation(libs.google.play.review)
-    implementation(libs.google.play.review.ktx)
-    implementation(libs.google.play.services.base)
-
-    // Save data in a local database using Room - https://developer.android.com/training/data-storage/room#setup
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
 
     // Media3 - ExoPlayer + MediaSessionService (background playback, notification, lock screen)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.session)
 
-    // Ktor
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.okhttp)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.kotlinx.serialization.json)
 }

@@ -7,7 +7,6 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
-import com.example.skeleton.ui.util.NetworkUtil
 import com.example.skeleton.ui.util.SystemBarUtil
 
 open class CoreActivity() : AppCompatActivity() {
@@ -23,9 +22,5 @@ open class CoreActivity() : AppCompatActivity() {
         )
         SystemBarUtil.hideNavigationBar(window = this.window)
         setContent { ComposeView() }
-    }
-
-     fun isInternetConnected(): Boolean {
-        return NetworkUtil.isInternetConnected(context = this)
     }
 }

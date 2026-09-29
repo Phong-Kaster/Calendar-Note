@@ -28,3 +28,8 @@
 - Reconciled: unfixed reviewer notes in ISSUES.md; no amendments.
 
 ## Archived Decisions
+
+## Iteration: Phase 4 (T-005 removals)
+- Iteration-executed (no Worker): deleted demo screens, rate sheet, bottom bar, Top-bar-4, Room/DataStore/Ktor/locale stacks, AppConfig/Constant/Language, network/location/alarm permissions, Lottie/Play/constraintlayout/navigation-compose deps, raw/values-de/demo drawables+font, Theme.Lockscreen; rebuilt Koin modules; MainApplication Koin-only; activity_main FrameLayout; app_name Music Player.
+- Learned: Media3 re-merges ACCESS_NETWORK_STATE into the manifest; `tools:node="remove"` fixes it.
+- Reconciled: no amendments; R5 sweep deferred to T-006 as planned.

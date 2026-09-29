@@ -2,9 +2,9 @@
 
 ## Current
 
-- **Stage:** executing (Phase 3 done)
+- **Stage:** executing (Phase 4 done)
 - **Loop Branch:** loop/music-player-v3
-- **Next Phase:** Phase 4 = T-005 (Iteration removals)
+- **Next Phase:** Phase 5 = T-006 (Iteration sweep/README)
 - **DONE-candidate:** no
 
 ## Progress
@@ -15,7 +15,7 @@
 | T-002 | complete | service/player (see TASKS/T-002.md) | build+unit tests pass; device drive pending |
 | T-003 | complete | ui/fragment/library/** | build+unit tests pass; device drive pending |
 | T-004 | complete | ui/fragment/nowplaying/** | build+unit tests pass; device drive pending |
-| T-005 | pending | Iteration-executed removals | - |
+| T-005 | complete | Iteration-executed removals | build+unit+androidTest compile green; R1,R3 rg empty; manifest verified |
 | T-006 | pending | Iteration-executed sweep/README | - |
 
 ## Assumptions

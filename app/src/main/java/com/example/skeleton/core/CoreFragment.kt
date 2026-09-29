@@ -21,7 +21,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import com.example.skeleton.ui.theme.MyApplicationTheme
-import com.example.skeleton.ui.util.NetworkUtil
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -74,10 +73,6 @@ open class CoreFragment : Fragment() {
 
      fun showToast(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-    }
-
-     fun isInternetConnected(): Boolean {
-        return NetworkUtil.isInternetConnected(context = requireContext())
     }
 
      fun trackEvent(name: String) {}
